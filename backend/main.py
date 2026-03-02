@@ -1,0 +1,36 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.database import engine, Base
+from app.routers import auth, patients, beds, audio, vitals, tasks, alerts
+
+# Create all tables on startup
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title="MedSuite IPD Management",
+    description="Hospital In-Patient Department management system API",
+    version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ─── Routers ──────────────────────────────────────────────────────────────────
+app.include_router(auth.router)
+app.include_router(patients.router)
+app.include_router(beds.router)
+app.include_router(audio.router)
+app.include_router(vitals.router)
+app.include_router(tasks.router)
+app.include_router(alerts.router)
+
+
+@app.get("/", tags=["Health"])
+def health():
+    return {"status": "ok", "service": "MedSuite IPD API"}
