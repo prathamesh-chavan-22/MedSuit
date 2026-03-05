@@ -1,0 +1,24 @@
+# ── Black ────────────────────────────────────────────────────────────────────
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | __pycache__
+  | build
+  | dist
+  | alembic/versions
+)/
+'''
+
+# ── isort ────────────────────────────────────────────────────────────────────
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["app"]
+known_third_party = ["fastapi", "sqlalchemy", "pydantic", "jose", "passlib", "google"]
+skip_glob = ["venv/*", ".venv/*", "alembic/versions/*"]

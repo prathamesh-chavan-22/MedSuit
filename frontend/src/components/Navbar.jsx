@@ -34,7 +34,9 @@ export default function Navbar() {
 
   const markRead = async (id) => {
     await api.patch(`/alerts/${id}/read`);
-    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, is_read: true } : a)));
+    setAlerts((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, is_read: true } : a)),
+    );
   };
 
   const handleLogout = () => {
@@ -50,20 +52,29 @@ export default function Navbar() {
       </div>
 
       <div style={styles.links}>
-        <Link to="/" style={styles.link}>Dashboard</Link>
-        <Link to="/patients" style={styles.link}>Patients</Link>
-        <Link to="/beds" style={styles.link}>Beds</Link>
-        <Link to="/tasks" style={styles.link}>Tasks</Link>
+        <Link to="/" style={styles.link}>
+          Dashboard
+        </Link>
+        <Link to="/patients" style={styles.link}>
+          Patients
+        </Link>
+        <Link to="/beds" style={styles.link}>
+          Beds
+        </Link>
+        <Link to="/tasks" style={styles.link}>
+          Tasks
+        </Link>
       </div>
 
       <div style={styles.actions}>
         {/* Alert bell */}
         <div style={{ position: "relative" }}>
-          <button style={styles.iconBtn} onClick={() => setShowAlerts(!showAlerts)}>
+          <button
+            style={styles.iconBtn}
+            onClick={() => setShowAlerts(!showAlerts)}
+          >
             <Bell size={20} />
-            {unreadCount > 0 && (
-              <span style={styles.badge}>{unreadCount}</span>
-            )}
+            {unreadCount > 0 && <span style={styles.badge}>{unreadCount}</span>}
           </button>
 
           {showAlerts && (
@@ -85,9 +96,11 @@ export default function Navbar() {
                     style={{
                       ...styles.severityDot,
                       background:
-                        a.severity === "critical" ? "#ef4444"
-                          : a.severity === "warning" ? "#f59e0b"
-                          : "#3b82f6",
+                        a.severity === "critical"
+                          ? "#ef4444"
+                          : a.severity === "warning"
+                            ? "#f59e0b"
+                            : "#3b82f6",
                     }}
                   />
                   <div>
@@ -115,44 +128,90 @@ export default function Navbar() {
 
 const styles = {
   nav: {
-    position: "fixed", top: 0, left: 0, right: 0, height: 64, zIndex: 100,
-    background: "#fff", borderBottom: "1px solid #e5e7eb",
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "0 24px", gap: 16,
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 64,
+    zIndex: 100,
+    background: "#fff",
+    borderBottom: "1px solid #e5e7eb",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0 24px",
+    gap: 16,
   },
   brand: { display: "flex", alignItems: "center", gap: 8 },
   brandText: { fontWeight: 700, fontSize: 18, color: "#1e3a5f" },
   links: { display: "flex", gap: 24 },
-  link: { textDecoration: "none", color: "#374151", fontWeight: 500, fontSize: 15 },
+  link: {
+    textDecoration: "none",
+    color: "#374151",
+    fontWeight: 500,
+    fontSize: 15,
+  },
   actions: { display: "flex", alignItems: "center", gap: 12 },
   iconBtn: {
-    background: "none", border: "none", cursor: "pointer",
-    position: "relative", padding: 6, borderRadius: 8,
-    display: "flex", alignItems: "center",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    position: "relative",
+    padding: 6,
+    borderRadius: 8,
+    display: "flex",
+    alignItems: "center",
   },
   badge: {
-    position: "absolute", top: -2, right: -2,
-    background: "#ef4444", color: "#fff", borderRadius: "50%",
-    fontSize: 10, width: 16, height: 16,
-    display: "flex", alignItems: "center", justifyContent: "center",
+    position: "absolute",
+    top: -2,
+    right: -2,
+    background: "#ef4444",
+    color: "#fff",
+    borderRadius: "50%",
+    fontSize: 10,
+    width: 16,
+    height: 16,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   userLabel: { fontSize: 13, color: "#6b7280" },
   alertDropdown: {
-    position: "absolute", top: 40, right: 0, width: 320,
-    background: "#fff", border: "1px solid #e5e7eb",
-    borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    zIndex: 200, maxHeight: 400, overflowY: "auto",
+    position: "absolute",
+    top: 40,
+    right: 0,
+    width: 320,
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 8,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    zIndex: 200,
+    maxHeight: 400,
+    overflowY: "auto",
   },
   alertHeader: {
-    padding: "10px 14px", fontWeight: 600, fontSize: 14,
+    padding: "10px 14px",
+    fontWeight: 600,
+    fontSize: 14,
     borderBottom: "1px solid #e5e7eb",
   },
   alertEmpty: { padding: "12px 14px", color: "#9ca3af", fontSize: 13 },
   alertItem: {
-    display: "flex", alignItems: "flex-start", gap: 10,
-    padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f3f4f6",
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    padding: "10px 14px",
+    cursor: "pointer",
+    borderBottom: "1px solid #f3f4f6",
   },
-  severityDot: { width: 8, height: 8, borderRadius: "50%", marginTop: 4, flexShrink: 0 },
+  severityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    marginTop: 4,
+    flexShrink: 0,
+  },
   alertMsg: { fontSize: 13, color: "#111827" },
   alertTime: { fontSize: 11, color: "#9ca3af", marginTop: 2 },
 };

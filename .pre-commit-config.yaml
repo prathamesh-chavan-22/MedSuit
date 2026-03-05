@@ -1,0 +1,60 @@
+# MedSuite — pre-commit hooks
+# Runs on every `git commit` to enforce code quality for both Python and JS.
+#
+# Install:  pre-commit install
+# Run all:  pre-commit run --all-files
+# Update:   pre-commit autoupdate
+
+default_language_version:
+  python: python3.10
+
+repos:
+  # ── General file hygiene ───────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace        # Strip trailing whitespace
+      - id: end-of-file-fixer          # Ensure files end with a newline
+      - id: check-yaml                 # Validate YAML syntax
+      - id: check-json                 # Validate JSON syntax
+      - id: check-toml                 # Validate TOML syntax
+      - id: check-merge-conflict       # Block accidental conflict markers
+      - id: check-added-large-files    # Warn on files > 500 KB
+        args: ["--maxkb=500"]
+      - id: debug-statements           # Catch leftover breakpoint() / pdb.set_trace()
+      - id: mixed-line-ending          # Normalise CRLF → LF
+        args: ["--fix=lf"]
+
+  # ── Python: Black (formatting) ────────────────────────────────────────────
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: ^backend/
+
+  # ── Python: isort (import sorting) ────────────────────────────────────────
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (python)
+        files: ^backend/
+
+  # ── Python: flake8 (linting) ──────────────────────────────────────────────
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        files: ^backend/
+        additional_dependencies:
+          - flake8-bugbear     # Extra opinionated bug-detection rules
+          - flake8-comprehensions  # Better list/set/dict comprehension usage
+
+  # ── JavaScript/JSX: Prettier (formatting) ─────────────────────────────────
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        files: ^frontend/
+        types_or: [javascript, jsx, css, json, yaml, markdown]

@@ -36,15 +36,21 @@ export default function Login() {
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>Email</label>
           <input
-            type="email" required value={email}
+            type="email"
+            required
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={styles.input} placeholder="doctor@hospital.com"
+            style={styles.input}
+            placeholder="doctor@hospital.com"
           />
           <label style={styles.label}>Password</label>
           <input
-            type="password" required value={password}
+            type="password"
+            required
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={styles.input} placeholder="••••••••"
+            style={styles.input}
+            placeholder="••••••••"
           />
           {error && <p style={styles.error}>{error}</p>}
           <button type="submit" style={styles.btn} disabled={loading}>
@@ -58,12 +64,19 @@ export default function Login() {
 
 const styles = {
   container: {
-    minHeight: "100vh", display: "flex", alignItems: "center",
-    justifyContent: "center", background: "#f0f4f8",
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#f0f4f8",
   },
   card: {
-    background: "#fff", borderRadius: 12, padding: "40px 36px",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.08)", width: "100%", maxWidth: 400,
+    background: "#fff",
+    borderRadius: 12,
+    padding: "40px 36px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+    width: "100%",
+    maxWidth: 400,
   },
   logo: { display: "flex", alignItems: "center", gap: 10, marginBottom: 4 },
   title: { margin: 0, fontSize: 22, fontWeight: 700, color: "#1e3a5f" },
@@ -71,13 +84,22 @@ const styles = {
   form: { display: "flex", flexDirection: "column", gap: 12 },
   label: { fontSize: 13, fontWeight: 500, color: "#374151" },
   input: {
-    border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px",
-    fontSize: 14, outline: "none",
+    border: "1px solid #d1d5db",
+    borderRadius: 8,
+    padding: "10px 12px",
+    fontSize: 14,
+    outline: "none",
   },
   error: { color: "#ef4444", fontSize: 13, margin: 0 },
   btn: {
-    background: "#3b82f6", color: "#fff", border: "none",
-    borderRadius: 8, padding: "11px 0", fontSize: 15,
-    fontWeight: 600, cursor: "pointer", marginTop: 4,
+    background: "#3b82f6",
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+    padding: "11px 0",
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: "pointer",
+    marginTop: 4,
   },
 };

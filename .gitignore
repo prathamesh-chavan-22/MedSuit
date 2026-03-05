@@ -1,26 +1,136 @@
+# =============================================================
+# MedSuite — root .gitignore
+# =============================================================
+
+# -------------------------------------------------------------
+# Environment & secrets
+# -------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+backend/.env*
+
+# -------------------------------------------------------------
 # Python
+# -------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *.pyo
-*.env
-.env
-.venv/
-backend/.venv/
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+.Python
 
-# Node
+# Virtual environments
+.venv/
+venv/
+env/
+backend/myenv/
+backend/.venv/
+backend/venv/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+nosetests.xml
+junit.xml
+
+# Type checking / linting caches
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# Distribution / packaging
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Jupyter
+.ipynb_checkpoints/
+
+# -------------------------------------------------------------
+# Node / npm
+# -------------------------------------------------------------
 node_modules/
 frontend/node_modules/
-/dist
+.npm/
+.pnpm-store/
 
-# Vite
+# Build outputs
+frontend/dist/
+frontend/dist-ssr/
+dist/
+dist-ssr/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Lock files (keep one; ignore the others)
+# Uncomment if you standardise on npm:
+# yarn.lock
+# pnpm-lock.yaml
+
+# -------------------------------------------------------------
+# Logs
+# -------------------------------------------------------------
+*.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# IDEs
+# -------------------------------------------------------------
+# Database & uploads
+# -------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+backend/uploads/
+
+# Alembic generated SQLite (keep migrations folder itself)
+*.db-shm
+*.db-wal
+
+# -------------------------------------------------------------
+# IDEs & editors
+# -------------------------------------------------------------
 .vscode/
+!.vscode/extensions.json
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 *.swp
+*.swo
+*~
 
-# macOS
+# -------------------------------------------------------------
+# OS generated
+# -------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
