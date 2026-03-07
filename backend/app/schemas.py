@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from typing import Optional, List
 from datetime import datetime
 from app.models import (
@@ -8,6 +8,9 @@ from app.models import (
     AlertSeverity,
     ConsentStatus,
     ClinicalNoteStatus,
+    AdmissionType,
+    PatientStatus,
+    AudioProcessingStatus,
 )
 
 
@@ -35,6 +38,31 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    refresh_token: Optional[str] = None
+    session_id: Optional[str] = None
+    access_expires_in: Optional[int] = None
+    refresh_expires_in: Optional[int] = None
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class LogoutRequest(BaseModel):
+    session_id: str
+
+
+class SessionOut(BaseModel):
+    id: str
+    user_id: int
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+    created_at: datetime
+    last_seen_at: datetime
+    expires_at: datetime
+    revoked_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
 
 
 class TokenData(BaseModel):
@@ -45,13 +73,48 @@ class TokenData(BaseModel):
 
 class PatientCreate(BaseModel):
     full_name: str
-    age: Optional[int] = None
+    age: Optional[int] = Field(default=None, ge=0, le=130)
     gender: Optional[str] = None
+    blood_group: Optional[str] = None
+    weight_kg: Optional[float] = Field(default=None, ge=0, le=500)
+    height_cm: Optional[float] = Field(default=None, ge=0, le=300)
     diagnosis: Optional[str] = None
+    comorbidities: Optional[str] = None
+    medications: Optional[str] = None
     allergies: Optional[str] = None
     mental_status: Optional[str] = None
+    primary_phone: Optional[str] = None
+    secondary_phone: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    insurance_provider: Optional[str] = None
+    insurance_policy_no: Optional[str] = None
+    mrn: Optional[str] = None
+    admission_type: AdmissionType = AdmissionType.planned
+    patient_status: PatientStatus = PatientStatus.admitted
+    admission_at: Optional[datetime] = None
+    discharge_at: Optional[datetime] = None
+    discharge_summary: Optional[str] = None
+    fall_risk: bool = False
     infection_risk: bool = False
     is_serious: bool = False
+
+    @model_validator(mode="after")
+    def validate_edge_cases(self):
+        if self.discharge_at and self.admission_at and self.discharge_at < self.admission_at:
+            raise ValueError("discharge_at cannot be earlier than admission_at")
+        if self.patient_status in {PatientStatus.discharged, PatientStatus.deceased} and not self.discharge_at:
+            raise ValueError("discharge_at is required when patient is discharged or deceased")
+        if self.emergency_contact_name and not self.emergency_contact_phone:
+            raise ValueError("emergency_contact_phone is required when emergency_contact_name is provided")
+        if self.emergency_contact_phone and not self.emergency_contact_name:
+            raise ValueError("emergency_contact_name is required when emergency_contact_phone is provided")
+        return self
 
 
 class PatientOut(PatientCreate):
@@ -91,6 +154,9 @@ class AudioNoteOut(BaseModel):
     patient_id: int
     recorded_by: int
     transcript: Optional[str] = None
+    processing_status: AudioProcessingStatus
+    celery_task_id: Optional[str] = None
+    processing_error: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

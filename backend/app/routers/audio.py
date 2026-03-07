@@ -4,40 +4,21 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
+from celery.result import AsyncResult
 
 from app import models, schemas
 from app.audit import log_event
 from app.auth import get_current_user, require_role
+from app.celery_app import celery_app
 from app.consent import has_active_consent
 from app.database import get_db
+from app.services.transcription import transcribe_with_google
+from app.tasks.audio_tasks import transcribe_audio_note
 
 router = APIRouter(prefix="/audio", tags=["Audio Notes"])
 
 UPLOAD_DIR = "uploads/audio"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-
-async def transcribe_with_google(file_path: str) -> str:
-    """Send audio to Google Speech-to-Text and return transcript."""
-    try:
-        from google.cloud import speech
-        client = speech.SpeechClient()
-
-        with open(file_path, "rb") as f:
-            content = f.read()
-
-        audio = speech.RecognitionAudio(content=content)
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.WEBM_OPUS,
-            sample_rate_hertz=48000,
-            language_code="en-US",
-            enable_automatic_punctuation=True,
-        )
-        response = client.recognize(config=config, audio=audio)
-        return " ".join(r.alternatives[0].transcript for r in response.results)
-    except Exception as exc:
-        # Fallback: return placeholder so dev can continue without credentials
-        return f"[Transcription failed: {exc}]"
 
 
 @router.post("/{patient_id}", response_model=schemas.AudioNoteOut, status_code=201)
@@ -73,18 +54,29 @@ async def upload_audio(
         content = await file.read()
         await out.write(content)
 
-    # Transcribe
-    transcript = await transcribe_with_google(file_path)
-
     note = models.AudioNote(
         patient_id=patient_id,
         recorded_by=current_user.id,
         audio_file_path=file_path,
-        transcript=transcript,
+        transcript="[Queued for transcription]",
+        processing_status=models.AudioProcessingStatus.pending,
     )
     db.add(note)
     db.commit()
     db.refresh(note)
+
+    try:
+        task = transcribe_audio_note.delay(note.id, file_path)
+        note.celery_task_id = task.id
+        db.commit()
+        db.refresh(note)
+    except Exception:
+        # Broker may be offline in local dev; fallback to immediate processing.
+        transcript = transcribe_with_google(file_path)
+        note.transcript = transcript
+        note.processing_status = models.AudioProcessingStatus.completed
+        db.commit()
+        db.refresh(note)
 
     log_event(
         db,
@@ -112,3 +104,18 @@ def list_audio_notes(
         .order_by(models.AudioNote.created_at.desc())
         .all()
     )
+
+
+@router.get("/task/{task_id}")
+def get_audio_task_status(
+    task_id: str,
+    _: models.User = Depends(get_current_user),
+):
+    task = AsyncResult(task_id, app=celery_app)
+    return {
+        "task_id": task_id,
+        "state": task.state,
+        "ready": task.ready(),
+        "successful": task.successful() if task.ready() else False,
+        "result": task.result if task.ready() else None,
+    }

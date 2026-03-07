@@ -234,6 +234,15 @@ export default function PatientDetail() {
             </button>
           ))}
         </div>
+
+        <div style={styles.profileGrid}>
+          <div style={styles.profileItem}><span style={styles.profileKey}>MRN</span><span>{patient.mrn || "N/A"}</span></div>
+          <div style={styles.profileItem}><span style={styles.profileKey}>Blood Group</span><span>{patient.blood_group || "N/A"}</span></div>
+          <div style={styles.profileItem}><span style={styles.profileKey}>Primary Phone</span><span>{patient.primary_phone || "N/A"}</span></div>
+          <div style={styles.profileItem}><span style={styles.profileKey}>Emergency Contact</span><span>{patient.emergency_contact_name || "N/A"}</span></div>
+          <div style={styles.profileItem}><span style={styles.profileKey}>Admission Type</span><span>{patient.admission_type || "planned"}</span></div>
+          <div style={styles.profileItem}><span style={styles.profileKey}>Patient Status</span><span>{patient.patient_status || "admitted"}</span></div>
+        </div>
       </div>
 
       {activeTab === "overview" && (
@@ -644,6 +653,29 @@ const styles = {
     gap: 8,
     flexWrap: "wrap",
     marginTop: 14,
+  },
+  profileGrid: {
+    marginTop: 12,
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+    gap: 8,
+  },
+  profileItem: {
+    border: "1px solid #dde7f2",
+    background: "#ffffff",
+    borderRadius: 10,
+    padding: "8px 10px",
+    display: "flex",
+    flexDirection: "column",
+    fontSize: 13,
+    color: "#1f2937",
+  },
+  profileKey: {
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+    color: "#64748b",
+    fontWeight: 700,
   },
   tabButton: {
     border: "1px solid #c7d7ea",

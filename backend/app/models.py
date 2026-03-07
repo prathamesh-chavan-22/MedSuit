@@ -46,6 +46,26 @@ class ClinicalNoteStatus(str, enum.Enum):
     finalized = "finalized"
 
 
+class AdmissionType(str, enum.Enum):
+    emergency = "emergency"
+    planned = "planned"
+    transfer = "transfer"
+
+
+class PatientStatus(str, enum.Enum):
+    admitted = "admitted"
+    in_observation = "in_observation"
+    discharged = "discharged"
+    deceased = "deceased"
+
+
+class AudioProcessingStatus(str, enum.Enum):
+    pending = "pending"
+    processing = "processing"
+    completed = "completed"
+    failed = "failed"
+
+
 # ─── Users ───────────────────────────────────────────────────────────────────
 
 class User(Base):
@@ -71,6 +91,7 @@ class User(Base):
     audit_events = orm_relationship("AuditLog", back_populates="actor_user")
     clinical_notes = orm_relationship("ClinicalNote", foreign_keys="ClinicalNote.authored_by", back_populates="author_user")
     reviewed_notes = orm_relationship("ClinicalNote", foreign_keys="ClinicalNote.reviewed_by", back_populates="reviewer_user")
+    sessions = orm_relationship("UserSession", back_populates="user")
 
 
 # ─── Patients ─────────────────────────────────────────────────────────────────
@@ -82,9 +103,32 @@ class Patient(Base):
     full_name = Column(String, nullable=False)
     age = Column(Integer)
     gender = Column(String)
+    blood_group = Column(String)
+    weight_kg = Column(Float)
+    height_cm = Column(Float)
     diagnosis = Column(Text)
+    comorbidities = Column(Text)
+    medications = Column(Text)
     allergies = Column(Text)          # comma-separated or JSON string
     mental_status = Column(String)    # e.g. "stable", "agitated", "confused"
+    primary_phone = Column(String)
+    secondary_phone = Column(String)
+    emergency_contact_name = Column(String)
+    emergency_contact_phone = Column(String)
+    emergency_contact_relationship = Column(String)
+    address = Column(Text)
+    city = Column(String)
+    state = Column(String)
+    pincode = Column(String)
+    insurance_provider = Column(String)
+    insurance_policy_no = Column(String)
+    mrn = Column(String, unique=True, index=True)
+    admission_type = Column(Enum(AdmissionType), default=AdmissionType.planned)
+    patient_status = Column(Enum(PatientStatus), default=PatientStatus.admitted)
+    admission_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    discharge_at = Column(DateTime(timezone=True), nullable=True)
+    discharge_summary = Column(Text)
+    fall_risk = Column(Boolean, default=False)
     infection_risk = Column(Boolean, default=False)
     is_serious = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -125,6 +169,9 @@ class AudioNote(Base):
     recorded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     audio_file_path = Column(String)        # path to stored audio file
     transcript = Column(Text)              # Google STT result
+    processing_status = Column(Enum(AudioProcessingStatus), default=AudioProcessingStatus.pending, nullable=False)
+    celery_task_id = Column(String, nullable=True, index=True)
+    processing_error = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     patient = orm_relationship("Patient", back_populates="audio_notes")
@@ -284,3 +331,19 @@ class LabResult(Base):
     measured_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     patient = orm_relationship("Patient", back_populates="lab_results")
+
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+
+    id = Column(String, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    refresh_token_hash = Column(String, nullable=False)
+    user_agent = Column(String, nullable=True)
+    ip_address = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    last_seen_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = orm_relationship("User", back_populates="sessions")

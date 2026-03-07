@@ -8,9 +8,32 @@ const EMPTY_FORM = {
   full_name: "",
   age: "",
   gender: "",
+  blood_group: "",
+  weight_kg: "",
+  height_cm: "",
   diagnosis: "",
+  comorbidities: "",
+  medications: "",
   allergies: "",
   mental_status: "",
+  primary_phone: "",
+  secondary_phone: "",
+  emergency_contact_name: "",
+  emergency_contact_phone: "",
+  emergency_contact_relationship: "",
+  address: "",
+  city: "",
+  state: "",
+  pincode: "",
+  insurance_provider: "",
+  insurance_policy_no: "",
+  mrn: "",
+  admission_type: "planned",
+  patient_status: "admitted",
+  admission_at: "",
+  discharge_at: "",
+  discharge_summary: "",
+  fall_risk: false,
   infection_risk: false,
   is_serious: false,
 };
@@ -43,12 +66,21 @@ export default function Patients() {
   const filtered = patients.filter(
     (p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.diagnosis || "").toLowerCase().includes(search.toLowerCase()),
+      (p.diagnosis || "").toLowerCase().includes(search.toLowerCase()) ||
+      (p.mrn || "").toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    createMut.mutate({ ...form, age: Number(form.age) || null });
+    createMut.mutate({
+      ...form,
+      age: Number(form.age) || null,
+      weight_kg: Number(form.weight_kg) || null,
+      height_cm: Number(form.height_cm) || null,
+      admission_at: form.admission_at || null,
+      discharge_at: form.discharge_at || null,
+      discharge_summary: form.discharge_summary || null,
+    });
   };
 
   return (
@@ -60,18 +92,38 @@ export default function Patients() {
         </button>
       </div>
 
-      {/* Add patient form */}
       {showForm && (
         <div style={styles.formCard}>
           <h3 style={styles.formTitle}>New Patient</h3>
           <form onSubmit={handleSubmit} style={styles.grid2}>
             {[
               ["full_name", "Full Name", "text", true],
+              ["mrn", "MRN", "text", false],
               ["age", "Age", "number", false],
               ["gender", "Gender", "text", false],
+              ["blood_group", "Blood Group", "text", false],
+              ["weight_kg", "Weight (kg)", "number", false],
+              ["height_cm", "Height (cm)", "number", false],
               ["diagnosis", "Diagnosis", "text", false],
+              ["comorbidities", "Comorbidities", "text", false],
+              ["medications", "Current Medications", "text", false],
               ["allergies", "Allergies", "text", false],
               ["mental_status", "Mental Status", "text", false],
+              ["primary_phone", "Primary Phone", "text", false],
+              ["secondary_phone", "Secondary Phone", "text", false],
+              ["emergency_contact_name", "Emergency Contact Name", "text", false],
+              ["emergency_contact_phone", "Emergency Contact Phone", "text", false],
+              [
+                "emergency_contact_relationship",
+                "Emergency Contact Relationship",
+                "text",
+                false,
+              ],
+              ["city", "City", "text", false],
+              ["state", "State", "text", false],
+              ["pincode", "Pincode", "text", false],
+              ["insurance_provider", "Insurance Provider", "text", false],
+              ["insurance_policy_no", "Insurance Policy No", "text", false],
             ].map(([key, label, type, required]) => (
               <div key={key} style={styles.field}>
                 <label style={styles.label}>{label}</label>
@@ -86,36 +138,125 @@ export default function Patients() {
                 />
               </div>
             ))}
+
+            <div style={{ ...styles.field, gridColumn: "1/-1" }}>
+              <label style={styles.label}>Address</label>
+              <input
+                type="text"
+                value={form.address}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, address: e.target.value }))
+                }
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Admission Type</label>
+              <select
+                value={form.admission_type}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, admission_type: e.target.value }))
+                }
+                style={styles.input}
+              >
+                <option value="planned">Planned</option>
+                <option value="emergency">Emergency</option>
+                <option value="transfer">Transfer</option>
+              </select>
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Patient Status</label>
+              <select
+                value={form.patient_status}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, patient_status: e.target.value }))
+                }
+                style={styles.input}
+              >
+                <option value="admitted">Admitted</option>
+                <option value="in_observation">In Observation</option>
+                <option value="discharged">Discharged</option>
+                <option value="deceased">Deceased</option>
+              </select>
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Admission At</label>
+              <input
+                type="datetime-local"
+                value={form.admission_at}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, admission_at: e.target.value }))
+                }
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Discharge At</label>
+              <input
+                type="datetime-local"
+                value={form.discharge_at}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, discharge_at: e.target.value }))
+                }
+                style={styles.input}
+              />
+            </div>
+
+            <div style={{ ...styles.field, gridColumn: "1/-1" }}>
+              <label style={styles.label}>Discharge Summary</label>
+              <input
+                type="text"
+                value={form.discharge_summary}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, discharge_summary: e.target.value }))
+                }
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>
+                <input
+                  type="checkbox"
+                  checked={form.fall_risk}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, fall_risk: e.target.checked }))
+                  }
+                />{" "}
+                Fall Risk
+              </label>
+            </div>
+
             <div style={styles.field}>
               <label style={styles.label}>
                 <input
                   type="checkbox"
                   checked={form.infection_risk}
                   onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      infection_risk: e.target.checked,
-                    }))
+                    setForm((prev) => ({ ...prev, infection_risk: e.target.checked }))
                   }
                 />{" "}
                 Infection Risk
               </label>
             </div>
+
             <div style={styles.field}>
               <label style={styles.label}>
                 <input
                   type="checkbox"
                   checked={form.is_serious}
                   onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      is_serious: e.target.checked,
-                    }))
+                    setForm((prev) => ({ ...prev, is_serious: e.target.checked }))
                   }
                 />{" "}
                 Serious
               </label>
             </div>
+
             <div
               style={{
                 gridColumn: "1/-1",
@@ -124,12 +265,8 @@ export default function Patients() {
                 marginTop: 4,
               }}
             >
-              <button
-                type="submit"
-                style={styles.btn}
-                disabled={createMut.isPending}
-              >
-                {createMut.isPending ? "Saving…" : "Save"}
+              <button type="submit" style={styles.btn} disabled={createMut.isPending}>
+                {createMut.isPending ? "Saving..." : "Save"}
               </button>
               <button
                 type="button"
@@ -143,30 +280,31 @@ export default function Patients() {
         </div>
       )}
 
-      {/* Search */}
       <div style={styles.searchBox}>
         <Search size={16} color="#9ca3af" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or diagnosis…"
+          placeholder="Search by name, MRN, or diagnosis..."
           style={styles.searchInput}
         />
       </div>
 
       {isLoading ? (
-        <p>Loading…</p>
+        <p>Loading...</p>
       ) : (
         <table style={styles.table}>
           <thead>
             <tr>
               {[
                 "Name",
+                "MRN",
                 "Age",
                 "Gender",
                 "Diagnosis",
-                "Allergies",
                 "Status",
+                "Allergies",
+                "Risk Flags",
                 "Actions",
               ].map((h) => (
                 <th key={h} style={styles.th}>
@@ -183,18 +321,19 @@ export default function Patients() {
                     {p.full_name}
                   </Link>
                 </td>
-                <td style={styles.td}>{p.age || "—"}</td>
-                <td style={styles.td}>{p.gender || "—"}</td>
-                <td style={styles.td}>{p.diagnosis || "—"}</td>
-                <td style={styles.td}>{p.allergies || "—"}</td>
+                <td style={styles.td}>{p.mrn || "-"}</td>
+                <td style={styles.td}>{p.age || "-"}</td>
+                <td style={styles.td}>{p.gender || "-"}</td>
+                <td style={styles.td}>{p.diagnosis || "-"}</td>
+                <td style={styles.td}>{p.patient_status || "admitted"}</td>
+                <td style={styles.td}>{p.allergies || "-"}</td>
                 <td style={styles.td}>
-                  {p.is_serious && (
-                    <span style={styles.badgeDanger}>Serious</span>
-                  )}
+                  {p.is_serious && <span style={styles.badgeDanger}>Serious</span>}
                   {p.infection_risk && (
                     <span style={styles.badgeWarn}>Infection Risk</span>
                   )}
-                  {!p.is_serious && !p.infection_risk && (
+                  {p.fall_risk && <span style={styles.badgeGray}>Fall Risk</span>}
+                  {!p.is_serious && !p.infection_risk && !p.fall_risk && (
                     <span style={styles.badgeOk}>Stable</span>
                   )}
                 </td>
@@ -211,12 +350,8 @@ export default function Patients() {
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
-                  style={{
-                    ...styles.td,
-                    color: "#9ca3af",
-                    textAlign: "center",
-                  }}
+                  colSpan={9}
+                  style={{ ...styles.td, color: "#9ca3af", textAlign: "center" }}
                 >
                   No patients found
                 </td>
@@ -297,7 +432,7 @@ const styles = {
     borderRadius: 8,
     padding: "8px 12px",
     marginBottom: 16,
-    maxWidth: 360,
+    maxWidth: 420,
   },
   searchInput: { border: "none", outline: "none", fontSize: 14, flex: 1 },
   table: {
@@ -335,6 +470,15 @@ const styles = {
   badgeWarn: {
     background: "#fef3c7",
     color: "#d97706",
+    borderRadius: 99,
+    padding: "2px 8px",
+    fontSize: 12,
+    fontWeight: 600,
+    marginRight: 4,
+  },
+  badgeGray: {
+    background: "#e5e7eb",
+    color: "#374151",
     borderRadius: 99,
     padding: "2px 8px",
     fontSize: 12,

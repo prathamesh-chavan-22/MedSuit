@@ -35,3 +35,34 @@ def test_login_and_me_with_username(client, user_factory, token_factory):
     body = me_res.json()
     assert body["username"] == "rushil.dhube"
     assert body["role"] == "admin"
+
+
+def test_refresh_and_logout_session_flow(client, user_factory):
+    user_factory("session.user", "Pass@123", models.UserRole.doctor, "session.user@example.com")
+
+    login_res = client.post(
+        "/auth/login",
+        data={"username": "session.user", "password": "Pass@123"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert login_res.status_code == 200
+    login_body = login_res.json()
+    assert login_body["refresh_token"]
+    assert login_body["session_id"]
+
+    refresh_res = client.post("/auth/refresh", json={"refresh_token": login_body["refresh_token"]})
+    assert refresh_res.status_code == 200
+    refresh_body = refresh_res.json()
+    assert refresh_body["access_token"]
+    assert refresh_body["refresh_token"]
+    assert refresh_body["session_id"] == login_body["session_id"]
+
+    logout_res = client.post(
+        "/auth/logout",
+        json={"session_id": login_body["session_id"]},
+        headers={"Authorization": f"Bearer {refresh_body['access_token']}"},
+    )
+    assert logout_res.status_code == 204
+
+    refresh_again = client.post("/auth/refresh", json={"refresh_token": refresh_body["refresh_token"]})
+    assert refresh_again.status_code == 401

@@ -15,6 +15,11 @@ def create_patient(
     db: Session = Depends(get_db),
     _: models.User = Depends(require_role(models.UserRole.admin, models.UserRole.doctor)),
 ):
+    if patient_in.mrn:
+        existing = db.query(models.Patient).filter(models.Patient.mrn == patient_in.mrn).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="MRN already exists")
+
     patient = models.Patient(**patient_in.model_dump())
     db.add(patient)
     db.commit()
@@ -52,6 +57,17 @@ def update_patient(
     patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
+
+    if patient_in.mrn:
+        existing = (
+            db.query(models.Patient)
+            .filter(models.Patient.mrn == patient_in.mrn)
+            .filter(models.Patient.id != patient_id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(status_code=400, detail="MRN already exists")
+
     for key, value in patient_in.model_dump().items():
         setattr(patient, key, value)
     db.commit()
