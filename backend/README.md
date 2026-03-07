@@ -77,7 +77,7 @@ backend/
     ├── schemas.py          # Pydantic input/output schemas
     └── routers/
         ├── __init__.py
-        ├── auth.py         # POST /auth/login, POST /auth/register
+        ├── auth.py         # POST /auth/login, GET /auth/me, POST /auth/register/admin
         ├── patients.py     # CRUD /patients
         ├── beds.py         # CRUD /beds + assignment endpoints
         ├── vitals.py       # POST /vitals/mock/{id}, GET /vitals/{id}
@@ -289,27 +289,22 @@ Missing or invalid tokens return `401 Unauthorized`. Correct token but wrong rol
 
 ### Auth
 
-#### `POST /auth/register` — Create a new user
+#### `POST /auth/register` — Public registration (disabled by default)
+
+When `ALLOW_PUBLIC_REGISTER=false` (default), this endpoint returns `403`.
+
+#### `POST /auth/register/admin` — Admin-managed user creation
+
+Requires an admin bearer token.
 
 **Body (JSON):**
 ```json
 {
+  "username": "sarah.khan",
   "full_name": "Dr. Sarah Khan",
   "email": "sarah.khan@hospital.com",
   "password": "SecurePass123!",
   "role": "doctor"
-}
-```
-
-**Response `201`:**
-```json
-{
-  "id": 1,
-  "full_name": "Dr. Sarah Khan",
-  "email": "sarah.khan@hospital.com",
-  "role": "doctor",
-  "is_active": true,
-  "created_at": "2026-03-05T09:00:00Z"
 }
 ```
 
@@ -319,7 +314,7 @@ Valid `role` values: `doctor`, `nurse`, `admin`.
 
 **Body (`application/x-www-form-urlencoded` or form-data):**
 ```
-username=sarah.khan@hospital.com
+username=sarah.khan
 password=SecurePass123!
 ```
 
@@ -761,16 +756,19 @@ The project uses **pytest** and **httpx** for API integration tests.
 
 ```bash
 # Install test dependencies
-pip install pytest pytest-asyncio httpx
+pip install -r requirements.txt
 
 # Run all tests
-pytest
+pytest tests -q
 
 # Run with verbose output
-pytest -v
+pytest tests -v
 
 # Run a specific test file
 pytest tests/test_auth.py -v
+
+# Or run the curated Phase 0 security suite from repo root
+python ../scripts/run_phase0_tests.py
 ```
 
 Example integration test pattern:
@@ -780,20 +778,12 @@ from httpx import AsyncClient
 import pytest
 
 @pytest.mark.asyncio
-async def test_register_and_login():
+async def test_login_and_me():
     async with AsyncClient(app=app, base_url="http://test") as client:
-        # Register
-        r = await client.post("/auth/register", json={
-            "full_name": "Test User",
-            "email": "test@example.com",
-            "password": "testpass",
-            "role": "nurse"
-        })
-        assert r.status_code == 201
-
         # Login
-        r = await client.post("/auth/login",
-            data={"username": "test@example.com", "password": "testpass"}
+        r = await client.post(
+            "/auth/login",
+            data={"username": "test.user", "password": "testpass"}
         )
         assert r.status_code == 200
         assert "access_token" in r.json()

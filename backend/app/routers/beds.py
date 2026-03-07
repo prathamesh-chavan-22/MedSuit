@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app import models, schemas
-from app.auth import get_current_user
+from app.auth import get_current_user, require_role
 from app.database import get_db
 
 router = APIRouter(prefix="/beds", tags=["Beds"])
@@ -30,7 +30,9 @@ def _suggest_bed(db: Session, patient: models.Patient) -> Optional[models.Bed]:
 def create_bed(
     bed_in: schemas.BedCreate,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
+    ),
 ):
     bed = models.Bed(**bed_in.model_dump())
     db.add(bed)
@@ -64,7 +66,9 @@ def assign_patient(
     bed_id: int,
     body: schemas.BedAssign,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
+    ),
 ):
     bed = db.query(models.Bed).filter(models.Bed.id == bed_id).first()
     if not bed:

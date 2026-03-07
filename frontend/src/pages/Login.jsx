@@ -47,6 +47,7 @@ export default function Login() {
           <input
             type="password"
             required
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={styles.input}

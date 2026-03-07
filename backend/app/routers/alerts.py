@@ -1,11 +1,11 @@
 import asyncio
 import json
 from typing import List, Set
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 
 from app import models, schemas
-from app.auth import get_current_user
+from app.auth import get_current_user, get_user_from_token
 from app.database import get_db, SessionLocal
 
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
@@ -70,11 +70,21 @@ def mark_read(
 # ─── WebSocket endpoint ───────────────────────────────────────────────────────
 
 @router.websocket("/ws")
-async def alerts_ws(websocket: WebSocket):
+async def alerts_ws(websocket: WebSocket, token: str = Query(default="")):
     """
     Connect to receive real-time alert push notifications.
     The server polls for new unread alerts every 3 seconds and broadcasts them.
     """
+    db: Session = SessionLocal()
+    try:
+        current_user = get_user_from_token(db, token)
+    finally:
+        db.close()
+
+    if not current_user:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await manager.connect(websocket)
     try:
         last_seen_id = 0

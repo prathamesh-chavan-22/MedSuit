@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app import models, schemas
-from app.auth import get_current_user
+from app.auth import get_current_user, require_role
 from app.database import get_db
 
 router = APIRouter(prefix="/audio", tags=["Audio Notes"])
@@ -43,7 +43,9 @@ async def upload_audio(
     patient_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
+    ),
 ):
     patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not patient:

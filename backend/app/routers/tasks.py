@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app import models, schemas
-from app.auth import get_current_user
+from app.auth import get_current_user, require_role
 from app.database import get_db
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -15,7 +15,9 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
 def create_shift(
     shift_in: schemas.ShiftCreate,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
+    ),
 ):
     shift = models.Shift(**shift_in.model_dump())
     db.add(shift)
@@ -35,7 +37,9 @@ def list_shifts(db: Session = Depends(get_db), _: models.User = Depends(get_curr
 def create_task(
     task_in: schemas.TaskCreate,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
+    ),
 ):
     task = models.Task(**task_in.model_dump())
     db.add(task)
@@ -67,7 +71,9 @@ def update_task(
     task_id: int,
     update: schemas.TaskUpdate,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
+    ),
 ):
     task = db.query(models.Task).filter(models.Task.id == task_id).first()
     if not task:
@@ -83,7 +89,9 @@ def update_task(
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
+    ),
 ):
     task = db.query(models.Task).filter(models.Task.id == task_id).first()
     if not task:

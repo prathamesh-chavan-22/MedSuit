@@ -4,6 +4,12 @@ import { Bell, LogOut, Activity } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
 
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const apiBaseUrl = rawApiBaseUrl.replace(/\/$/, "");
+const wsBaseUrl =
+  (import.meta.env.VITE_WS_BASE_URL ||
+    apiBaseUrl.replace("https://", "wss://").replace("http://", "ws://")).replace(/\/$/, "");
+
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -14,7 +20,9 @@ export default function Navbar() {
   // WebSocket for real-time alerts
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const ws = new WebSocket(`ws://localhost:8000/alerts/ws?token=${token}`);
+    if (!token) return undefined;
+
+    const ws = new WebSocket(`${wsBaseUrl}/alerts/ws?token=${token}`);
     wsRef.current = ws;
 
     ws.onmessage = (e) => {

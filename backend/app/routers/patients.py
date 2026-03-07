@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app import models, schemas
-from app.auth import get_current_user
+from app.auth import get_current_user, require_role
 from app.database import get_db
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/patients", tags=["Patients"])
 def create_patient(
     patient_in: schemas.PatientCreate,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(require_role(models.UserRole.admin, models.UserRole.doctor)),
 ):
     patient = models.Patient(**patient_in.model_dump())
     db.add(patient)
@@ -47,7 +47,7 @@ def update_patient(
     patient_id: int,
     patient_in: schemas.PatientCreate,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(require_role(models.UserRole.admin, models.UserRole.doctor)),
 ):
     patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not patient:
@@ -63,7 +63,7 @@ def update_patient(
 def delete_patient(
     patient_id: int,
     db: Session = Depends(get_db),
-    _: models.User = Depends(get_current_user),
+    _: models.User = Depends(require_role(models.UserRole.admin, models.UserRole.doctor)),
 ):
     patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not patient:
