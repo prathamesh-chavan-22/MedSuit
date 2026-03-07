@@ -1,7 +1,14 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
-from app.models import UserRole, BedStatus, TaskStatus, AlertSeverity
+from app.models import (
+    UserRole,
+    BedStatus,
+    TaskStatus,
+    AlertSeverity,
+    ConsentStatus,
+    ClinicalNoteStatus,
+)
 
 
 # ─── Auth / Users ─────────────────────────────────────────────────────────────
@@ -163,3 +170,146 @@ class AlertOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ─── Consent ─────────────────────────────────────────────────────────────────
+
+class ConsentCreate(BaseModel):
+    basis: str = "clinical-care"
+    expires_at: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class ConsentRequestCreate(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone: str
+    relationship: str
+    address: str
+    basis: str = "clinical-care"
+    notes: Optional[str] = None
+    expires_at: Optional[datetime] = None
+
+
+class ConsentRequestResult(BaseModel):
+    consent: "ConsentOut"
+    email_sent: bool
+    action_url_sent_to: str
+
+
+class ConsentOut(BaseModel):
+    id: int
+    patient_id: int
+    status: ConsentStatus
+    basis: str
+    notes: Optional[str] = None
+    contact_first_name: Optional[str] = None
+    contact_last_name: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    relationship: Optional[str] = None
+    contact_address: Optional[str] = None
+    email_sent: bool
+    requested_at: datetime
+    responded_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    captured_by: int
+    captured_at: datetime
+    revoked_by: Optional[int] = None
+    revoked_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+# ─── Rounding ────────────────────────────────────────────────────────────────
+
+class RoundingPriorityOut(BaseModel):
+    patient_id: int
+    patient_name: str
+    score: int
+    reasons: List[str]
+    unread_alerts: int
+    overdue_tasks: int
+    is_serious: bool
+
+
+# ─── Clinical Notes ──────────────────────────────────────────────────────────
+
+class ClinicalNoteCreate(BaseModel):
+    subjective: str = ""
+    objective: str = ""
+    assessment: str = ""
+    plan: str = ""
+    confidence: float = 0.0
+
+
+class ClinicalNoteUpdate(BaseModel):
+    subjective: Optional[str] = None
+    objective: Optional[str] = None
+    assessment: Optional[str] = None
+    plan: Optional[str] = None
+    status: Optional[ClinicalNoteStatus] = None
+    confidence: Optional[float] = None
+
+
+class ClinicalNoteOut(BaseModel):
+    id: int
+    patient_id: int
+    authored_by: int
+    reviewed_by: Optional[int] = None
+    source_audio_note_id: Optional[int] = None
+    status: ClinicalNoteStatus
+    subjective: str
+    objective: str
+    assessment: str
+    plan: str
+    confidence: float
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    finalized_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+# ─── Labs ────────────────────────────────────────────────────────────────────
+
+class LabResultCreate(BaseModel):
+    test_name: str
+    value: float
+    unit: Optional[str] = None
+    reference_low: Optional[float] = None
+    reference_high: Optional[float] = None
+    measured_at: Optional[datetime] = None
+
+
+class LabResultOut(BaseModel):
+    id: int
+    patient_id: int
+    test_name: str
+    value: float
+    unit: Optional[str] = None
+    reference_low: Optional[float] = None
+    reference_high: Optional[float] = None
+    is_abnormal: bool
+    measured_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class LabSummaryOut(BaseModel):
+    test_name: str
+    latest_value: float
+    unit: Optional[str] = None
+    is_abnormal: bool
+    trend: str
+
+
+# ─── Timeline ────────────────────────────────────────────────────────────────
+
+class TimelineEventOut(BaseModel):
+    event_type: str
+    title: str
+    created_at: datetime
+    severity: Optional[str] = None
+    metadata: dict = {}

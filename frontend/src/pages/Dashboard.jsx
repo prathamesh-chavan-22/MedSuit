@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Users, Bed, ClipboardList, AlertTriangle } from "lucide-react";
+import { Users, Bed, ClipboardList, AlertTriangle, Siren, Clock3 } from "lucide-react";
 import api from "../api";
 
 export default function Dashboard() {
@@ -19,6 +19,10 @@ export default function Dashboard() {
   const { data: alerts = [] } = useQuery({
     queryKey: ["alerts"],
     queryFn: () => api.get("/alerts/?unread_only=true").then((r) => r.data),
+  });
+  const { data: priorities = [] } = useQuery({
+    queryKey: ["rounding-priorities"],
+    queryFn: () => api.get("/rounding/priorities?limit=6").then((r) => r.data),
   });
 
   const cards = [
@@ -139,12 +143,49 @@ export default function Dashboard() {
           ))}
         </div>
       )}
+
+      <div style={{ ...styles.section, ...styles.prioritySection }}>
+        <div style={styles.priorityHeader}>
+          <h3 style={styles.sectionTitle}>Smart Rounding Priorities</h3>
+          <span style={styles.priorityMeta}>
+            <Siren size={14} /> AI-assisted ordering
+          </span>
+        </div>
+
+        {priorities.length === 0 ? (
+          <p style={styles.empty}>No high-priority patients right now.</p>
+        ) : (
+          priorities.map((p, idx) => (
+            <div key={p.patient_id} style={styles.priorityRow}>
+              <div style={styles.priorityRank}>{idx + 1}</div>
+              <div style={{ flex: 1 }}>
+                <div style={styles.priorityName}>{p.patient_name}</div>
+                <div style={styles.priorityReasons}>{p.reasons.join(" | ")}</div>
+              </div>
+              <div style={styles.priorityStats}>
+                <span style={styles.scoreChip}>Score {p.score}</span>
+                <span style={styles.detailChip}>
+                  <Clock3 size={12} /> {p.overdue_tasks} overdue
+                </span>
+              </div>
+              <Link to={`/patients/${p.patient_id}`} style={styles.link}>
+                Open
+              </Link>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
 
 const styles = {
-  page: { padding: "28px 32px", maxWidth: 1100 },
+  page: {
+    padding: "28px 32px",
+    maxWidth: 1100,
+    background:
+      "radial-gradient(circle at 10% 10%, rgba(59,130,246,0.08), transparent 32%), radial-gradient(circle at 90% 0%, rgba(245,158,11,0.08), transparent 28%)",
+  },
   heading: {
     margin: "0 0 20px",
     fontSize: 22,
@@ -207,4 +248,80 @@ const styles = {
   dot: { width: 8, height: 8, borderRadius: "50%", flexShrink: 0 },
   alertMsg: { fontSize: 13, color: "#111827", flex: 1 },
   alertTime: { fontSize: 12, color: "#9ca3af" },
+  prioritySection: {
+    border: "1px solid #e5e7eb",
+  },
+  priorityHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  priorityMeta: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 12,
+    color: "#6b7280",
+    background: "#f3f4f6",
+    borderRadius: 999,
+    padding: "4px 10px",
+  },
+  priorityRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    border: "1px solid #eef2f7",
+    borderRadius: 10,
+    padding: "10px 12px",
+    marginBottom: 10,
+    background: "#fcfdff",
+  },
+  priorityRank: {
+    width: 26,
+    height: 26,
+    borderRadius: "50%",
+    background: "#1f2937",
+    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  priorityName: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#111827",
+  },
+  priorityReasons: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#6b7280",
+  },
+  priorityStats: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+  },
+  scoreChip: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: "#b45309",
+    background: "#fffbeb",
+    border: "1px solid #fde68a",
+    borderRadius: 999,
+    padding: "4px 8px",
+  },
+  detailChip: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    fontSize: 12,
+    color: "#374151",
+    background: "#f9fafb",
+    border: "1px solid #e5e7eb",
+    borderRadius: 999,
+    padding: "4px 8px",
+  },
 };

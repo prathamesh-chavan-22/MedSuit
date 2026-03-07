@@ -2,7 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
-from app.routers import auth, patients, beds, audio, vitals, tasks, alerts
+from app.routers import (
+    auth,
+    patients,
+    beds,
+    audio,
+    vitals,
+    tasks,
+    alerts,
+    consents,
+    rounding,
+    clinical_notes,
+    labs,
+    timeline,
+)
 
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
@@ -29,6 +42,11 @@ app.include_router(audio.router)
 app.include_router(vitals.router)
 app.include_router(tasks.router)
 app.include_router(alerts.router)
+app.include_router(consents.router)
+app.include_router(rounding.router)
+app.include_router(clinical_notes.router)
+app.include_router(labs.router)
+app.include_router(timeline.router)
 
 
 @app.get("/", tags=["Health"])

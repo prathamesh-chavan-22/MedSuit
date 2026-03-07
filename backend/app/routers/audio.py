@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app import models, schemas
+from app.audit import log_event
 from app.auth import get_current_user, require_role
+from app.consent import has_active_consent
 from app.database import get_db
 
 router = APIRouter(prefix="/audio", tags=["Audio Notes"])
@@ -51,6 +53,17 @@ async def upload_audio(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
+    if not has_active_consent(db, patient_id):
+        log_event(
+            db,
+            action="audio.upload_blocked_no_consent",
+            entity_type="audio_note",
+            actor_user_id=current_user.id,
+            patient_id=patient_id,
+            commit=True,
+        )
+        raise HTTPException(status_code=403, detail="Active consent is required for audio upload")
+
     # Save file
     ext = os.path.splitext(file.filename)[-1] or ".webm"
     filename = f"{uuid.uuid4()}{ext}"
@@ -72,6 +85,18 @@ async def upload_audio(
     db.add(note)
     db.commit()
     db.refresh(note)
+
+    log_event(
+        db,
+        action="audio.uploaded",
+        entity_type="audio_note",
+        entity_id=note.id,
+        actor_user_id=current_user.id,
+        patient_id=patient_id,
+        details={"file_path": file_path},
+        commit=True,
+    )
+
     return note
 
 
