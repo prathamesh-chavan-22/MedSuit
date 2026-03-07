@@ -20,9 +20,9 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     const form = new URLSearchParams();
-    form.append("username", email);
+    form.append("username", username);
     form.append("password", password);
     const res = await api.post("/auth/login", form);
     localStorage.setItem("token", res.data.access_token);

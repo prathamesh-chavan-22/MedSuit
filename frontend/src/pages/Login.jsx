@@ -6,7 +6,7 @@ import { Activity } from "lucide-react";
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,10 +16,10 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await login(email, password);
+      await login(username, password);
       navigate("/");
     } catch {
-      setError("Invalid email or password");
+      setError("Invalid username or password");
     } finally {
       setLoading(false);
     }
@@ -34,14 +34,14 @@ export default function Login() {
         </div>
         <p style={styles.subtitle}>Hospital In-Patient Department System</p>
         <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>Email</label>
+          <label style={styles.label}>Username</label>
           <input
-            type="email"
+            type="text"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             style={styles.input}
-            placeholder="doctor@hospital.com"
+            placeholder="rushil.dhube"
           />
           <label style={styles.label}>Password</label>
           <input

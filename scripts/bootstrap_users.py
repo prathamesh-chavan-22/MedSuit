@@ -25,27 +25,33 @@ from app.auth import hash_password
 def create_bootstrap_users():
     """Create bootstrap users if they don't already exist."""
     
-    # Create tables if they don't exist
+    # Drop all tables and recreate with new schema (including username field)
+    print("Dropping old tables and creating new schema...")
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    print("✓ Database schema created with username support\n")
     
     # Bootstrap users data
     users_data = [
         {
+            "username": "tushar.dayma",
             "email": "tdayma858@gmail.com",
             "password": "test@123",
-            "full_name": "User One",
+            "full_name": "Tushar Dayma",
             "role": UserRole.admin
         },
         {
+            "username": "rushil.dhube",
             "email": "rushildhube@gmail.com",
             "password": "test@456",
-            "full_name": "User Two",
+            "full_name": "Rushil Dhube",
             "role": UserRole.admin
         },
         {
+            "username": "prathamesh.chavan",
             "email": "prathamesh011official@gmail.com",
             "password": "test@789",
-            "full_name": "User Three",
+            "full_name": "Prathamesh Chavan",
             "role": UserRole.admin
         }
     ]
@@ -57,15 +63,16 @@ def create_bootstrap_users():
         
         for user_data in users_data:
             # Check if user already exists
-            existing_user = db.query(User).filter(User.email == user_data["email"]).first()
+            existing_user = db.query(User).filter(User.username == user_data["username"]).first()
             
             if existing_user:
-                print(f"⚠️  User already exists: {user_data['email']}")
+                print(f"⚠️  User already exists: {user_data['username']} ({user_data['email']})")
                 skipped_count += 1
                 continue
             
             # Create new user
             new_user = User(
+                username=user_data["username"],
                 email=user_data["email"],
                 full_name=user_data["full_name"],
                 hashed_password=hash_password(user_data["password"]),
@@ -77,7 +84,7 @@ def create_bootstrap_users():
             db.commit()
             db.refresh(new_user)
             
-            print(f"✓ Created user: {user_data['email']} (Role: {user_data['role'].value})")
+            print(f"✓ Created user: {user_data['username']} - {user_data['full_name']} (Role: {user_data['role'].value})")
             created_count += 1
         
         print(f"\n{'='*60}")

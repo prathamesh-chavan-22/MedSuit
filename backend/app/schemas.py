@@ -7,6 +7,7 @@ from app.models import UserRole, BedStatus, TaskStatus, AlertSeverity
 # ─── Auth / Users ─────────────────────────────────────────────────────────────
 
 class UserCreate(BaseModel):
+    username: str
     full_name: str
     email: EmailStr
     password: str
@@ -15,6 +16,7 @@ class UserCreate(BaseModel):
 
 class UserOut(BaseModel):
     id: int
+    username: str
     full_name: str
     email: str
     role: UserRole
@@ -29,7 +31,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: Optional[str] = None
+    username: Optional[str] = None
 
 
 # ─── Patients ─────────────────────────────────────────────────────────────────
