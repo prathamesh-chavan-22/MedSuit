@@ -1,9 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Users, Bed, ClipboardList, AlertTriangle, Siren, Clock3 } from "lucide-react";
+import {
+  Users,
+  Bed,
+  ClipboardList,
+  AlertTriangle,
+  Siren,
+  Clock3,
+  UserCog,
+  Shield,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import api from "../api";
 
+function getRoleTitle(role) {
+  if (role === "admin") return "Admin Command Center";
+  if (role === "doctor") return "Doctor Dashboard";
+  return "Nurse Dashboard";
+}
+
 export default function Dashboard() {
+  const { user } = useAuth();
+
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients/").then((r) => r.data),
@@ -24,48 +42,117 @@ export default function Dashboard() {
     queryKey: ["rounding-priorities"],
     queryFn: () => api.get("/rounding/priorities?limit=6").then((r) => r.data),
   });
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => api.get("/auth/users").then((r) => r.data),
+    enabled: user?.role === "admin",
+  });
 
-  const cards = [
-    {
-      label: "Total Patients",
-      value: patients.length,
-      icon: <Users size={24} color="#3b82f6" />,
-      to: "/patients",
-      bg: "#eff6ff",
-    },
-    {
-      label: "Occupied Beds",
-      value:
-        beds.filter((b) => b.status === "occupied").length +
-        " / " +
-        beds.length,
-      icon: <Bed size={24} color="#10b981" />,
-      to: "/beds",
-      bg: "#ecfdf5",
-    },
-    {
-      label: "Pending Tasks",
-      value: tasks.filter((t) => t.status === "pending").length,
-      icon: <ClipboardList size={24} color="#f59e0b" />,
-      to: "/tasks",
-      bg: "#fffbeb",
-    },
-    {
-      label: "Unread Alerts",
-      value: alerts.length,
-      icon: <AlertTriangle size={24} color="#ef4444" />,
-      to: "/",
-      bg: "#fef2f2",
-    },
-  ];
-
+  const pendingTasks = tasks.filter((t) => t.status === "pending").length;
+  const inProgressTasks = tasks.filter((t) => t.status === "in_progress").length;
+  const occupiedBeds = beds.filter((b) => b.status === "occupied").length;
+  const availableBeds = beds.filter((b) => b.status === "available").length;
   const seriousPatients = patients.filter((p) => p.is_serious);
+
+  const cardsByRole = {
+    admin: [
+      {
+        label: "Total Users",
+        value: users.length,
+        icon: <UserCog size={24} color="#0369a1" />,
+        to: "/users",
+        bg: "#f0f9ff",
+      },
+      {
+        label: "Total Patients",
+        value: patients.length,
+        icon: <Users size={24} color="#3b82f6" />,
+        to: "/patients",
+        bg: "#eff6ff",
+      },
+      {
+        label: "Occupied Beds",
+        value: `${occupiedBeds} / ${beds.length}`,
+        icon: <Bed size={24} color="#10b981" />,
+        to: "/beds",
+        bg: "#ecfdf5",
+      },
+      {
+        label: "Unread Alerts",
+        value: alerts.length,
+        icon: <AlertTriangle size={24} color="#ef4444" />,
+        to: "/",
+        bg: "#fef2f2",
+      },
+    ],
+    doctor: [
+      {
+        label: "My Patients Pool",
+        value: patients.length,
+        icon: <Users size={24} color="#3b82f6" />,
+        to: "/patients",
+        bg: "#eff6ff",
+      },
+      {
+        label: "Serious Cases",
+        value: seriousPatients.length,
+        icon: <Siren size={24} color="#dc2626" />,
+        to: "/patients",
+        bg: "#fef2f2",
+      },
+      {
+        label: "Pending Tasks",
+        value: pendingTasks,
+        icon: <ClipboardList size={24} color="#f59e0b" />,
+        to: "/tasks",
+        bg: "#fffbeb",
+      },
+      {
+        label: "Unread Alerts",
+        value: alerts.length,
+        icon: <AlertTriangle size={24} color="#ef4444" />,
+        to: "/",
+        bg: "#fef2f2",
+      },
+    ],
+    nurse: [
+      {
+        label: "Pending Tasks",
+        value: pendingTasks,
+        icon: <ClipboardList size={24} color="#f59e0b" />,
+        to: "/tasks",
+        bg: "#fffbeb",
+      },
+      {
+        label: "In Progress",
+        value: inProgressTasks,
+        icon: <Clock3 size={24} color="#2563eb" />,
+        to: "/tasks",
+        bg: "#eff6ff",
+      },
+      {
+        label: "Available Beds",
+        value: availableBeds,
+        icon: <Bed size={24} color="#10b981" />,
+        to: "/beds",
+        bg: "#ecfdf5",
+      },
+      {
+        label: "Unread Alerts",
+        value: alerts.length,
+        icon: <AlertTriangle size={24} color="#ef4444" />,
+        to: "/",
+        bg: "#fef2f2",
+      },
+    ],
+  };
+
+  const cards = cardsByRole[user?.role || "nurse"];
 
   return (
     <div style={styles.page}>
-      <h2 style={styles.heading}>Ward Overview</h2>
+      <h2 style={styles.heading}>{getRoleTitle(user?.role)}</h2>
 
-      {/* Stats grid */}
       <div style={styles.grid}>
         {cards.map((c) => (
           <Link to={c.to} key={c.label} style={{ textDecoration: "none" }}>
@@ -80,73 +167,73 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Serious patients panel */}
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Serious Patients</h3>
-        {seriousPatients.length === 0 ? (
-          <p style={styles.empty}>No serious patients currently.</p>
-        ) : (
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                {[
-                  "Name",
-                  "Age",
-                  "Diagnosis",
-                  "Allergies",
-                  "Mental Status",
-                  "",
-                ].map((h) => (
-                  <th key={h} style={styles.th}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {seriousPatients.map((p) => (
-                <tr key={p.id}>
-                  <td style={styles.td}>{p.full_name}</td>
-                  <td style={styles.td}>{p.age}</td>
-                  <td style={styles.td}>{p.diagnosis}</td>
-                  <td style={styles.td}>{p.allergies || "—"}</td>
-                  <td style={styles.td}>{p.mental_status || "—"}</td>
-                  <td style={styles.td}>
-                    <Link to={`/patients/${p.id}`} style={styles.link}>
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Recent alerts */}
-      {alerts.length > 0 && (
+      {user?.role === "admin" && (
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>Recent Alerts</h3>
-          {alerts.slice(0, 5).map((a) => (
-            <div key={a.id} style={styles.alertItem}>
-              <span
-                style={{
-                  ...styles.dot,
-                  background: a.severity === "critical" ? "#ef4444" : "#f59e0b",
-                }}
-              />
-              <span style={styles.alertMsg}>{a.message}</span>
-              <span style={styles.alertTime}>
-                {new Date(a.created_at).toLocaleString()}
-              </span>
+          <div style={styles.priorityHeader}>
+            <h3 style={styles.sectionTitle}>Administration Summary</h3>
+            <span style={styles.priorityMeta}>
+              <Shield size={14} /> Access and operations overview
+            </span>
+          </div>
+          <div style={styles.summaryGrid}>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryValue}>{users.filter((u) => u.role === "admin").length}</div>
+              <div style={styles.summaryLabel}>Admins</div>
             </div>
-          ))}
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryValue}>{users.filter((u) => u.role === "doctor").length}</div>
+              <div style={styles.summaryLabel}>Doctors</div>
+            </div>
+            <div style={styles.summaryCard}>
+              <div style={styles.summaryValue}>{users.filter((u) => u.role === "nurse").length}</div>
+              <div style={styles.summaryLabel}>Nurses</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {user?.role === "doctor" && (
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>Serious Patients</h3>
+          {seriousPatients.length === 0 ? (
+            <p style={styles.empty}>No serious patients currently.</p>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  {["Name", "Age", "Diagnosis", "Allergies", "Mental Status", ""].map((h) => (
+                    <th key={h} style={styles.th}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {seriousPatients.map((p) => (
+                  <tr key={p.id}>
+                    <td style={styles.td}>{p.full_name}</td>
+                    <td style={styles.td}>{p.age}</td>
+                    <td style={styles.td}>{p.diagnosis}</td>
+                    <td style={styles.td}>{p.allergies || "-"}</td>
+                    <td style={styles.td}>{p.mental_status || "-"}</td>
+                    <td style={styles.td}>
+                      <Link to={`/patients/${p.id}`} style={styles.link}>
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 
       <div style={{ ...styles.section, ...styles.prioritySection }}>
         <div style={styles.priorityHeader}>
-          <h3 style={styles.sectionTitle}>Smart Rounding Priorities</h3>
+          <h3 style={styles.sectionTitle}>
+            {user?.role === "nurse" ? "Shift Priorities" : "Smart Rounding Priorities"}
+          </h3>
           <span style={styles.priorityMeta}>
             <Siren size={14} /> AI-assisted ordering
           </span>
@@ -175,6 +262,24 @@ export default function Dashboard() {
           ))
         )}
       </div>
+
+      {alerts.length > 0 && (
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>Recent Alerts</h3>
+          {alerts.slice(0, 5).map((a) => (
+            <div key={a.id} style={styles.alertItem}>
+              <span
+                style={{
+                  ...styles.dot,
+                  background: a.severity === "critical" ? "#ef4444" : "#f59e0b",
+                }}
+              />
+              <span style={styles.alertMsg}>{a.message}</span>
+              <span style={styles.alertTime}>{new Date(a.created_at).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -183,6 +288,7 @@ const styles = {
   page: {
     padding: "28px 32px",
     maxWidth: 1100,
+    margin: "0 auto",
     background:
       "radial-gradient(circle at 10% 10%, rgba(59,130,246,0.08), transparent 32%), radial-gradient(circle at 90% 0%, rgba(245,158,11,0.08), transparent 28%)",
   },
@@ -194,7 +300,7 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4,1fr)",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
     gap: 16,
     marginBottom: 28,
   },
@@ -323,5 +429,25 @@ const styles = {
     border: "1px solid #e5e7eb",
     borderRadius: 999,
     padding: "4px 8px",
+  },
+  summaryGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+    gap: 12,
+  },
+  summaryCard: {
+    border: "1px solid #e2e8f0",
+    borderRadius: 10,
+    background: "#f8fafc",
+    padding: "10px 12px",
+  },
+  summaryValue: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: "#0f172a",
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: "#64748b",
   },
 };

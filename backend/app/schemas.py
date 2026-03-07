@@ -35,6 +35,13 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class UserAdminUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[UserRole] = None
+    is_active: Optional[bool] = None
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str

@@ -8,6 +8,7 @@ import Patients from "./pages/Patients";
 import PatientDetail from "./pages/PatientDetail";
 import Beds from "./pages/Beds";
 import Tasks from "./pages/Tasks";
+import Users from "./pages/Users";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -21,10 +22,17 @@ function ProtectedRoute({ children }) {
 
 function AppRoutes() {
   const { user } = useAuth();
+
+  function RoleRoute({ allowedRoles, children }) {
+    if (!user) return <Navigate to="/login" replace />;
+    if (!allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
+    return children;
+  }
+
   return (
     <>
       {user && <Navbar />}
-      <div style={{ marginTop: user ? 64 : 0 }}>
+      <div className="app-shell" style={{ marginTop: user ? 74 : 0 }}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -64,6 +72,16 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <Tasks />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={["admin"]}>
+                  <Users />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />

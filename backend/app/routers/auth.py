@@ -235,3 +235,59 @@ def list_sessions(
 @router.get("/me", response_model=schemas.UserOut)
 def me(current_user: models.User = Depends(get_current_user)):
     return current_user
+
+
+@router.get("/users", response_model=list[schemas.UserOut])
+def list_users(
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_role(models.UserRole.admin)),
+):
+    return db.query(models.User).order_by(models.User.id.asc()).all()
+
+
+@router.patch("/users/{user_id}", response_model=schemas.UserOut)
+def update_user_admin(
+    user_id: int,
+    user_in: schemas.UserAdminUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_role(models.UserRole.admin)),
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    data = user_in.model_dump(exclude_none=True)
+
+    if "email" in data:
+        existing = (
+            db.query(models.User)
+            .filter(models.User.email == data["email"])
+            .filter(models.User.id != user_id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+    if user_id == current_user.id:
+        if data.get("is_active") is False:
+            raise HTTPException(status_code=400, detail="You cannot deactivate your own account")
+        if data.get("role") and data["role"] != models.UserRole.admin:
+            raise HTTPException(status_code=400, detail="You cannot remove your own admin role")
+
+    for key, value in data.items():
+        setattr(user, key, value)
+
+    db.commit()
+    db.refresh(user)
+
+    log_event(
+        db,
+        action="user.updated.admin",
+        entity_type="user",
+        entity_id=user.id,
+        actor_user_id=current_user.id,
+        details={"fields": sorted(list(data.keys()))},
+        commit=True,
+    )
+
+    return user

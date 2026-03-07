@@ -40,6 +40,14 @@ export default function Navbar() {
 
   const unreadCount = alerts.filter((a) => !a.is_read).length;
 
+  const navLinks = [
+    { to: "/", label: "Dashboard", roles: ["admin", "doctor", "nurse"] },
+    { to: "/patients", label: "Patients", roles: ["admin", "doctor", "nurse"] },
+    { to: "/beds", label: "Beds", roles: ["admin", "doctor", "nurse"] },
+    { to: "/tasks", label: "Tasks", roles: ["admin", "doctor", "nurse"] },
+    { to: "/users", label: "Users", roles: ["admin"] },
+  ].filter((link) => link.roles.includes(user?.role));
+
   const markRead = async (id) => {
     await api.patch(`/alerts/${id}/read`);
     setAlerts((prev) =>
@@ -60,18 +68,11 @@ export default function Navbar() {
       </div>
 
       <div style={styles.links}>
-        <Link to="/" style={styles.link}>
-          Dashboard
-        </Link>
-        <Link to="/patients" style={styles.link}>
-          Patients
-        </Link>
-        <Link to="/beds" style={styles.link}>
-          Beds
-        </Link>
-        <Link to="/tasks" style={styles.link}>
-          Tasks
-        </Link>
+        {navLinks.map((item) => (
+          <Link key={item.to} to={item.to} style={styles.link}>
+            {item.label}
+          </Link>
+        ))}
       </div>
 
       <div style={styles.actions}>
@@ -140,19 +141,20 @@ const styles = {
     top: 0,
     left: 0,
     right: 0,
-    height: 64,
+    height: 70,
     zIndex: 100,
-    background: "#fff",
-    borderBottom: "1px solid #e5e7eb",
+    background: "rgba(255, 255, 255, 0.92)",
+    backdropFilter: "blur(8px)",
+    borderBottom: "1px solid #dbe3ee",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "0 24px",
+    padding: "0 max(12px, calc((100vw - 1220px) / 2))",
     gap: 16,
   },
   brand: { display: "flex", alignItems: "center", gap: 8 },
   brandText: { fontWeight: 700, fontSize: 18, color: "#1e3a5f" },
-  links: { display: "flex", gap: 24 },
+  links: { display: "flex", gap: 20, flexWrap: "wrap" },
   link: {
     textDecoration: "none",
     color: "#374151",
