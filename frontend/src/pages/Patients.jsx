@@ -365,7 +365,7 @@ export default function Patients() {
 }
 
 const styles = {
-  page: { padding: "28px 32px", maxWidth: 1100 },
+  page: { padding: "28px 32px", maxWidth: 1100, margin: "0 auto" },
   header: {
     display: "flex",
     justifyContent: "space-between",

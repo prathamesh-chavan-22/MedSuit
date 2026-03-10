@@ -187,7 +187,7 @@ export default function Beds() {
 }
 
 const styles = {
-  page: { padding: "28px 32px", maxWidth: 1100 },
+  page: { padding: "28px 32px", maxWidth: 1100, margin: "0 auto" },
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -216,7 +216,7 @@ const styles = {
     boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
   },
   formTitle: { margin: "0 0 14px", fontSize: 16, fontWeight: 600 },
-  row: { display: "flex", gap: 16, alignItems: "flex-end" },
+  row: { display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" },
   field: { display: "flex", flexDirection: "column", gap: 4 },
   label: { fontSize: 13, fontWeight: 500, color: "#374151" },
   input: {

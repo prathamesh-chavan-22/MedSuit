@@ -260,7 +260,7 @@ export default function Tasks() {
 }
 
 const styles = {
-  page: { padding: "28px 32px", maxWidth: 900 },
+  page: { padding: "28px 32px", maxWidth: 900, margin: "0 auto" },
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -325,7 +325,7 @@ const styles = {
     fontSize: 14,
     outline: "none",
   },
-  tabs: { display: "flex", gap: 8, marginBottom: 16 },
+  tabs: { display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" },
   tab: {
     background: "#f3f4f6",
     border: "none",
