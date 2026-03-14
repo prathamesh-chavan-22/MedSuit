@@ -107,7 +107,8 @@ def update_note(
     updates = body.model_dump(exclude_none=True)
     for key, value in updates.items():
         setattr(note, key, value)
-    note.reviewed_by = current_user.id
+    if updates.get("status") == models.ClinicalNoteStatus.reviewed:
+        note.reviewed_by = current_user.id
     db.commit()
     db.refresh(note)
 

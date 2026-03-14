@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -11,16 +11,35 @@ from app.database import get_db
 router = APIRouter(prefix="/patients", tags=["Timeline"])
 
 
+@router.get("/uhid/{uhid}/timeline", response_model=List[schemas.TimelineEventOut])
+def patient_timeline_by_uhid(
+    uhid: str,
+    limit: int = Query(default=100, ge=1, le=500),
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_user),
+):
+    patient = db.query(models.Patient).filter(models.Patient.uhid == uhid).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient with given UHID not found")
+
+    return _get_patient_timeline_events(db, patient.id, limit)
+
+
 @router.get("/{patient_id}/timeline", response_model=List[schemas.TimelineEventOut])
 def patient_timeline(
     patient_id: int,
-    limit: int = 100,
+    limit: int = Query(default=100, ge=1, le=500),
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_user),
 ):
     patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
+
+    return _get_patient_timeline_events(db, patient_id, limit)
+
+
+def _get_patient_timeline_events(db: Session, patient_id: int, limit: int = 100) -> List[schemas.TimelineEventOut]:
 
     events: List[schemas.TimelineEventOut] = []
 

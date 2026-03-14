@@ -52,7 +52,7 @@ export default function Patients() {
   const createMut = useMutation({
     mutationFn: (data) => api.post("/patients/", data),
     onSuccess: () => {
-      qc.invalidateQueries(["patients"]);
+      qc.invalidateQueries({ queryKey: ["patients"] });
       setShowForm(false);
       setForm(EMPTY_FORM);
     },
@@ -60,14 +60,15 @@ export default function Patients() {
 
   const deleteMut = useMutation({
     mutationFn: (id) => api.delete(`/patients/${id}`),
-    onSuccess: () => qc.invalidateQueries(["patients"]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["patients"] }),
   });
 
   const filtered = patients.filter(
     (p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.diagnosis || "").toLowerCase().includes(search.toLowerCase()) ||
-      (p.mrn || "").toLowerCase().includes(search.toLowerCase()),
+      (p.mrn || "").toLowerCase().includes(search.toLowerCase()) ||
+      (p.uhid || "").toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleSubmit = (e) => {
@@ -285,7 +286,7 @@ export default function Patients() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, MRN, or diagnosis..."
+          placeholder="Search by name, MRN, UHID, or diagnosis..."
           style={styles.searchInput}
         />
       </div>
@@ -298,6 +299,7 @@ export default function Patients() {
             <tr>
               {[
                 "Name",
+                "UHID",
                 "MRN",
                 "Age",
                 "Gender",
@@ -321,6 +323,7 @@ export default function Patients() {
                     {p.full_name}
                   </Link>
                 </td>
+                <td style={styles.td}><span style={styles.uhidBadge}>{p.uhid || "-"}</span></td>
                 <td style={styles.td}>{p.mrn || "-"}</td>
                 <td style={styles.td}>{p.age || "-"}</td>
                 <td style={styles.td}>{p.gender || "-"}</td>
@@ -340,7 +343,11 @@ export default function Patients() {
                 <td style={styles.td}>
                   <button
                     style={styles.btnDanger}
-                    onClick={() => deleteMut.mutate(p.id)}
+                    onClick={() => {
+                      if (window.confirm(`Remove ${p.full_name}? This cannot be undone.`)) {
+                        deleteMut.mutate(p.id);
+                      }
+                    }}
                   >
                     Remove
                   </button>
@@ -350,7 +357,7 @@ export default function Patients() {
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={10}
                   style={{ ...styles.td, color: "#9ca3af", textAlign: "center" }}
                 >
                   No patients found
@@ -492,5 +499,14 @@ const styles = {
     padding: "2px 8px",
     fontSize: 12,
     fontWeight: 600,
+  },
+  uhidBadge: {
+    background: "#eff6ff",
+    color: "#1e40af",
+    borderRadius: 6,
+    padding: "2px 6px",
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: "monospace",
   },
 };

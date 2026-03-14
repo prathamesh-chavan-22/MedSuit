@@ -26,10 +26,10 @@ def create_bootstrap_users():
     """Create bootstrap users if they don't already exist."""
     
     # Drop all tables and recreate with new schema (including username field)
-    print("Dropping old tables and creating new schema...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    print("✓ Database schema created with username support\n")
+    # print("Dropping old tables and creating new schema...")
+    # Base.metadata.drop_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
+    # print("✓ Database schema created with username support\n")
     
     # Bootstrap users data
     users_data = [

@@ -43,7 +43,7 @@ export default function Tasks() {
   const createMut = useMutation({
     mutationFn: (d) => api.post("/tasks/", d),
     onSuccess: () => {
-      qc.invalidateQueries(["tasks"]);
+      qc.invalidateQueries({ queryKey: ["tasks"] });
       setShowForm(false);
       setForm(EMPTY);
     },
@@ -51,12 +51,13 @@ export default function Tasks() {
 
   const updateMut = useMutation({
     mutationFn: ({ id, status }) => api.patch(`/tasks/${id}`, { status }),
-    onSuccess: () => qc.invalidateQueries(["tasks"]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+    onError: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id) => api.delete(`/tasks/${id}`),
-    onSuccess: () => qc.invalidateQueries(["tasks"]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 
   const filtered =

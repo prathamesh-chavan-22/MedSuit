@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app import models, schemas
 from app.auth import get_current_user, require_role
@@ -21,6 +21,7 @@ def create_patient(
             raise HTTPException(status_code=400, detail="MRN already exists")
 
     patient = models.Patient(**patient_in.model_dump())
+    patient.uhid = models.Patient.generate_uhid()
     db.add(patient)
     db.commit()
     db.refresh(patient)
@@ -31,8 +32,29 @@ def create_patient(
 def list_patients(
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_user),
+    search: Optional[str] = Query(None, description="Search by name, MRN, UHID, or diagnosis"),
 ):
-    return db.query(models.Patient).all()
+    query = db.query(models.Patient)
+    if search:
+        query = query.filter(
+            (models.Patient.full_name.ilike(f"%{search}%"))
+            | (models.Patient.mrn.ilike(f"%{search}%"))
+            | (models.Patient.uhid.ilike(f"%{search}%"))
+            | (models.Patient.diagnosis.ilike(f"%{search}%"))
+        )
+    return query.all()
+
+
+@router.get("/uhid/{uhid}", response_model=schemas.PatientOut)
+def get_patient_by_uhid(
+    uhid: str,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_user),
+):
+    patient = db.query(models.Patient).filter(models.Patient.uhid == uhid).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient with given UHID not found")
+    return patient
 
 
 @router.get("/{patient_id}", response_model=schemas.PatientOut)
@@ -50,7 +72,7 @@ def get_patient(
 @router.put("/{patient_id}", response_model=schemas.PatientOut)
 def update_patient(
     patient_id: int,
-    patient_in: schemas.PatientCreate,
+    patient_in: schemas.PatientUpdate,
     db: Session = Depends(get_db),
     _: models.User = Depends(require_role(models.UserRole.admin, models.UserRole.doctor)),
 ):
@@ -68,7 +90,7 @@ def update_patient(
         if existing:
             raise HTTPException(status_code=400, detail="MRN already exists")
 
-    for key, value in patient_in.model_dump().items():
+    for key, value in patient_in.model_dump(exclude_none=True).items():
         setattr(patient, key, value)
     db.commit()
     db.refresh(patient)

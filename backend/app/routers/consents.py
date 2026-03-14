@@ -146,7 +146,12 @@ def respond_to_consent_request(
         entity_type="consent",
         entity_id=consent.id,
         patient_id=consent.patient_id,
-        details={"decision": outcome},
+        details={
+            "decision": outcome,
+            "actor": "email_link",
+            "contact_email": consent.contact_email,
+            "contact_name": f"{consent.contact_first_name} {consent.contact_last_name}".strip(),
+        },
         commit=True,
     )
 

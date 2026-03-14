@@ -1,7 +1,7 @@
 import asyncio
 import json
 from typing import List, Set
-from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -26,7 +26,7 @@ class ConnectionManager:
     async def broadcast(self, data: dict):
         message = json.dumps(data)
         dead = set()
-        for ws in self.active:
+        for ws in list(self.active):
             try:
                 await ws.send_text(message)
             except Exception:
@@ -59,7 +59,6 @@ def mark_read(
 ):
     alert = db.query(models.Alert).filter(models.Alert.id == alert_id).first()
     if not alert:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Alert not found")
     alert.is_read = True
     db.commit()
@@ -102,7 +101,7 @@ async def alerts_ws(websocket: WebSocket, token: str = Query(default="")):
                     payload = {
                         "id": alert.id,
                         "patient_id": alert.patient_id,
-                        "severity": alert.severity,
+                        "severity": alert.severity.value,
                         "message": alert.message,
                         "created_at": str(alert.created_at),
                     }

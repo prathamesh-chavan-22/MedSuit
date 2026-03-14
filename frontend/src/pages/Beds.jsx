@@ -31,7 +31,7 @@ export default function Beds() {
   const createMut = useMutation({
     mutationFn: (d) => api.post("/beds/", d),
     onSuccess: () => {
-      qc.invalidateQueries(["beds"]);
+      qc.invalidateQueries({ queryKey: ["beds"] });
       setShowForm(false);
       setForm({ bed_number: "", ward: "", notes: "" });
     },
@@ -40,7 +40,7 @@ export default function Beds() {
   const assignMut = useMutation({
     mutationFn: ({ bedId, patientId }) =>
       api.patch(`/beds/${bedId}/assign`, { patient_id: patientId }),
-    onSuccess: () => qc.invalidateQueries(["beds"]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["beds"] }),
   });
 
   // Group by ward
@@ -169,11 +169,13 @@ export default function Beds() {
                             {patient.full_name}
                           </option>
                         )}
-                        {unassignedPatients.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.full_name}
-                          </option>
-                        ))}
+                        {unassignedPatients
+                          .filter((p) => p.id !== bed.patient_id)
+                          .map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.full_name}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>

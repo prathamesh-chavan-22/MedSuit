@@ -92,18 +92,18 @@ export default function PatientDetail() {
       api.post(`/consents/patients/${id}`, {
         basis: "clinical-care",
       }),
-    onSuccess: () => qc.invalidateQueries(["consent", id]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["consent", id] }),
   });
 
   const revokeConsentMut = useMutation({
     mutationFn: () => api.post(`/consents/patients/${id}/revoke`),
-    onSuccess: () => qc.invalidateQueries(["consent", id]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["consent", id] }),
   });
 
   const requestConsentEmailMut = useMutation({
     mutationFn: (payload) => api.post(`/consents/patients/${id}/request-email`, payload),
     onSuccess: (res) => {
-      qc.invalidateQueries(["consent", id]);
+      qc.invalidateQueries({ queryKey: ["consent", id] });
       setConsentFeedback(
         res.data?.email_sent
           ? `Consent action email sent to ${res.data.action_url_sent_to}.`
@@ -119,24 +119,24 @@ export default function PatientDetail() {
 
   const createDraftMut = useMutation({
     mutationFn: () => api.post(`/clinical-notes/patients/${id}/draft-from-latest-audio`),
-    onSuccess: () => qc.invalidateQueries(["clinical-notes", id]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["clinical-notes", id] }),
   });
   const finalizeNoteMut = useMutation({
     mutationFn: (noteId) => api.post(`/clinical-notes/${noteId}/finalize`),
-    onSuccess: () => qc.invalidateQueries(["clinical-notes", id]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["clinical-notes", id] }),
   });
 
   const addLabMut = useMutation({
     mutationFn: (payload) => api.post(`/labs/patients/${id}`, payload),
     onSuccess: () => {
-      qc.invalidateQueries(["lab-summary", id]);
-      qc.invalidateQueries(["timeline", id]);
+      qc.invalidateQueries({ queryKey: ["lab-summary", id] });
+      qc.invalidateQueries({ queryKey: ["timeline", id] });
     },
   });
 
   const mockVitalMut = useMutation({
     mutationFn: () => api.post(`/vitals/mock/${id}`),
-    onSuccess: () => qc.invalidateQueries(["vitals", id]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["vitals", id] }),
   });
 
   const startRecording = async () => {
@@ -154,8 +154,8 @@ export default function PatientDetail() {
           await api.post(`/audio/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-          qc.invalidateQueries(["audio", id]);
-          qc.invalidateQueries(["timeline", id]);
+          qc.invalidateQueries({ queryKey: ["audio", id] });
+          qc.invalidateQueries({ queryKey: ["timeline", id] });
         } catch (err) {
           setConsentFeedback(
             err?.response?.data?.detail || "Audio upload failed. Consent may be missing."
@@ -236,6 +236,7 @@ export default function PatientDetail() {
         </div>
 
         <div style={styles.profileGrid}>
+          <div style={styles.profileItem}><span style={styles.profileKey}>UHID</span><span style={styles.uhidValue}>{patient.uhid || "N/A"}</span></div>
           <div style={styles.profileItem}><span style={styles.profileKey}>MRN</span><span>{patient.mrn || "N/A"}</span></div>
           <div style={styles.profileItem}><span style={styles.profileKey}>Blood Group</span><span>{patient.blood_group || "N/A"}</span></div>
           <div style={styles.profileItem}><span style={styles.profileKey}>Primary Phone</span><span>{patient.primary_phone || "N/A"}</span></div>
@@ -676,6 +677,12 @@ const styles = {
     letterSpacing: 0.3,
     color: "#64748b",
     fontWeight: 700,
+  },
+  uhidValue: {
+    fontFamily: "monospace",
+    fontWeight: 700,
+    color: "#1e40af",
+    fontSize: 13,
   },
   tabButton: {
     border: "1px solid #c7d7ea",

@@ -22,20 +22,45 @@ export default function Navbar() {
     const token = localStorage.getItem("token");
     if (!token) return undefined;
 
-    const ws = new WebSocket(`${wsBaseUrl}/alerts/ws?token=${token}`);
-    wsRef.current = ws;
+    let ws;
+    let retryTimeout;
+    let isCancelled = false;
 
-    ws.onmessage = (e) => {
-      const alert = JSON.parse(e.data);
-      setAlerts((prev) => [alert, ...prev].slice(0, 20));
+    const connect = () => {
+      if (isCancelled) return;
+      ws = new WebSocket(`${wsBaseUrl}/alerts/ws?token=${token}`);
+      wsRef.current = ws;
+
+      ws.onmessage = (e) => {
+        const alert = JSON.parse(e.data);
+        setAlerts((prev) => [alert, ...prev].slice(0, 20));
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+
+      ws.onclose = () => {
+        if (!isCancelled) {
+          retryTimeout = setTimeout(connect, 5000);
+        }
+      };
     };
 
-    return () => ws.close();
+    connect();
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(retryTimeout);
+      if (ws) ws.close();
+    };
   }, []);
 
   // Load existing unread alerts on mount
   useEffect(() => {
-    api.get("/alerts/?unread_only=true").then((res) => setAlerts(res.data));
+    api.get("/alerts/?unread_only=true")
+      .then((res) => setAlerts(res.data))
+      .catch(() => {});
   }, []);
 
   const unreadCount = alerts.filter((a) => !a.is_read).length;

@@ -5,6 +5,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship as orm_relationship
 from sqlalchemy.sql import func
 import enum
+import secrets
+from datetime import datetime
 from app.database import Base
 
 
@@ -100,6 +102,7 @@ class Patient(Base):
     __tablename__ = "patients"
 
     id = Column(Integer, primary_key=True, index=True)
+    uhid = Column(String, unique=True, index=True, nullable=False)
     full_name = Column(String, nullable=False)
     age = Column(Integer)
     gender = Column(String)
@@ -124,7 +127,7 @@ class Patient(Base):
     insurance_policy_no = Column(String)
     mrn = Column(String, unique=True, index=True)
     admission_type = Column(Enum(AdmissionType), default=AdmissionType.planned)
-    patient_status = Column(Enum(PatientStatus), default=PatientStatus.admitted)
+    patient_status = Column(Enum(PatientStatus), default=PatientStatus.admitted, index=True)
     admission_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     discharge_at = Column(DateTime(timezone=True), nullable=True)
     discharge_summary = Column(Text)
@@ -132,6 +135,12 @@ class Patient(Base):
     infection_risk = Column(Boolean, default=False)
     is_serious = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    @staticmethod
+    def generate_uhid() -> str:
+        date_str = datetime.utcnow().strftime("%Y%m%d")
+        rand_part = secrets.token_hex(3).upper()  # 6 uppercase hex chars
+        return f"UHID-{date_str}-{rand_part}"
 
     bed = orm_relationship("Bed", back_populates="patient", uselist=False)
     audio_notes = orm_relationship("AudioNote", back_populates="patient")

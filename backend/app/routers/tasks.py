@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app import models, schemas
 from app.auth import get_current_user, require_role
@@ -41,6 +41,9 @@ def create_task(
         require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
     ),
 ):
+    if task_in.assigned_to is not None:
+        if not db.query(models.User).filter(models.User.id == task_in.assigned_to).first():
+            raise HTTPException(status_code=400, detail="Assigned user does not exist")
     task = models.Task(**task_in.model_dump())
     db.add(task)
     db.commit()
@@ -50,9 +53,9 @@ def create_task(
 
 @router.get("/", response_model=List[schemas.TaskOut])
 def list_tasks(
-    shift_id: int = None,
-    assigned_to: int = None,
-    patient_id: int = None,
+    shift_id: Optional[int] = None,
+    assigned_to: Optional[int] = None,
+    patient_id: Optional[int] = None,
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_user),
 ):

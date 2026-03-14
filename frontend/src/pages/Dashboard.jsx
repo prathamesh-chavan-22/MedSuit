@@ -22,19 +22,19 @@ function getRoleTitle(role) {
 export default function Dashboard() {
   const { user } = useAuth();
 
-  const { data: patients = [] } = useQuery({
+  const { data: patients = [], isError: patientsError } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients/").then((r) => r.data),
   });
-  const { data: beds = [] } = useQuery({
+  const { data: beds = [], isError: bedsError } = useQuery({
     queryKey: ["beds"],
     queryFn: () => api.get("/beds/").then((r) => r.data),
   });
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [], isError: tasksError } = useQuery({
     queryKey: ["tasks"],
     queryFn: () => api.get("/tasks/").then((r) => r.data),
   });
-  const { data: alerts = [] } = useQuery({
+  const { data: alerts = [], isError: alertsError } = useQuery({
     queryKey: ["alerts"],
     queryFn: () => api.get("/alerts/?unread_only=true").then((r) => r.data),
   });
@@ -47,6 +47,8 @@ export default function Dashboard() {
     queryFn: () => api.get("/auth/users").then((r) => r.data),
     enabled: user?.role === "admin",
   });
+
+  const hasError = patientsError || bedsError || tasksError || alertsError;
 
   const pendingTasks = tasks.filter((t) => t.status === "pending").length;
   const inProgressTasks = tasks.filter((t) => t.status === "in_progress").length;
@@ -152,6 +154,11 @@ export default function Dashboard() {
   return (
     <div style={styles.page}>
       <h2 style={styles.heading}>{getRoleTitle(user?.role)}</h2>
+      {hasError && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 16px", marginBottom: 16, color: "#dc2626", fontSize: 14 }}>
+          Some dashboard data could not be loaded. Please refresh the page.
+        </div>
+      )}
 
       <div style={styles.grid}>
         {cards.map((c) => (

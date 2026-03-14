@@ -124,8 +124,41 @@ class PatientCreate(BaseModel):
         return self
 
 
+class PatientUpdate(BaseModel):
+    full_name: Optional[str] = None
+    age: Optional[int] = Field(default=None, ge=0, le=130)
+    gender: Optional[str] = None
+    blood_group: Optional[str] = None
+    weight_kg: Optional[float] = Field(default=None, ge=0, le=500)
+    height_cm: Optional[float] = Field(default=None, ge=0, le=300)
+    diagnosis: Optional[str] = None
+    comorbidities: Optional[str] = None
+    medications: Optional[str] = None
+    allergies: Optional[str] = None
+    mental_status: Optional[str] = None
+    primary_phone: Optional[str] = None
+    secondary_phone: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    insurance_provider: Optional[str] = None
+    insurance_policy_no: Optional[str] = None
+    mrn: Optional[str] = None
+    patient_status: Optional[PatientStatus] = None
+    discharge_at: Optional[datetime] = None
+    discharge_summary: Optional[str] = None
+    fall_risk: Optional[bool] = None
+    infection_risk: Optional[bool] = None
+    is_serious: Optional[bool] = None
+
+
 class PatientOut(PatientCreate):
     id: int
+    uhid: str
     created_at: datetime
 
     model_config = {"from_attributes": True}
