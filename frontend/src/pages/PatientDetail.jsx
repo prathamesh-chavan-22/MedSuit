@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Mail, Mic, MicOff, RefreshCw } from "lucide-react";
@@ -50,6 +50,15 @@ export default function PatientDetail() {
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
   const recognitionRef = useRef(null);
+  const transcriptTextareaRef = useRef(null);
+
+  useEffect(() => {
+    const el = transcriptTextareaRef.current;
+    if (!el) return;
+
+    el.style.height = "auto";
+    el.style.height = `${Math.max(96, el.scrollHeight)}px`;
+  }, [transcript]);
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ["patient", id],
@@ -287,11 +296,11 @@ export default function PatientDetail() {
     });
   };
 
-  if (isLoading) return <div style={{ padding: 40 }}>Loading...</div>;
-  if (!patient) return <div style={{ padding: 40 }}>Patient not found.</div>;
+  if (isLoading) return <div style={{ padding: "40px" }}>Loading...</div>;
+  if (!patient) return <div style={{ padding: "40px" }}>Patient not found.</div>;
 
   return (
-    <div style={styles.page}>
+    <div className="page-pad" style={styles.page}>
       <div style={styles.headerCard}>
         <div style={styles.headerTop}>
           <div>
@@ -627,11 +636,11 @@ export default function PatientDetail() {
               <div style={{ marginBottom: 12, fontWeight: 600, color: "#1e3a5f" }}>
                 Create New Note with Voice Dictation
               </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <div style={styles.dictationControlsRow}>
                 <select
                   value={noteType}
                   onChange={(e) => setNoteType(e.target.value)}
-                  style={styles.input}
+                  style={{ ...styles.input, ...styles.dictationSelect }}
                 >
                   <option value="general">General</option>
                   <option value="intake">Intake</option>
@@ -641,11 +650,8 @@ export default function PatientDetail() {
                 <button
                   onClick={isListening ? stopDictation : startDictation}
                   style={{
-                    ...styles.btn,
+                    ...styles.dictationToggleBtn,
                     background: isListening ? "#ef4444" : "#3b82f6",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
                   }}
                 >
                   {isListening ? (
@@ -660,38 +666,26 @@ export default function PatientDetail() {
                 </button>
               </div>
               <textarea
+                ref={transcriptTextareaRef}
                 value={transcript}
                 onChange={(e) => setTranscript(e.target.value)}
                 placeholder="Transcript will appear here or paste manually..."
-                style={{
-                  ...styles.textarea,
-                  minHeight: 80,
-                  fontFamily: "monospace",
-                  fontSize: 13,
-                }}
+                style={styles.transcriptTextarea}
               />
-              <button
-                onClick={handleSubmitDictation}
-                disabled={
-                  createFromTextMut.isPending ||
-                  !transcript.trim() ||
-                  isListening
-                }
-                style={{
-                  ...styles.btn,
-                  marginTop: 8,
-                  opacity:
-                    createFromTextMut.isPending ||
-                    !transcript.trim() ||
-                    isListening
-                      ? 0.6
-                      : 1,
-                }}
-              >
-                {createFromTextMut.isPending
-                  ? "Processing with Mistral AI..."
-                  : "Structure with Mistral AI"}
-              </button>
+              {transcript.trim() && (
+                <button
+                  onClick={handleSubmitDictation}
+                  disabled={createFromTextMut.isPending || isListening}
+                  style={{
+                    ...styles.structureBtn,
+                    opacity: createFromTextMut.isPending || isListening ? 0.6 : 1,
+                  }}
+                >
+                  {createFromTextMut.isPending
+                    ? "Processing with Mistral AI..."
+                    : "Structure with Mistral AI"}
+                </button>
+              )}
             </div>
           )}
 
@@ -955,12 +949,12 @@ export default function PatientDetail() {
 
 const styles = {
   page: {
-    padding: "26px 24px 34px",
-    maxWidth: 1200,
+    padding: "24px 8px 28px",
+    maxWidth: "1240px",
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",
-    gap: 18,
+    gap: 16,
   },
   headerCard: {
     background: "linear-gradient(140deg, #ffffff 0%, #f8fbff 100%)",
@@ -1077,7 +1071,7 @@ const styles = {
     background: "#fff",
     borderRadius: 12,
     padding: "18px 18px",
-    boxShadow: "0 2px 12px rgba(15, 23, 42, 0.08)",
+    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
     border: "1px solid #e7eef5",
     transition: "all 180ms ease",
   },
@@ -1085,7 +1079,7 @@ const styles = {
     background: "#fff",
     borderRadius: 12,
     padding: "18px 20px",
-    boxShadow: "0 2px 12px rgba(15, 23, 42, 0.08)",
+    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
     border: "1px solid #e7eef5",
     transition: "all 180ms ease",
   },
@@ -1151,6 +1145,9 @@ const styles = {
     padding: "14px",
     marginBottom: 16,
     border: "1px solid #bfdbfe",
+    maxWidth: "100%",
+    overflow: "hidden",
+    boxSizing: "border-box",
   },
   noteDate: { fontSize: 11, color: "#9ca3af", marginBottom: 4 },
   noteTranscript: { fontSize: 14, color: "#111827", lineHeight: 1.45, marginBottom: 8 },
@@ -1236,6 +1233,73 @@ const styles = {
     outline: "none",
     width: "100%",
     background: "#fff",
+  },
+  dictationControlsRow: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 12,
+    width: "100%",
+    alignItems: "center",
+    minWidth: 0,
+  },
+  dictationSelect: {
+    flex: "1 1 220px",
+    minWidth: 0,
+    minHeight: 44,
+  },
+  dictationToggleBtn: {
+    flex: "0 0 auto",
+    minHeight: 44,
+    minWidth: 150,
+    maxWidth: "100%",
+    border: "none",
+    borderRadius: 10,
+    color: "#fff",
+    padding: "0 14px",
+    fontSize: 13,
+    fontWeight: 700,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  transcriptTextarea: {
+    display: "block",
+    width: "100%",
+    maxWidth: "100%",
+    boxSizing: "border-box",
+    minHeight: 96,
+    borderRadius: 12,
+    padding: "12px 14px",
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: 14,
+    lineHeight: 1.6,
+    color: "#0f172a",
+    background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)",
+    border: "1px solid #bfdbfe",
+    boxShadow: "inset 0 1px 1px rgba(37, 99, 235, 0.04)",
+    resize: "none",
+    overflow: "hidden",
+  },
+  structureBtn: {
+    marginTop: 10,
+    width: "100%",
+    minHeight: 42,
+    border: "none",
+    borderRadius: 10,
+    background: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)",
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: 700,
+    letterSpacing: 0.2,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    boxShadow: "0 8px 20px rgba(37, 99, 235, 0.25)",
   },
   formActions: {
     display: "flex",

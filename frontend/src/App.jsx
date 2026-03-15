@@ -9,13 +9,14 @@ import PatientDetail from "./pages/PatientDetail";
 import Beds from "./pages/Beds";
 import Tasks from "./pages/Tasks";
 import Users from "./pages/Users";
+import ChatApp from "./components/chatapp/ChatApp";
 import "./index.css";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div style={{ padding: 40 }}>Loading…</div>;
+  if (loading) return <div style={{ padding: "40px" }}>Loading…</div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 }
@@ -32,7 +33,7 @@ function AppRoutes() {
   return (
     <>
       {user && <Navbar />}
-      <div className="app-shell" style={{ marginTop: user ? 74 : 0 }}>
+      <div className="app-shell" style={{ marginTop: user ? "74px" : "0px" }}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -88,6 +89,7 @@ function AppRoutes() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      {user && <ChatApp />}
     </>
   );
 }

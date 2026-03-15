@@ -52,7 +52,8 @@ export default function Users() {
         ) : sortedUsers.length === 0 ? (
           <p style={styles.empty}>No users found.</p>
         ) : (
-          <table style={styles.table}>
+          <div className="table-scroll">
+            <table style={styles.table}>
             <thead>
               <tr>
                 <th style={styles.th}>Username</th>
@@ -109,7 +110,8 @@ export default function Users() {
                 );
               })}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
 
@@ -123,7 +125,7 @@ export default function Users() {
 }
 
 const styles = {
-  page: { padding: "28px 32px", maxWidth: 1100, margin: "0 auto" },
+  page: { padding: "24px 8px 28px", maxWidth: "1240px", margin: "0 auto" },
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -146,7 +148,7 @@ const styles = {
     background: "#fff",
     borderRadius: 12,
     padding: "14px 16px",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
     overflowX: "auto",
   },
   table: { width: "100%", borderCollapse: "collapse" },
@@ -165,8 +167,8 @@ const styles = {
   },
   select: {
     border: "1px solid #cbd5e1",
-    borderRadius: 8,
-    padding: "6px 10px",
+    borderRadius: 10,
+    padding: "8px 10px",
     fontSize: 13,
     background: "#fff",
   },

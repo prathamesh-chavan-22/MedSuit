@@ -295,8 +295,8 @@ export default function Dashboard() {
 
 const styles = {
   page: {
-    padding: "28px 32px",
-    maxWidth: 1100,
+    padding: "24px 8px 28px",
+    maxWidth: "1240px",
     margin: "0 auto",
     background:
       "radial-gradient(circle at 10% 10%, rgba(59,130,246,0.08), transparent 32%), radial-gradient(circle at 90% 0%, rgba(245,158,11,0.08), transparent 28%)",
@@ -309,9 +309,9 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: 16,
-    marginBottom: 28,
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "16px",
+    marginBottom: "24px",
   },
   card: {
     borderRadius: 12,
@@ -327,9 +327,9 @@ const styles = {
   section: {
     background: "#fff",
     borderRadius: 12,
-    padding: "20px 22px",
-    marginBottom: 20,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    padding: "18px 20px",
+    marginBottom: "16px",
+    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
   },
   sectionTitle: {
     margin: "0 0 14px",
