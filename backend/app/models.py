@@ -48,6 +48,13 @@ class ClinicalNoteStatus(str, enum.Enum):
     finalized = "finalized"
 
 
+class ClinicalNoteType(str, enum.Enum):
+    intake = "intake"
+    rounds = "rounds"
+    discharge = "discharge"
+    general = "general"
+
+
 class AdmissionType(str, enum.Enum):
     emergency = "emergency"
     planned = "planned"
@@ -311,6 +318,7 @@ class ClinicalNote(Base):
     reviewed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     source_audio_note_id = Column(Integer, ForeignKey("audio_notes.id"), nullable=True)
     status = Column(Enum(ClinicalNoteStatus), default=ClinicalNoteStatus.draft, nullable=False)
+    note_type = Column(Enum(ClinicalNoteType), default=ClinicalNoteType.general, nullable=False)
     subjective = Column(Text, default="")
     objective = Column(Text, default="")
     assessment = Column(Text, default="")

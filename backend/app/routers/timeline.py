@@ -138,9 +138,14 @@ def _get_patient_timeline_events(db: Session, patient_id: int, limit: int = 100)
         events.append(
             schemas.TimelineEventOut(
                 event_type="clinical_note",
-                title=f"Clinical note {row.status.value}",
+                title=f"Clinical note ({row.note_type.value}) {row.status.value}",
                 created_at=row.created_at,
-                metadata={"note_id": row.id, "confidence": row.confidence},
+                metadata={
+                    "note_id": row.id,
+                    "confidence": row.confidence,
+                    "note_type": row.note_type.value,
+                    "subjective_preview": row.subjective[:100] if row.subjective else "",
+                },
             )
         )
 

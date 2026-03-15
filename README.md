@@ -106,6 +106,97 @@ Background jobs:
 - expired session cleanup
 - consent expiry updates
 
+## Feature Guide
+
+### Patient Management
+
+1. **Browse Patients**: Navigate to "Patients" page to view all patients in the system
+2. **View Patient Details**: Click on a patient to open their detail page with tabs for Overview, Clinical Notes, Labs, and Timeline
+3. **Patient Info**: Each patient profile includes name, age, gender, admission date, and unique UHID (Universal Health ID)
+
+### Consent Management
+
+The consent workflow ensures patient privacy and compliance:
+
+1. **Check Consent Status**: On the patient detail page, look at the "Recording Consent" badge:
+   - **Green "active"**: Patient has active consent; recording is allowed
+   - **Yellow "pending"**: Consent request sent, awaiting response
+   - **Red "missing"**: No consent yet; recording is blocked
+
+2. **Grant Consent** (Admin/Doctor/Nurse):
+   - Click "Grant Consent" to immediately activate recording consent
+   - The consent status will update in real-time
+   - Error messages auto-clear after 5 seconds
+
+3. **Revoke Consent** (Admin/Doctor):
+   - Click "Revoke Consent" to disable recording and audio uploads
+   - Use this when patient withdraws consent
+   - The Record button will automatically disable
+
+4. **Send Consent Email Action**:
+   - Fill out the "Send Consent Email Action" form with patient contact details
+   - Patient receives an email with yes/no action links
+   - Once clicked, consent status updates automatically
+   - Supports pending and active consent states
+
+### Audio Recording & Clinical Notes
+
+1. **Start Recording** (requires active consent):
+   - Click the "Record" button in the "Doctor Audio Notes" section
+   - The button is **disabled** if consent is not active
+   - Message "Active consent required" appears when recording is blocked
+   - Browser will request microphone access on first use
+
+2. **Stop Recording**:
+   - Click "Stop" button to end recording
+   - Audio is automatically uploaded to the server
+   - Transcription begins asynchronously (visible in Flower dashboard)
+
+3. **Audio Playback**:
+   - Recorded audio files appear in the "Recorded Checks" section
+   - Click a timestamp to play the audio file
+
+4. **Create Clinical Note from Audio**:
+   - Click "Create Draft from Latest Audio" to auto-generate a note
+   - The system transcribes audio and creates a SOAP note template
+   - Edit the transcription or SOAP fields as needed
+
+5. **Manual Note Entry**:
+   - Use the "Or enter text directly" section to type a note
+   - Select note type: General, SOAP, or Progress Note
+   - Create from text and edit inline
+
+### Error Handling & Feedback
+
+- **Recording without active consent**: Record button is disabled with explanatory text
+- **Microphone access denied**: Error message appears; grant permission in browser settings
+- **Audio upload failed**: Error displayed below the Record button (e.g., consent revoked mid-upload)
+- **Consent actions fail**: Error message shows with auto-clear after 5 seconds
+- **Stale feedback**: All feedback messages automatically clear after 5 seconds to keep UI clean
+
+### Clinical Notes
+
+1. **View Notes**: All notes appear in the "Clinical Notes" tab with creation date
+2. **Edit Notes**:
+   - Click "Edit" on a draft note
+   - Modify transcription and SOAP fields (S/O/A/P sections)
+   - Click "Save" to persist changes
+3. **Finalize Notes** (Admin/Doctor only):
+   - Click "Finalize" to mark a note as complete and immutable
+   - Finalized notes cannot be edited (archival compliance)
+
+### Labs & Vitals
+
+- **Add Lab Values**: Use the lab form to log test results with date and values
+- **Mock Vitals**: Click "Mock Vitals" to generate sample vital signs for testing
+- **Labs Summary**: View aggregated lab history by test type
+
+### Timeline View
+
+- **Event History**: Timeline tab shows all patient events (admissions, notes, vitals, etc.)
+- **Color-coded**: Different event types have distinct colors
+- **Chronological**: Events are ordered by creation time with most recent first
+
 ## Local Run
 
 API:

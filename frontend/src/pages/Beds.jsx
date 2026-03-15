@@ -50,7 +50,7 @@ export default function Beds() {
   );
 
   return (
-    <div style={styles.page}>
+    <div className="page-pad" style={styles.page}>
       <div style={styles.header}>
         <h2 style={styles.heading}>Bed Management</h2>
         <button style={styles.btn} onClick={() => setShowForm(!showForm)}>

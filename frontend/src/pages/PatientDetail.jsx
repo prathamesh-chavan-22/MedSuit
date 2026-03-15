@@ -29,6 +29,12 @@ export default function PatientDetail() {
   const [recording, setRecording] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [consentFeedback, setConsentFeedback] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [noteType, setNoteType] = useState("general");
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editingSoapFields, setEditingSoapFields] = useState({});
+  const [savingNoteId, setSavingNoteId] = useState(null);
   const [consentForm, setConsentForm] = useState({
     first_name: "",
     last_name: "",
@@ -43,6 +49,7 @@ export default function PatientDetail() {
 
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
+  const recognitionRef = useRef(null);
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ["patient", id],
@@ -87,31 +94,40 @@ export default function PatientDetail() {
     [user?.role]
   );
 
+  const showFeedback = (msg) => {
+    setConsentFeedback(msg);
+    setTimeout(() => setConsentFeedback(""), 5000);
+  };
+
   const grantConsentMut = useMutation({
     mutationFn: () =>
       api.post(`/consents/patients/${id}`, {
         basis: "clinical-care",
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["consent", id] }),
+    onError: (err) =>
+      showFeedback(err?.response?.data?.detail || "Failed to grant consent. Please try again."),
   });
 
   const revokeConsentMut = useMutation({
     mutationFn: () => api.post(`/consents/patients/${id}/revoke`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["consent", id] }),
+    onError: (err) =>
+      showFeedback(err?.response?.data?.detail || "Failed to revoke consent. Please try again."),
   });
 
   const requestConsentEmailMut = useMutation({
     mutationFn: (payload) => api.post(`/consents/patients/${id}/request-email`, payload),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["consent", id] });
-      setConsentFeedback(
+      showFeedback(
         res.data?.email_sent
           ? `Consent action email sent to ${res.data.action_url_sent_to}.`
           : "Consent created but email was not sent. Check SMTP settings."
       );
     },
     onError: (err) => {
-      setConsentFeedback(
+      showFeedback(
         err?.response?.data?.detail || "Failed to send consent action email."
       );
     },
@@ -120,6 +136,23 @@ export default function PatientDetail() {
   const createDraftMut = useMutation({
     mutationFn: () => api.post(`/clinical-notes/patients/${id}/draft-from-latest-audio`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["clinical-notes", id] }),
+  });
+  const createFromTextMut = useMutation({
+    mutationFn: (data) => api.post(`/clinical-notes/patients/${id}/from-text`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["clinical-notes", id] });
+      setTranscript("");
+      setNoteType("general");
+    },
+  });
+  const updateNoteMut = useMutation({
+    mutationFn: (data) => api.patch(`/clinical-notes/${data.noteId}`, data.updates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["clinical-notes", id] });
+      setEditingNoteId(null);
+      setEditingSoapFields({});
+      setSavingNoteId(null);
+    },
   });
   const finalizeNoteMut = useMutation({
     mutationFn: (noteId) => api.post(`/clinical-notes/${noteId}/finalize`),
@@ -157,7 +190,7 @@ export default function PatientDetail() {
           qc.invalidateQueries({ queryKey: ["audio", id] });
           qc.invalidateQueries({ queryKey: ["timeline", id] });
         } catch (err) {
-          setConsentFeedback(
+          showFeedback(
             err?.response?.data?.detail || "Audio upload failed. Consent may be missing."
           );
         }
@@ -165,13 +198,72 @@ export default function PatientDetail() {
       mr.start();
       setRecording(true);
     } catch {
-      setConsentFeedback("Microphone access is required for recording.");
+      showFeedback("Microphone access is required for recording.");
     }
   };
 
   const stopRecording = () => {
     mediaRef.current?.stop();
     setRecording(false);
+  };
+
+  const startDictation = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert(
+        "Speech recognition not supported in this browser. Try Chrome, Edge, or Safari."
+      );
+      return;
+    }
+    const r = new SpeechRecognition();
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = "en-US";
+    r.onresult = (e) => {
+      const text = Array.from(e.results)
+        .map((r) => r[0].transcript)
+        .join(" ");
+      setTranscript(text);
+    };
+    r.onend = () => setIsListening(false);
+    recognitionRef.current = r;
+    r.start();
+    setIsListening(true);
+  };
+
+  const stopDictation = () => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  };
+
+  const handleSubmitDictation = () => {
+    if (!transcript.trim()) {
+      alert("Please record or paste a transcript first");
+      return;
+    }
+    createFromTextMut.mutate({
+      transcript: transcript.trim(),
+      note_type: noteType,
+    });
+  };
+
+  const handleStartEditNote = (note) => {
+    setEditingNoteId(note.id);
+    setEditingSoapFields({
+      subjective: note.subjective,
+      objective: note.objective,
+      assessment: note.assessment,
+      plan: note.plan,
+    });
+  };
+
+  const handleSaveNoteChanges = (noteId) => {
+    setSavingNoteId(noteId);
+    updateNoteMut.mutate({
+      noteId,
+      updates: editingSoapFields,
+    });
   };
 
   const chartData = [...vitals].reverse().map((v, i) => ({
@@ -248,24 +340,38 @@ export default function PatientDetail() {
 
       {activeTab === "overview" && (
         <>
-          <div style={styles.columns}>
+          <div className="detail-columns" style={styles.columns}>
             <div style={styles.panel}>
               <div style={styles.panelHeader}>
                 <span style={styles.panelTitle}>Doctor Audio Notes</span>
-                <button
-                  style={recording ? styles.btnStop : styles.btnRecord}
-                  onClick={recording ? stopRecording : startRecording}
-                >
-                  {recording ? (
+                {(() => {
+                  const canRecord = consent?.status === "active";
+                  return (
                     <>
-                      <MicOff size={14} /> Stop
+                      <button
+                        style={recording ? styles.btnStop : canRecord ? styles.btnRecord : { ...styles.btnRecord, opacity: 0.5, cursor: "not-allowed" }}
+                        onClick={recording ? stopRecording : startRecording}
+                        disabled={!canRecord && !recording}
+                        title={!canRecord && !recording ? "Active consent required to record audio" : undefined}
+                      >
+                        {recording ? (
+                          <>
+                            <MicOff size={14} /> Stop
+                          </>
+                        ) : (
+                          <>
+                            <Mic size={14} /> Record
+                          </>
+                        )}
+                      </button>
+                      {!canRecord && !recording && (
+                        <span style={{ color: "#b91c1c", fontSize: 12, marginLeft: 8 }}>
+                          Active consent required
+                        </span>
+                      )}
                     </>
-                  ) : (
-                    <>
-                      <Mic size={14} /> Record
-                    </>
-                  )}
-                </button>
+                  );
+                })()}
               </div>
 
               <div style={styles.consentBox}>
@@ -298,7 +404,7 @@ export default function PatientDetail() {
                 </div>
 
                 {(consent?.contact_first_name || consent?.contact_email) && (
-                  <div style={styles.consentMetaGrid}>
+                  <div className="grid-2col" style={styles.consentMetaGrid}>
                     <span>
                       Contact: {consent?.contact_first_name || ""} {consent?.contact_last_name || ""}
                     </span>
@@ -336,7 +442,7 @@ export default function PatientDetail() {
                     <Mail size={14} /> Send Consent Email Action
                   </div>
 
-                  <div style={styles.formGrid2}>
+                  <div className="grid-2col" style={styles.formGrid2}>
                     <input
                       required
                       placeholder="First name"
@@ -389,7 +495,7 @@ export default function PatientDetail() {
                     style={{ ...styles.input, marginTop: 8 }}
                   />
 
-                  <div style={styles.formGrid2}>
+                  <div className="grid-2col" style={styles.formGrid2}>
                     <input
                       placeholder="Consent basis"
                       value={consentForm.basis}
@@ -515,6 +621,80 @@ export default function PatientDetail() {
               </button>
             )}
           </div>
+
+          {canFinalizeNotes && (
+            <div style={styles.noteFormCard}>
+              <div style={{ marginBottom: 12, fontWeight: 600, color: "#1e3a5f" }}>
+                Create New Note with Voice Dictation
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <select
+                  value={noteType}
+                  onChange={(e) => setNoteType(e.target.value)}
+                  style={styles.input}
+                >
+                  <option value="general">General</option>
+                  <option value="intake">Intake</option>
+                  <option value="rounds">Rounds</option>
+                  <option value="discharge">Discharge</option>
+                </select>
+                <button
+                  onClick={isListening ? stopDictation : startDictation}
+                  style={{
+                    ...styles.btn,
+                    background: isListening ? "#ef4444" : "#3b82f6",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  {isListening ? (
+                    <>
+                      <MicOff size={16} /> Stop
+                    </>
+                  ) : (
+                    <>
+                      <Mic size={16} /> Start Dictating
+                    </>
+                  )}
+                </button>
+              </div>
+              <textarea
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
+                placeholder="Transcript will appear here or paste manually..."
+                style={{
+                  ...styles.textarea,
+                  minHeight: 80,
+                  fontFamily: "monospace",
+                  fontSize: 13,
+                }}
+              />
+              <button
+                onClick={handleSubmitDictation}
+                disabled={
+                  createFromTextMut.isPending ||
+                  !transcript.trim() ||
+                  isListening
+                }
+                style={{
+                  ...styles.btn,
+                  marginTop: 8,
+                  opacity:
+                    createFromTextMut.isPending ||
+                    !transcript.trim() ||
+                    isListening
+                      ? 0.6
+                      : 1,
+                }}
+              >
+                {createFromTextMut.isPending
+                  ? "Processing with Mistral AI..."
+                  : "Structure with Mistral AI"}
+              </button>
+            </div>
+          )}
+
           {clinicalNotes.length === 0 ? (
             <p style={styles.empty}>No clinical notes yet.</p>
           ) : (
@@ -523,9 +703,49 @@ export default function PatientDetail() {
                 <div style={styles.consentStatusRow}>
                   <strong>#{note.id}</strong>
                   <span style={styles.badgeInfo}>{note.status}</span>
+                  <span
+                    style={{
+                      ...styles.badgeInfo,
+                      background:
+                        note.note_type === "intake"
+                          ? "#3b82f6"
+                          : note.note_type === "rounds"
+                            ? "#10b981"
+                            : note.note_type === "discharge"
+                              ? "#f97316"
+                              : "#6b7280",
+                    }}
+                  >
+                    {note.note_type}
+                  </span>
                   <span style={styles.consentMeta}>
                     confidence: {Math.round((note.confidence || 0) * 100)}%
                   </span>
+                  {canFinalizeNotes &&
+                    note.status !== "finalized" &&
+                    editingNoteId !== note.id && (
+                      <button
+                        style={styles.btnRefresh}
+                        onClick={() => handleStartEditNote(note)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  {canFinalizeNotes &&
+                    note.status !== "finalized" &&
+                    editingNoteId === note.id && (
+                      <button
+                        style={{
+                          ...styles.btnRefresh,
+                          background: "#10b981",
+                          color: "white",
+                        }}
+                        onClick={() => handleSaveNoteChanges(note.id)}
+                        disabled={savingNoteId === note.id}
+                      >
+                        {savingNoteId === note.id ? "Saving..." : "Save"}
+                      </button>
+                    )}
                   {canFinalizeNotes && note.status !== "finalized" && (
                     <button
                       style={styles.btnRefresh}
@@ -536,18 +756,78 @@ export default function PatientDetail() {
                     </button>
                   )}
                 </div>
-                <div style={styles.noteTranscript}>
-                  <strong>S:</strong> {note.subjective}
-                </div>
-                <div style={styles.noteTranscript}>
-                  <strong>O:</strong> {note.objective}
-                </div>
-                <div style={styles.noteTranscript}>
-                  <strong>A:</strong> {note.assessment}
-                </div>
-                <div style={styles.noteTranscript}>
-                  <strong>P:</strong> {note.plan}
-                </div>
+
+                {editingNoteId === note.id ? (
+                  <>
+                    <div style={{ marginTop: 12 }}>
+                      <label style={styles.fieldLabel}>Subjective (S)</label>
+                      <textarea
+                        value={editingSoapFields.subjective || ""}
+                        onChange={(e) =>
+                          setEditingSoapFields((prev) => ({
+                            ...prev,
+                            subjective: e.target.value,
+                          }))
+                        }
+                        style={{ ...styles.textarea, minHeight: 60 }}
+                      />
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <label style={styles.fieldLabel}>Objective (O)</label>
+                      <textarea
+                        value={editingSoapFields.objective || ""}
+                        onChange={(e) =>
+                          setEditingSoapFields((prev) => ({
+                            ...prev,
+                            objective: e.target.value,
+                          }))
+                        }
+                        style={{ ...styles.textarea, minHeight: 60 }}
+                      />
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <label style={styles.fieldLabel}>Assessment (A)</label>
+                      <textarea
+                        value={editingSoapFields.assessment || ""}
+                        onChange={(e) =>
+                          setEditingSoapFields((prev) => ({
+                            ...prev,
+                            assessment: e.target.value,
+                          }))
+                        }
+                        style={{ ...styles.textarea, minHeight: 60 }}
+                      />
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <label style={styles.fieldLabel}>Plan (P)</label>
+                      <textarea
+                        value={editingSoapFields.plan || ""}
+                        onChange={(e) =>
+                          setEditingSoapFields((prev) => ({
+                            ...prev,
+                            plan: e.target.value,
+                          }))
+                        }
+                        style={{ ...styles.textarea, minHeight: 60 }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={styles.noteTranscript}>
+                      <strong>S:</strong> {note.subjective}
+                    </div>
+                    <div style={styles.noteTranscript}>
+                      <strong>O:</strong> {note.objective}
+                    </div>
+                    <div style={styles.noteTranscript}>
+                      <strong>A:</strong> {note.assessment}
+                    </div>
+                    <div style={styles.noteTranscript}>
+                      <strong>P:</strong> {note.plan}
+                    </div>
+                  </>
+                )}
               </div>
             ))
           )}
@@ -608,13 +888,64 @@ export default function PatientDetail() {
           {timeline.length === 0 ? (
             <p style={styles.empty}>No timeline events yet.</p>
           ) : (
-            timeline.slice(0, 20).map((evt, idx) => (
-              <div key={`${evt.event_type}-${idx}`} style={styles.alertItemLike}>
-                <span style={styles.badgeGray}>{evt.event_type}</span>
-                <span style={{ flex: 1 }}>{evt.title}</span>
-                <span style={styles.consentMeta}>{new Date(evt.created_at).toLocaleString()}</span>
-              </div>
-            ))
+            <div style={styles.timelineContainer}>
+              {timeline.slice(0, 20).map((evt, idx) => {
+                const dotColor =
+                  evt.event_type === "admission"
+                    ? "#10b981"
+                    : evt.event_type === "discharge"
+                      ? "#ef4444"
+                      : evt.event_type === "clinical_note"
+                        ? "#3b82f6"
+                        : evt.event_type === "vitals"
+                          ? "#9ca3af"
+                          : "#6b7280";
+
+                return (
+                  <div key={`${evt.event_type}-${idx}`} style={styles.timelineItem}>
+                    <div
+                      style={{
+                        ...styles.timelineDot,
+                        background: dotColor,
+                      }}
+                    />
+                    {idx < timeline.length - 1 && (
+                      <div
+                        style={{
+                          ...styles.timelineLine,
+                          borderLeftColor: dotColor,
+                        }}
+                      />
+                    )}
+                    <div style={styles.timelineContent}>
+                      <div style={styles.consentStatusRow}>
+                        <span
+                          style={{
+                            ...styles.badgeGray,
+                            background:
+                              evt.event_type === "clinical_note"
+                                ? "#eff6ff"
+                                : "#f3f4f6",
+                            color:
+                              evt.event_type === "clinical_note"
+                                ? "#1e40af"
+                                : "#374151",
+                          }}
+                        >
+                          {evt.event_type}
+                        </span>
+                        <span style={styles.consentMeta}>
+                          {new Date(evt.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 14, color: "#111827", marginTop: 6 }}>
+                        {evt.title}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
@@ -814,8 +1145,22 @@ const styles = {
     marginBottom: 10,
     border: "1px solid #e5edf7",
   },
+  noteFormCard: {
+    background: "#f0f9ff",
+    borderRadius: 10,
+    padding: "14px",
+    marginBottom: 16,
+    border: "1px solid #bfdbfe",
+  },
   noteDate: { fontSize: 11, color: "#9ca3af", marginBottom: 4 },
-  noteTranscript: { fontSize: 14, color: "#111827", lineHeight: 1.45 },
+  noteTranscript: { fontSize: 14, color: "#111827", lineHeight: 1.45, marginBottom: 8 },
+  fieldLabel: {
+    display: "block",
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#374151",
+    marginBottom: 6,
+  },
   consentBox: {
     border: "1px solid #e5e7eb",
     borderRadius: 10,
@@ -930,4 +1275,39 @@ const styles = {
   vitalValue: { fontSize: 18, fontWeight: 700 },
   vitalUnit: { fontSize: 12, fontWeight: 400, color: "#6b7280" },
   vitalLabel: { fontSize: 12, color: "#6b7280", marginTop: 2 },
+  timelineContainer: {
+    position: "relative",
+    paddingLeft: 30,
+  },
+  timelineItem: {
+    position: "relative",
+    paddingBottom: 20,
+    display: "flex",
+    gap: 12,
+  },
+  timelineDot: {
+    position: "absolute",
+    left: -30,
+    top: 0,
+    width: 12,
+    height: 12,
+    borderRadius: "50%",
+    border: "2px solid white",
+    boxShadow: "0 0 0 2px #e5e7eb",
+  },
+  timelineLine: {
+    position: "absolute",
+    left: -24,
+    top: 12,
+    width: 0,
+    height: 32,
+    borderLeft: "2px solid #e5e7eb",
+  },
+  timelineContent: {
+    flex: 1,
+    background: "#f9fafb",
+    borderRadius: 8,
+    padding: "10px 12px",
+    borderLeft: "3px solid #e5e7eb",
+  },
 };

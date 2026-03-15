@@ -31,14 +31,14 @@ export default function Users() {
 
   if (user?.role !== "admin") {
     return (
-      <div style={styles.page}>
+      <div className="page-pad" style={styles.page}>
         <div style={styles.denied}>Only admin users can manage accounts.</div>
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div className="page-pad" style={styles.page}>
       <div style={styles.header}>
         <h2 style={styles.heading}>User Management</h2>
         <div style={styles.badge}>

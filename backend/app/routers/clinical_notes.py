@@ -2,14 +2,21 @@ from datetime import datetime, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.audit import log_event
 from app.auth import get_current_user, require_role
 from app.database import get_db
+from app.services import mistral_service
 
 router = APIRouter(prefix="/clinical-notes", tags=["Clinical Notes"])
+
+
+class DraftFromTextRequest(BaseModel):
+    transcript: str
+    note_type: str = "general"
 
 
 def _draft_from_text(transcript: str) -> dict:
@@ -47,7 +54,7 @@ def create_draft_from_latest_audio(
     if not latest_audio:
         raise HTTPException(status_code=404, detail="No audio notes found for this patient")
 
-    draft = _draft_from_text(latest_audio.transcript or "")
+    draft = mistral_service.structure_transcript_to_soap(latest_audio.transcript or "")
     note = models.ClinicalNote(
         patient_id=patient_id,
         authored_by=current_user.id,
@@ -71,6 +78,49 @@ def create_draft_from_latest_audio(
         actor_user_id=current_user.id,
         patient_id=patient_id,
         details={"source_audio_note_id": latest_audio.id},
+        commit=True,
+    )
+
+    return note
+
+
+@router.post("/patients/{patient_id}/from-text", response_model=schemas.ClinicalNoteOut, status_code=201)
+def create_draft_from_text(
+    patient_id: int,
+    body: DraftFromTextRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(
+        require_role(models.UserRole.admin, models.UserRole.doctor)
+    ),
+):
+    patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    draft = mistral_service.structure_transcript_to_soap(body.transcript, body.note_type)
+    note = models.ClinicalNote(
+        patient_id=patient_id,
+        authored_by=current_user.id,
+        status=models.ClinicalNoteStatus.draft,
+        note_type=models.ClinicalNoteType[body.note_type],
+        subjective=draft["subjective"],
+        objective=draft["objective"],
+        assessment=draft["assessment"],
+        plan=draft["plan"],
+        confidence=draft["confidence"],
+    )
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+
+    log_event(
+        db,
+        action="clinical_note.voice_draft",
+        entity_type="clinical_note",
+        entity_id=note.id,
+        actor_user_id=current_user.id,
+        patient_id=patient_id,
+        details={"note_type": body.note_type, "transcript_len": len(body.transcript)},
         commit=True,
     )
 

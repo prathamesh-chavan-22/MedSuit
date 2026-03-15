@@ -50,3 +50,77 @@ p {
     padding: 0 8px 18px;
   }
 }
+
+/* ── Responsive utilities ─────────────────────────────────── */
+
+/* 2-column grids → single column on mobile */
+@media (max-width: 767px) {
+  .grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Table scroll wrapper (always applied; prevents overflow on mobile) */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+/* PatientDetail 2-panel layout */
+@media (max-width: 767px) {
+  .detail-columns {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Page inner padding reduction (pages use padding: "28px 32px") */
+@media (max-width: 767px) {
+  .page-pad {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* Navbar hamburger button */
+.nav-hamburger {
+  display: none;
+}
+@media (max-width: 767px) {
+  .nav-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+  }
+  .nav-links-mobile-hidden {
+    display: none !important;
+  }
+  .nav-actions-mobile-hidden {
+    display: none !important;
+  }
+  .nav-mobile-open {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid #dbe3ee;
+    padding: 12px 16px 16px;
+    gap: 12px;
+    z-index: 99;
+  }
+  .alert-dropdown-mobile {
+    right: auto !important;
+    left: 0 !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 320px;
+  }
+}

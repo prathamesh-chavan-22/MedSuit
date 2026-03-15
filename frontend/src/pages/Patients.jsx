@@ -85,7 +85,7 @@ export default function Patients() {
   };
 
   return (
-    <div style={styles.page}>
+    <div className="page-pad" style={styles.page}>
       <div style={styles.header}>
         <h2 style={styles.heading}>Patients</h2>
         <button style={styles.btn} onClick={() => setShowForm(!showForm)}>
@@ -96,7 +96,7 @@ export default function Patients() {
       {showForm && (
         <div style={styles.formCard}>
           <h3 style={styles.formTitle}>New Patient</h3>
-          <form onSubmit={handleSubmit} style={styles.grid2}>
+          <form onSubmit={handleSubmit} className="grid-2col" style={styles.grid2}>
             {[
               ["full_name", "Full Name", "text", true],
               ["mrn", "MRN", "text", false],
@@ -294,7 +294,8 @@ export default function Patients() {
       {isLoading ? (
         <p>Loading...</p>
       ) : (
-        <table style={styles.table}>
+        <div className="table-scroll">
+          <table style={styles.table}>
           <thead>
             <tr>
               {[
@@ -366,6 +367,7 @@ export default function Patients() {
             )}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

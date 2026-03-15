@@ -152,7 +152,7 @@ export default function Dashboard() {
   const cards = cardsByRole[user?.role || "nurse"];
 
   return (
-    <div style={styles.page}>
+    <div className="page-pad" style={styles.page}>
       <h2 style={styles.heading}>{getRoleTitle(user?.role)}</h2>
       {hasError && (
         <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 16px", marginBottom: 16, color: "#dc2626", fontSize: 14 }}>
@@ -205,33 +205,35 @@ export default function Dashboard() {
           {seriousPatients.length === 0 ? (
             <p style={styles.empty}>No serious patients currently.</p>
           ) : (
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  {["Name", "Age", "Diagnosis", "Allergies", "Mental Status", ""].map((h) => (
-                    <th key={h} style={styles.th}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {seriousPatients.map((p) => (
-                  <tr key={p.id}>
-                    <td style={styles.td}>{p.full_name}</td>
-                    <td style={styles.td}>{p.age}</td>
-                    <td style={styles.td}>{p.diagnosis}</td>
-                    <td style={styles.td}>{p.allergies || "-"}</td>
-                    <td style={styles.td}>{p.mental_status || "-"}</td>
-                    <td style={styles.td}>
-                      <Link to={`/patients/${p.id}`} style={styles.link}>
-                        View
-                      </Link>
-                    </td>
+            <div className="table-scroll">
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    {["Name", "Age", "Diagnosis", "Allergies", "Mental Status", ""].map((h) => (
+                      <th key={h} style={styles.th}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {seriousPatients.map((p) => (
+                    <tr key={p.id}>
+                      <td style={styles.td}>{p.full_name}</td>
+                      <td style={styles.td}>{p.age}</td>
+                      <td style={styles.td}>{p.diagnosis}</td>
+                      <td style={styles.td}>{p.allergies || "-"}</td>
+                      <td style={styles.td}>{p.mental_status || "-"}</td>
+                      <td style={styles.td}>
+                        <Link to={`/patients/${p.id}`} style={styles.link}>
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

@@ -8,6 +8,7 @@ from app.models import (
     AlertSeverity,
     ConsentStatus,
     ClinicalNoteStatus,
+    ClinicalNoteType,
     AdmissionType,
     PatientStatus,
     AudioProcessingStatus,
@@ -348,6 +349,7 @@ class ClinicalNoteCreate(BaseModel):
     assessment: str = ""
     plan: str = ""
     confidence: float = 0.0
+    note_type: Optional[str] = "general"
 
 
 class ClinicalNoteUpdate(BaseModel):
@@ -357,6 +359,7 @@ class ClinicalNoteUpdate(BaseModel):
     plan: Optional[str] = None
     status: Optional[ClinicalNoteStatus] = None
     confidence: Optional[float] = None
+    note_type: Optional[str] = None
 
 
 class ClinicalNoteOut(BaseModel):
@@ -366,6 +369,7 @@ class ClinicalNoteOut(BaseModel):
     reviewed_by: Optional[int] = None
     source_audio_note_id: Optional[int] = None
     status: ClinicalNoteStatus
+    note_type: str
     subjective: str
     objective: str
     assessment: str

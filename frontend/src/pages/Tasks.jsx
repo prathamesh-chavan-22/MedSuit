@@ -70,7 +70,7 @@ export default function Tasks() {
   };
 
   return (
-    <div style={styles.page}>
+    <div className="page-pad" style={styles.page}>
       <div style={styles.header}>
         <h2 style={styles.heading}>Shift Tasks</h2>
         <button style={styles.btn} onClick={() => setShowForm(!showForm)}>
@@ -92,6 +92,7 @@ export default function Tasks() {
                 priority: Number(form.priority),
               });
             }}
+            className="grid-2col"
             style={styles.grid2}
           >
             <div style={styles.field}>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Bell, LogOut, Activity } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Bell, LogOut, Activity, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useIsMobile } from "../hooks/useWindowWidth";
 import api from "../api";
 
 const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
@@ -13,9 +14,17 @@ const wsBaseUrl =
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [showAlerts, setShowAlerts] = useState(false);
   const wsRef = useRef(null);
+
+  // Close menu on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   // WebSocket for real-time alerts
   useEffect(() => {
@@ -92,15 +101,97 @@ export default function Navbar() {
         <span style={styles.brandText}>MedSuite IPD</span>
       </div>
 
-      <div style={styles.links}>
+      <button className="nav-hamburger" onClick={() => setMenuOpen(m => !m)}>
+        {menuOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
+
+      <div
+        className={
+          isMobile ? (menuOpen ? "nav-mobile-open" : "nav-links-mobile-hidden") : ""
+        }
+        style={isMobile && menuOpen ? { ...styles.links, flexDirection: "column", gap: 0 } : styles.links}
+      >
         {navLinks.map((item) => (
           <Link key={item.to} to={item.to} style={styles.link}>
             {item.label}
           </Link>
         ))}
+
+        {/* Mobile actions menu */}
+        {isMobile && menuOpen && (
+          <div
+            style={{
+              borderTop: "1px solid #dbe3ee",
+              paddingTop: 12,
+              marginTop: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            {/* Alert bell */}
+            <div style={{ position: "relative" }}>
+              <button
+                style={styles.iconBtn}
+                onClick={() => setShowAlerts(!showAlerts)}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && <span style={styles.badge}>{unreadCount}</span>}
+              </button>
+
+              {showAlerts && (
+                <div className="alert-dropdown-mobile" style={styles.alertDropdown}>
+                  <div style={styles.alertHeader}>Alerts</div>
+                  {alerts.length === 0 && (
+                    <div style={styles.alertEmpty}>No new alerts</div>
+                  )}
+                  {alerts.slice(0, 10).map((a) => (
+                    <div
+                      key={a.id}
+                      style={{
+                        ...styles.alertItem,
+                        background: a.is_read ? "#f9fafb" : "#eff6ff",
+                      }}
+                      onClick={() => markRead(a.id)}
+                    >
+                      <span
+                        style={{
+                          ...styles.severityDot,
+                          background:
+                            a.severity === "critical"
+                              ? "#ef4444"
+                              : a.severity === "warning"
+                                ? "#f59e0b"
+                                : "#3b82f6",
+                        }}
+                      />
+                      <div>
+                        <div style={styles.alertMsg}>{a.message}</div>
+                        <div style={styles.alertTime}>
+                          {new Date(a.created_at).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <span style={styles.userLabel}>
+              {user?.full_name} ({user?.role})
+            </span>
+            <button style={styles.iconBtn} onClick={handleLogout} title="Logout">
+              <LogOut size={18} />
+            </button>
+          </div>
+        )}
       </div>
 
-      <div style={styles.actions}>
+      {/* Desktop actions */}
+      <div
+        className="nav-actions-mobile-hidden"
+        style={styles.actions}
+      >
         {/* Alert bell */}
         <div style={{ position: "relative" }}>
           <button
@@ -112,7 +203,7 @@ export default function Navbar() {
           </button>
 
           {showAlerts && (
-            <div style={styles.alertDropdown}>
+            <div className="alert-dropdown-mobile" style={styles.alertDropdown}>
               <div style={styles.alertHeader}>Alerts</div>
               {alerts.length === 0 && (
                 <div style={styles.alertEmpty}>No new alerts</div>
