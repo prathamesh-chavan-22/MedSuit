@@ -64,7 +64,7 @@ class VitalWalker:
 
     def next(self) -> float:
         if random.random() < self.spike_prob:
-            delta = self.spike * (1 if self.spike >= 0 else -1)
+            delta = random.choice([self.spike, -self.spike])
         else:
             delta = random.uniform(-self.step, self.step)
 

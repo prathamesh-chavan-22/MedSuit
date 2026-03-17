@@ -53,6 +53,13 @@ function VitalWaveform({ color = "#0d9488" }) {
             100% { transform: translateX(-100px); }
           }
           .wave-anim { animation: wave-slide 4s linear infinite; }
+          @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 4px 24px rgba(239, 68, 68, 0.25), inset 0 0 0 1px rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 4px 32px rgba(239, 68, 68, 0.5), inset 0 0 0 2px rgba(239, 68, 68, 0.6); }
+          }
+          .vital-warn {
+            animation: glow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          }
         `}
       </style>
       <g className="wave-anim">
@@ -376,13 +383,6 @@ export default function PatientDetail() {
             <div style={styles.panel}>
               <div style={styles.panelHeader}>
                 <span style={styles.panelTitle}>Vital Signs</span>
-                <button
-                  style={styles.btnRefresh}
-                  onClick={() => mockVitalMut.mutate()}
-                  disabled={mockVitalMut.isPending}
-                >
-                  <RefreshCw size={14} /> {mockVitalMut.isPending ? "..." : "Simulate"}
-                </button>
               </div>
 
               {vitals.length > 0 && (
@@ -405,23 +405,23 @@ export default function PatientDetail() {
                   ].map(([label, val, unit, warn]) => (
                     <div
                       key={label}
+                      className={warn ? "vital-warn" : ""}
                       style={{
                         ...styles.vitalBox,
-                        borderColor: warn ? "#ef4444" : "#ccfbf1",
-                        position: "relative",
-                        overflow: "hidden",
+                        borderColor: warn ? "rgba(239, 68, 68, 0.5)" : "rgba(255, 255, 255, 0.4)",
+                        background: warn ? "rgba(254, 226, 226, 0.5)" : "rgba(255, 255, 255, 0.25)",
                       }}
                     >
                       <VitalWaveform color={warn ? "#ef4444" : "#0d9488"} />
                       <div
                         style={{
                           ...styles.vitalValue,
-                          color: warn ? "#ef4444" : "#134e4a",
+                          color: warn ? "#ef4444" : "#0f172a",
                         }}
                       >
-                        {val} <span style={styles.vitalUnit}>{unit}</span>
+                        {val} <span style={{ ...styles.vitalUnit, color: warn ? "#f87171" : "#64748b" }}>{unit}</span>
                       </div>
-                      <div style={styles.vitalLabel}>{label}</div>
+                      <div style={{ ...styles.vitalLabel, color: warn ? "#ef4444" : "#64748b" }}>{label}</div>
                     </div>
                   ))}
                 </div>
@@ -440,7 +440,7 @@ export default function PatientDetail() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p style={styles.empty}>No vitals recorded. Click Simulate to add a reading.</p>
+                <p style={styles.empty}>No vitals recorded.</p>
               )}
             </div>
           </div>
@@ -1349,20 +1349,44 @@ const styles = {
   latestVitals: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-    gap: 10,
+    gap: 12,
     marginBottom: 16,
   },
   vitalBox: {
-    border: "1px solid #ccfbf1",
-    borderRadius: 12,
-    padding: "12px 14px",
+    border: "1px solid rgba(255, 255, 255, 0.4)",
+    borderRadius: 16,
+    padding: "16px",
     textAlign: "center",
-    background: "rgba(255,255,255,0.9)",
-    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+    background: "rgba(255, 255, 255, 0.25)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.5)",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    position: "relative",
+    overflow: "hidden",
   },
-  vitalValue: { fontSize: 18, fontWeight: 700, position: "relative", zIndex: 1 },
-  vitalUnit: { fontSize: 12, fontWeight: 400, color: "#64748b" },
-  vitalLabel: { fontSize: 12, color: "#64748b", marginTop: 2, position: "relative", zIndex: 1 },
+  vitalValue: { 
+    fontSize: 28, 
+    fontWeight: 800, 
+    letterSpacing: "-0.03em",
+    position: "relative", 
+    zIndex: 1,
+    textShadow: "0 2px 10px rgba(0,0,0,0.05)",
+  },
+  vitalUnit: { 
+    fontSize: 13, 
+    fontWeight: 600, 
+    marginLeft: 4,
+  },
+  vitalLabel: { 
+    fontSize: 13, 
+    fontWeight: 600,
+    marginTop: 6, 
+    position: "relative", 
+    zIndex: 1,
+    letterSpacing: "0.02em",
+    textTransform: "uppercase",
+  },
   timelineContainer: {
     position: "relative",
     paddingLeft: 30,
