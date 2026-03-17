@@ -1,16 +1,31 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, CheckCircle, Circle, Clock } from "lucide-react";
+import { Plus, CheckCircle, Circle, Clock, X } from "lucide-react";
 import api from "../api";
 
+/* ---------- SVG Illustrations ---------- */
+
+function AllCaughtUpSvg() {
+  return (
+    <svg width="140" height="100" viewBox="0 0 140 100" fill="none">
+      <rect x="30" y="12" width="80" height="70" rx="14" fill="#f0fdfa" stroke="#99f6e4" strokeWidth="2" />
+      <circle cx="70" cy="40" r="16" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" />
+      <polyline points="62,40 68,46 78,34" fill="none" stroke="#0d9488" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="48" y1="68" x2="92" y2="68" stroke="#ccfbf1" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="110" cy="20" r="3" fill="#99f6e4" />
+      <circle cx="30" cy="78" r="2.5" fill="#99f6e4" />
+    </svg>
+  );
+}
+
 const priorityLabel = { 1: "Low", 2: "Medium", 3: "High" };
-const priorityColor = { 1: "#16a34a", 2: "#d97706", 3: "#dc2626" };
-const priorityBg = { 1: "#dcfce7", 2: "#fef3c7", 3: "#fee2e2" };
+const priorityColor = { 1: "#10b981", 2: "#f59e0b", 3: "#ef4444" };
+const priorityBg = { 1: "#d1fae5", 2: "#fef3c7", 3: "#fee2e2" };
 
 const statusIcon = {
-  pending: <Circle size={17} color="#9ca3af" />,
-  in_progress: <Clock size={17} color="#2563eb" />,
-  done: <CheckCircle size={17} color="#16a34a" />,
+  pending: <Circle size={17} color="#94a3b8" />,
+  in_progress: <Clock size={17} color="#0d9488" />,
+  done: <CheckCircle size={17} color="#10b981" />,
 };
 
 const EMPTY = {
@@ -78,7 +93,7 @@ export default function Tasks() {
 
   return (
     <div className="page-pad" style={styles.page}>
-      <div style={styles.header}>
+      <div className="anim-slide-up" style={styles.header}>
         <div>
           <h2 style={styles.heading}>Shift Tasks</h2>
           <p style={styles.subText}>Create, assign, and track care tasks by shift.</p>
@@ -88,27 +103,22 @@ export default function Tasks() {
         </button>
       </div>
 
-      <div style={styles.statsRow}>
-        <div style={{ ...styles.statCard, background: "#eff6ff" }}>
-          <div style={styles.statValue}>{counts.all}</div>
-          <div style={styles.statLabel}>Total</div>
-        </div>
-        <div style={{ ...styles.statCard, background: "#f8fafc" }}>
-          <div style={styles.statValue}>{counts.pending}</div>
-          <div style={styles.statLabel}>Pending</div>
-        </div>
-        <div style={{ ...styles.statCard, background: "#dbeafe" }}>
-          <div style={styles.statValue}>{counts.in_progress}</div>
-          <div style={styles.statLabel}>In Progress</div>
-        </div>
-        <div style={{ ...styles.statCard, background: "#ecfdf5" }}>
-          <div style={styles.statValue}>{counts.done}</div>
-          <div style={styles.statLabel}>Done</div>
-        </div>
+      <div className="anim-fade-in" style={styles.statsRow}>
+        {[
+          { key: "all", label: "Total", bg: "#f0fdfa", border: "#ccfbf1" },
+          { key: "pending", label: "Pending", bg: "#f8fafc", border: "#e2e8f0" },
+          { key: "in_progress", label: "In Progress", bg: "#f0fdfa", border: "#99f6e4" },
+          { key: "done", label: "Done", bg: "#ecfdf5", border: "#a7f3d0" },
+        ].map((s) => (
+          <div key={s.key} style={{ ...styles.statCard, background: s.bg, borderColor: s.border }}>
+            <div style={styles.statValue}>{counts[s.key]}</div>
+            <div style={styles.statLabel}>{s.label}</div>
+          </div>
+        ))}
       </div>
 
       {showForm && (
-        <div style={styles.formCard}>
+        <div className="anim-fade-scale" style={styles.formCard}>
           <h3 style={styles.formTitle}>Add New Task</h3>
           <form
             onSubmit={(e) => {
@@ -133,9 +143,7 @@ export default function Tasks() {
               >
                 <option value="">Select patient...</option>
                 {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name}
-                  </option>
+                  <option key={p.id} value={p.id}>{p.full_name}</option>
                 ))}
               </select>
             </div>
@@ -186,11 +194,7 @@ export default function Tasks() {
               </select>
             </div>
             <div style={styles.formActions}>
-              <button
-                type="button"
-                style={styles.btnSecondary}
-                onClick={() => setShowForm(false)}
-              >
+              <button type="button" style={styles.btnSecondary} onClick={() => setShowForm(false)}>
                 Cancel
               </button>
               <button type="submit" style={styles.btn} disabled={createMut.isPending}>
@@ -221,8 +225,9 @@ export default function Tasks() {
 
       <div style={styles.list}>
         {filtered.length === 0 && (
-          <div style={styles.emptyWrap}>
-            <p style={styles.empty}>No tasks found for this filter.</p>
+          <div className="empty-state anim-fade-scale" style={styles.emptyWrap}>
+            <AllCaughtUpSvg />
+            <p>All caught up! No tasks for this filter.</p>
           </div>
         )}
 
@@ -234,10 +239,11 @@ export default function Tasks() {
           return (
             <article
               key={task.id}
+              className="anim-slide-up"
               style={{
                 ...styles.taskCard,
                 borderLeftColor: pColor,
-                opacity: task.status === "done" ? 0.7 : 1,
+                opacity: task.status === "done" ? 0.65 : 1,
               }}
             >
               <button
@@ -268,8 +274,8 @@ export default function Tasks() {
                 </div>
               </div>
 
-              <button style={styles.btnDanger} onClick={() => deleteMut.mutate(task.id)}>
-                x
+              <button style={styles.btnDelete} onClick={() => deleteMut.mutate(task.id)} title="Delete">
+                <X size={14} />
               </button>
             </article>
           );
@@ -293,27 +299,29 @@ const styles = {
     gap: "12px",
     marginBottom: 16,
   },
-  heading: { margin: 0, fontSize: 22, fontWeight: 700, color: "#1e3a5f" },
+  heading: { margin: 0, fontSize: 24, fontWeight: 700, color: "#134e4a", letterSpacing: "-0.02em" },
   subText: { margin: "4px 0 0", color: "#64748b", fontSize: 13 },
   btn: {
     display: "inline-flex",
     alignItems: "center",
     gap: 6,
-    background: "#2563eb",
+    background: "linear-gradient(135deg, #0d9488, #14b8a6)",
     color: "#fff",
     border: "none",
     borderRadius: 10,
-    padding: "10px 16px",
+    padding: "10px 18px",
     fontWeight: 600,
     cursor: "pointer",
     fontSize: 14,
+    boxShadow: "0 4px 12px rgba(13,148,136,0.2)",
+    transition: "transform 0.15s ease",
   },
   btnSecondary: {
     background: "#f8fafc",
-    color: "#334155",
-    border: "1px solid #cbd5e1",
+    color: "#475569",
+    border: "1px solid #e2e8f0",
     borderRadius: 10,
-    padding: "10px 16px",
+    padding: "10px 18px",
     fontWeight: 600,
     cursor: "pointer",
     fontSize: 14,
@@ -326,10 +334,11 @@ const styles = {
   },
   statCard: {
     borderRadius: 12,
-    padding: "14px 16px",
-    border: "1px solid #dbe3ee",
+    padding: "16px 18px",
+    border: "1px solid #e2e8f0",
+    transition: "transform 0.15s ease, box-shadow 0.15s ease",
   },
-  statValue: { fontSize: 24, fontWeight: 700, color: "#1e3a5f", lineHeight: 1.1 },
+  statValue: { fontSize: 26, fontWeight: 700, color: "#134e4a", lineHeight: 1.1 },
   statLabel: {
     fontSize: 12,
     fontWeight: 600,
@@ -339,14 +348,15 @@ const styles = {
     marginTop: 4,
   },
   formCard: {
-    background: "#fff",
-    borderRadius: 12,
-    padding: "18px 20px",
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(10px)",
+    borderRadius: 14,
+    padding: "20px 22px",
     marginBottom: "16px",
-    border: "1px solid #dbe3ee",
-    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
+    border: "1px solid rgba(226, 232, 240, 0.7)",
+    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.06)",
   },
-  formTitle: { margin: "0 0 14px", fontSize: 16, fontWeight: 600, color: "#1e3a5f" },
+  formTitle: { margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#134e4a" },
   formGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
@@ -354,14 +364,15 @@ const styles = {
     alignItems: "end",
   },
   field: { display: "flex", flexDirection: "column", gap: 4 },
-  label: { fontSize: 13, fontWeight: 500, color: "#334155" },
+  label: { fontSize: 13, fontWeight: 600, color: "#475569" },
   input: {
-    border: "1px solid #cbd5e1",
+    border: "1px solid #e2e8f0",
     borderRadius: 10,
     padding: "10px 12px",
     fontSize: 14,
     outline: "none",
-    background: "#fff",
+    background: "rgba(255,255,255,0.7)",
+    transition: "border-color 0.2s, box-shadow 0.2s",
   },
   formActions: {
     gridColumn: "1 / -1",
@@ -372,38 +383,38 @@ const styles = {
   tabs: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" },
   tab: {
     background: "#f8fafc",
-    border: "1px solid #dbe3ee",
+    border: "1px solid #e2e8f0",
     borderRadius: 10,
-    padding: "8px 12px",
+    padding: "8px 14px",
     fontSize: 13,
     fontWeight: 600,
-    color: "#334155",
+    color: "#475569",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     gap: 8,
+    transition: "all 0.15s ease",
   },
   tabActive: {
-    background: "#dbeafe",
-    borderColor: "#93c5fd",
-    color: "#1d4ed8",
+    background: "#f0fdfa",
+    borderColor: "#99f6e4",
+    color: "#0d9488",
   },
   tabCount: {
     borderRadius: 999,
     padding: "1px 8px",
     fontSize: 11,
-    background: "rgba(255,255,255,0.8)",
-    border: "1px solid #dbe3ee",
+    background: "rgba(255,255,255,0.9)",
+    border: "1px solid #e2e8f0",
     fontWeight: 700,
   },
   list: { display: "flex", flexDirection: "column", gap: 10 },
   emptyWrap: {
-    border: "1px solid #dbe3ee",
-    borderRadius: 12,
-    background: "#f8fafc",
-    padding: "18px 16px",
+    border: "1px solid #ccfbf1",
+    borderRadius: 14,
+    background: "#f0fdfa",
+    padding: "24px 16px",
   },
-  empty: { margin: 0, color: "#64748b" },
   taskCard: {
     display: "flex",
     alignItems: "flex-start",
@@ -411,9 +422,11 @@ const styles = {
     border: "1px solid #e2e8f0",
     borderLeft: "4px solid #e2e8f0",
     borderRadius: 12,
-    padding: "12px 14px",
-    background: "#fff",
-    boxShadow: "0 2px 8px rgba(30, 58, 95, 0.06)",
+    padding: "14px 16px",
+    background: "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(6px)",
+    boxShadow: "0 2px 8px rgba(30, 58, 95, 0.04)",
+    transition: "transform 0.18s ease, box-shadow 0.18s ease",
   },
   iconBtn: {
     background: "none",
@@ -438,7 +451,7 @@ const styles = {
   },
   priorityBadge: {
     borderRadius: 999,
-    padding: "2px 8px",
+    padding: "3px 10px",
     fontSize: 11,
     fontWeight: 700,
     textTransform: "capitalize",
@@ -455,14 +468,17 @@ const styles = {
     color: "#475569",
     fontSize: 12,
   },
-  btnDanger: {
+  btnDelete: {
     background: "none",
-    color: "#cbd5e1",
-    border: "none",
+    color: "#94a3b8",
+    border: "1px solid #e2e8f0",
     cursor: "pointer",
-    fontSize: 16,
-    padding: 4,
+    padding: 5,
     lineHeight: 1,
-    borderRadius: 6,
+    borderRadius: 8,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.12s ease",
   },
 };

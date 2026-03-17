@@ -12,6 +12,33 @@ import {
   Legend,
 } from "recharts";
 import api from "../api";
+
+/* ---------- SVG Components ---------- */
+
+function PatientAvatar() {
+  return (
+    <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+      <rect width="52" height="52" rx="16" fill="url(#avatarGrad)" />
+      <circle cx="26" cy="20" r="8" fill="rgba(255,255,255,0.3)" stroke="#fff" strokeWidth="2" />
+      <path d="M14 44c0-7 5-12 12-12s12 5 12 12" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      <defs>
+        <linearGradient id="avatarGrad" x1="0" y1="0" x2="52" y2="52">
+          <stop stopColor="#0d9488" />
+          <stop offset="1" stopColor="#2dd4bf" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function VitalWaveform({ color = "#0d9488" }) {
+  return (
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 30, opacity: 0.08, pointerEvents: "none" }} viewBox="0 0 200 30" preserveAspectRatio="none">
+      <polyline points="0,20 20,20 30,15 40,25 50,10 60,22 70,18 80,20 100,20 120,20 130,12 140,28 150,8 160,22 170,18 180,20 200,20"
+        fill="none" stroke={color} strokeWidth="2" />
+    </svg>
+  );
+}
 import { useAuth } from "../context/AuthContext";
 
 const TABS = [
@@ -238,15 +265,18 @@ export default function PatientDetail() {
 
   return (
     <div className="page-pad" style={styles.page}>
-      <div style={styles.headerCard}>
+      <div className="anim-slide-up" style={styles.headerCard}>
         <div style={styles.headerTop}>
-          <div>
-            <h2 style={styles.name}>{patient.full_name}</h2>
-            <p style={styles.meta}>
-              {patient.age ? `${patient.age} yrs` : ""}
-              {patient.gender ? ` · ${patient.gender}` : ""}
-              {patient.diagnosis ? ` · ${patient.diagnosis}` : ""}
-            </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <PatientAvatar />
+            <div>
+              <h2 style={styles.name}>{patient.full_name}</h2>
+              <p style={styles.meta}>
+                {patient.age ? `${patient.age} yrs` : ""}
+                {patient.gender ? ` · ${patient.gender}` : ""}
+                {patient.diagnosis ? ` · ${patient.diagnosis}` : ""}
+              </p>
+            </div>
           </div>
           <div style={styles.tags}>
             {patient.is_serious && <span style={styles.badgeDanger}>Serious</span>}
@@ -354,13 +384,16 @@ export default function PatientDetail() {
                       key={label}
                       style={{
                         ...styles.vitalBox,
-                        borderColor: warn ? "#ef4444" : "#e5e7eb",
+                        borderColor: warn ? "#ef4444" : "#ccfbf1",
+                        position: "relative",
+                        overflow: "hidden",
                       }}
                     >
+                      <VitalWaveform color={warn ? "#ef4444" : "#0d9488"} />
                       <div
                         style={{
                           ...styles.vitalValue,
-                          color: warn ? "#ef4444" : "#111827",
+                          color: warn ? "#ef4444" : "#134e4a",
                         }}
                       >
                         {val} <span style={styles.vitalUnit}>{unit}</span>
@@ -916,11 +949,12 @@ const styles = {
     gap: 16,
   },
   headerCard: {
-    background: "linear-gradient(140deg, #ffffff 0%, #f8fbff 100%)",
-    border: "1px solid #dbe5f0",
-    borderRadius: 14,
-    padding: "18px 20px",
-    boxShadow: "0 10px 30px rgba(30, 58, 95, 0.08)",
+    background: "linear-gradient(140deg, rgba(255,255,255,0.92) 0%, rgba(240,253,250,0.8) 100%)",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(204,251,241,0.6)",
+    borderRadius: 16,
+    padding: "20px 22px",
+    boxShadow: "0 10px 30px rgba(13, 148, 136, 0.06)",
     transition: "all 220ms ease",
   },
   headerTop: {
@@ -930,8 +964,8 @@ const styles = {
     gap: 12,
     flexWrap: "wrap",
   },
-  name: { margin: 0, fontSize: 24, fontWeight: 700, color: "#1e3a5f" },
-  meta: { margin: "4px 0 0", color: "#6b7280", fontSize: 14 },
+  name: { margin: 0, fontSize: 24, fontWeight: 700, color: "#134e4a", letterSpacing: "-0.02em" },
+  meta: { margin: "4px 0 0", color: "#64748b", fontSize: 14 },
   tags: { display: "flex", gap: 8, flexWrap: "wrap" },
   tabRow: {
     display: "flex",
@@ -946,14 +980,14 @@ const styles = {
     gap: 8,
   },
   profileItem: {
-    border: "1px solid #dde7f2",
-    background: "#ffffff",
+    border: "1px solid #ccfbf1",
+    background: "rgba(255,255,255,0.85)",
     borderRadius: 10,
     padding: "8px 10px",
     display: "flex",
     flexDirection: "column",
     fontSize: 13,
-    color: "#1f2937",
+    color: "#0f172a",
   },
   profileKey: {
     fontSize: 11,
@@ -965,13 +999,13 @@ const styles = {
   uhidValue: {
     fontFamily: "monospace",
     fontWeight: 700,
-    color: "#1e40af",
+    color: "#134e4a",
     fontSize: 13,
   },
   tabButton: {
-    border: "1px solid #c7d7ea",
-    background: "#ffffff",
-    color: "#1e3a5f",
+    border: "1px solid #ccfbf1",
+    background: "rgba(255,255,255,0.8)",
+    color: "#475569",
     borderRadius: 999,
     padding: "7px 14px",
     fontSize: 13,
@@ -980,14 +1014,15 @@ const styles = {
     transition: "all 160ms ease",
   },
   tabActive: {
-    border: "1px solid #1e3a5f",
-    background: "#1e3a5f",
+    border: "1px solid #0d9488",
+    background: "linear-gradient(135deg, #0d9488, #14b8a6)",
     color: "#ffffff",
     borderRadius: 999,
     padding: "7px 14px",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(13,148,136,0.25)",
   },
   badgeDanger: {
     background: "#fee2e2",
@@ -1006,16 +1041,16 @@ const styles = {
     fontWeight: 600,
   },
   badgeInfo: {
-    background: "#eff6ff",
-    color: "#3b82f6",
+    background: "#f0fdfa",
+    color: "#0d9488",
     borderRadius: 99,
     padding: "4px 10px",
     fontSize: 12,
     fontWeight: 600,
   },
   badgeGray: {
-    background: "#f3f4f6",
-    color: "#6b7280",
+    background: "#f1f5f9",
+    color: "#64748b",
     borderRadius: 99,
     padding: "4px 10px",
     fontSize: 12,
@@ -1027,19 +1062,21 @@ const styles = {
     gap: 16,
   },
   panel: {
-    background: "#fff",
-    borderRadius: 12,
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(8px)",
+    borderRadius: 14,
     padding: "18px 18px",
-    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
-    border: "1px solid #e7eef5",
+    boxShadow: "0 4px 14px rgba(13, 148, 136, 0.05)",
+    border: "1px solid rgba(204,251,241,0.6)",
     transition: "all 180ms ease",
   },
   panelWide: {
-    background: "#fff",
-    borderRadius: 12,
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(8px)",
+    borderRadius: 14,
     padding: "18px 20px",
-    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
-    border: "1px solid #e7eef5",
+    boxShadow: "0 4px 14px rgba(13, 148, 136, 0.05)",
+    border: "1px solid rgba(204,251,241,0.6)",
     transition: "all 180ms ease",
   },
   panelHeader: {
@@ -1050,19 +1087,20 @@ const styles = {
     gap: 10,
     flexWrap: "wrap",
   },
-  panelTitle: { fontWeight: 700, fontSize: 15, color: "#1e3a5f" },
+  panelTitle: { fontWeight: 700, fontSize: 15, color: "#134e4a" },
   btnRecord: {
     display: "flex",
     alignItems: "center",
     gap: 6,
-    background: "#0d9488",
+    background: "linear-gradient(135deg, #0d9488, #14b8a6)",
     color: "#fff",
     border: "none",
-    borderRadius: 8,
-    padding: "8px 12px",
+    borderRadius: 10,
+    padding: "8px 14px",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(13,148,136,0.2)",
   },
   btnStop: {
     display: "flex",
@@ -1071,8 +1109,8 @@ const styles = {
     background: "#dc2626",
     color: "#fff",
     border: "none",
-    borderRadius: 8,
-    padding: "8px 12px",
+    borderRadius: 10,
+    padding: "8px 14px",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",
@@ -1081,29 +1119,30 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 6,
-    background: "#eef4fb",
-    color: "#27435f",
-    border: "1px solid #d2dfed",
-    borderRadius: 8,
-    padding: "8px 12px",
+    background: "#f0fdfa",
+    color: "#134e4a",
+    border: "1px solid #ccfbf1",
+    borderRadius: 10,
+    padding: "8px 14px",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",
+    transition: "all 0.15s ease",
   },
-  empty: { color: "#9ca3af", fontSize: 14 },
+  empty: { color: "#94a3b8", fontSize: 14 },
   noteCard: {
-    background: "#f9fbfe",
-    borderRadius: 10,
-    padding: "12px 14px",
+    background: "rgba(240,253,250,0.5)",
+    borderRadius: 12,
+    padding: "14px 16px",
     marginBottom: 10,
-    border: "1px solid #e5edf7",
+    border: "1px solid #ccfbf1",
   },
   noteFormCard: {
-    background: "#f0f9ff",
-    borderRadius: 10,
-    padding: "14px",
+    background: "#f0fdfa",
+    borderRadius: 12,
+    padding: "16px",
     marginBottom: 16,
-    border: "1px solid #bfdbfe",
+    border: "1px solid #99f6e4",
     maxWidth: "100%",
     overflow: "hidden",
     boxSizing: "border-box",
@@ -1185,13 +1224,14 @@ const styles = {
     marginBottom: 8,
   },
   input: {
-    border: "1px solid #cdd9e7",
-    borderRadius: 8,
-    padding: "8px 10px",
+    border: "1px solid #e2e8f0",
+    borderRadius: 10,
+    padding: "8px 12px",
     fontSize: 13,
     outline: "none",
     width: "100%",
-    background: "#fff",
+    background: "rgba(255,255,255,0.7)",
+    transition: "border-color 0.2s, box-shadow 0.2s",
   },
   dictationControlsRow: {
     display: "flex",
@@ -1249,7 +1289,7 @@ const styles = {
     minHeight: 42,
     border: "none",
     borderRadius: 10,
-    background: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)",
+    background: "linear-gradient(135deg, #0d9488, #14b8a6)",
     color: "#ffffff",
     fontSize: 13,
     fontWeight: 700,
@@ -1258,7 +1298,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
-    boxShadow: "0 8px 20px rgba(37, 99, 235, 0.25)",
+    boxShadow: "0 8px 20px rgba(13, 148, 136, 0.25)",
+    transition: "transform 0.15s ease",
   },
   formActions: {
     display: "flex",
@@ -1289,15 +1330,16 @@ const styles = {
     marginBottom: 16,
   },
   vitalBox: {
-    border: "1px solid #e5e7eb",
-    borderRadius: 8,
-    padding: "10px 12px",
+    border: "1px solid #ccfbf1",
+    borderRadius: 12,
+    padding: "12px 14px",
     textAlign: "center",
-    background: "#fff",
+    background: "rgba(255,255,255,0.9)",
+    transition: "transform 0.15s ease, box-shadow 0.15s ease",
   },
-  vitalValue: { fontSize: 18, fontWeight: 700 },
-  vitalUnit: { fontSize: 12, fontWeight: 400, color: "#6b7280" },
-  vitalLabel: { fontSize: 12, color: "#6b7280", marginTop: 2 },
+  vitalValue: { fontSize: 18, fontWeight: 700, position: "relative", zIndex: 1 },
+  vitalUnit: { fontSize: 12, fontWeight: 400, color: "#64748b" },
+  vitalLabel: { fontSize: 12, color: "#64748b", marginTop: 2, position: "relative", zIndex: 1 },
   timelineContainer: {
     position: "relative",
     paddingLeft: 30,
@@ -1316,7 +1358,7 @@ const styles = {
     height: 12,
     borderRadius: "50%",
     border: "2px solid white",
-    boxShadow: "0 0 0 2px #e5e7eb",
+    boxShadow: "0 0 0 2px #ccfbf1",
   },
   timelineLine: {
     position: "absolute",
@@ -1324,13 +1366,24 @@ const styles = {
     top: 12,
     width: 0,
     height: 32,
-    borderLeft: "2px solid #e5e7eb",
+    borderLeft: "2px solid #ccfbf1",
   },
   timelineContent: {
     flex: 1,
-    background: "#f9fafb",
-    borderRadius: 8,
-    padding: "10px 12px",
-    borderLeft: "3px solid #e5e7eb",
+    background: "rgba(240,253,250,0.5)",
+    borderRadius: 10,
+    padding: "10px 14px",
+    borderLeft: "3px solid #99f6e4",
+  },
+  textarea: {
+    border: "1px solid #e2e8f0",
+    borderRadius: 10,
+    padding: "8px 12px",
+    fontSize: 13,
+    outline: "none",
+    width: "100%",
+    background: "rgba(255,255,255,0.7)",
+    resize: "vertical",
+    fontFamily: "inherit",
   },
 };

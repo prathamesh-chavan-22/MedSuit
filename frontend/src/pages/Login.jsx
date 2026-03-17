@@ -1,7 +1,61 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Activity } from "lucide-react";
+
+/* ---------- inline SVG components ---------- */
+
+function MedicalLogo() {
+  return (
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="12" fill="url(#logoGrad)" />
+      <path d="M20 10v20M10 20h20" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M14 14l12 12M26 14L14 26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+      <defs>
+        <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+          <stop stopColor="#0d9488" />
+          <stop offset="1" stopColor="#2dd4bf" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function BackgroundPattern() {
+  return (
+    <svg
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.045, pointerEvents: "none" }}
+      viewBox="0 0 800 600"
+      preserveAspectRatio="xMidYMid slice"
+    >
+      {/* Heartbeat / ECG line */}
+      <polyline
+        points="0,300 120,300 140,300 160,250 180,360 200,280 220,300 800,300"
+        fill="none"
+        stroke="#0d9488"
+        strokeWidth="2"
+        strokeDasharray="1200"
+        strokeDashoffset="1200"
+        style={{ animation: "dash-draw 3s ease-out forwards" }}
+      />
+      {/* Cross markers */}
+      {[{x:100,y:120},{x:650,y:100},{x:400,y:480},{x:700,y:420},{x:180,y:500},{x:520,y:160}].map((p,i) => (
+        <g key={i} transform={`translate(${p.x},${p.y})`} opacity="0.5">
+          <line x1="-10" y1="0" x2="10" y2="0" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
+          <line x1="0" y1="-10" x2="0" y2="10" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
+        </g>
+      ))}
+      {/* Circles / atoms */}
+      {[{x:300,y:80,r:40},{x:600,y:500,r:55},{x:80,y:400,r:30}].map((c,i) => (
+        <circle key={i} cx={c.x} cy={c.y} r={c.r} fill="none" stroke="#0d9488" strokeWidth="1" strokeDasharray="6 4" />
+      ))}
+      {/* DNA helix hint */}
+      <path d="M720 0 Q740 100 720 200 Q700 300 720 400 Q740 500 720 600" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="8 6" />
+      <path d="M740 0 Q720 100 740 200 Q760 300 740 400 Q720 500 740 600" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="8 6" />
+    </svg>
+  );
+}
+
+/* ---------- component ---------- */
 
 export default function Login() {
   const { login } = useAuth();
@@ -27,84 +81,188 @@ export default function Login() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
+      <BackgroundPattern />
+
+      {/* floating decorative blobs */}
+      <div style={styles.blobTopRight} />
+      <div style={styles.blobBottomLeft} />
+
+      <div style={styles.card} className="anim-fade-scale">
         <div style={styles.logo}>
-          <Activity size={32} color="#3b82f6" />
-          <h1 style={styles.title}>MedSuite IPD</h1>
+          <MedicalLogo />
+          <div>
+            <h1 style={styles.title}>MedSuite IPD</h1>
+            <p style={styles.subtitle}>Hospital In-Patient Department</p>
+          </div>
         </div>
-        <p style={styles.subtitle}>Hospital In-Patient Department System</p>
+
+        <div style={styles.divider} />
+
         <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>Username</label>
-          <input
-            type="text"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={styles.input}
-            placeholder="rushil.dhube"
-          />
-          <label style={styles.label}>Password</label>
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
-            placeholder="••••••••"
-          />
+          <div style={styles.field}>
+            <label style={styles.label}>Username</label>
+            <input
+              type="text"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={styles.input}
+              placeholder="e.g. rushil.dhube"
+            />
+          </div>
+          <div style={styles.field}>
+            <label style={styles.label}>Password</label>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+              placeholder="••••••••"
+            />
+          </div>
+
           {error && <p style={styles.error}>{error}</p>}
+
           <button type="submit" style={styles.btn} disabled={loading}>
             {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
+
+        <p style={styles.footer}>Secure clinical-grade access</p>
       </div>
     </div>
   );
 }
 
+/* ---------- styles ---------- */
+
 const styles = {
   container: {
+    position: "relative",
     minHeight: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "20px",
-    background:
-      "radial-gradient(circle at 20% 10%, rgba(59,130,246,0.14), transparent 36%), radial-gradient(circle at 80% 0%, rgba(16,185,129,0.14), transparent 30%), #eef3f9",
+    padding: 20,
+    overflow: "hidden",
+    background: "linear-gradient(145deg, #e8f5f3 0%, #eef3f9 40%, #f1f5f9 100%)",
+  },
+  blobTopRight: {
+    position: "absolute",
+    top: "-10%",
+    right: "-8%",
+    width: 420,
+    height: 420,
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(13,148,136,0.12), transparent 70%)",
+    filter: "blur(60px)",
+    pointerEvents: "none",
+    animation: "float 6s ease-in-out infinite",
+  },
+  blobBottomLeft: {
+    position: "absolute",
+    bottom: "-12%",
+    left: "-6%",
+    width: 360,
+    height: 360,
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(45,212,191,0.10), transparent 70%)",
+    filter: "blur(50px)",
+    pointerEvents: "none",
+    animation: "float 7s ease-in-out infinite 1s",
   },
   card: {
-    background: "rgba(255,255,255,0.94)",
-    border: "1px solid #dbe3ee",
-    borderRadius: 16,
-    padding: "40px 36px",
-    boxShadow: "0 14px 40px rgba(24, 54, 92, 0.16)",
-    backdropFilter: "blur(8px)",
+    position: "relative",
+    zIndex: 2,
+    background: "rgba(255,255,255,0.82)",
+    backdropFilter: "blur(20px) saturate(1.6)",
+    WebkitBackdropFilter: "blur(20px) saturate(1.6)",
+    border: "1px solid rgba(255,255,255,0.55)",
+    borderRadius: 20,
+    padding: "44px 38px 36px",
+    boxShadow:
+      "0 20px 60px -12px rgba(13,148,136,0.12), 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)",
     width: "100%",
-    maxWidth: 400,
+    maxWidth: 420,
   },
-  logo: { display: "flex", alignItems: "center", gap: 10, marginBottom: 4 },
-  title: { margin: 0, fontSize: 22, fontWeight: 700, color: "#1e3a5f" },
-  subtitle: { color: "#6b7280", fontSize: 14, marginBottom: 28 },
-  form: { display: "flex", flexDirection: "column", gap: 12 },
-  label: { fontSize: 13, fontWeight: 500, color: "#374151" },
+  logo: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 4,
+  },
+  title: {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 700,
+    color: "#134e4a",
+    letterSpacing: "-0.02em",
+  },
+  subtitle: {
+    margin: "2px 0 0",
+    color: "#64748b",
+    fontSize: 13,
+  },
+  divider: {
+    height: 1,
+    background: "linear-gradient(90deg, transparent, #d1d5db, transparent)",
+    margin: "22px 0 26px",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 18,
+  },
+  field: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#475569",
+  },
   input: {
     border: "1px solid #d1d5db",
-    borderRadius: 8,
-    padding: "10px 12px",
+    borderRadius: 10,
+    padding: "11px 14px",
     fontSize: 14,
     outline: "none",
+    background: "rgba(255,255,255,0.7)",
+    transition: "border-color 0.2s, box-shadow 0.2s",
   },
-  error: { color: "#ef4444", fontSize: 13, margin: 0 },
+  error: {
+    color: "#ef4444",
+    fontSize: 13,
+    margin: 0,
+    background: "#fef2f2",
+    border: "1px solid #fecaca",
+    borderRadius: 8,
+    padding: "8px 12px",
+  },
   btn: {
-    background: "#3b82f6",
+    background: "linear-gradient(135deg, #0d9488, #14b8a6)",
     color: "#fff",
     border: "none",
-    borderRadius: 8,
-    padding: "11px 0",
+    borderRadius: 10,
+    padding: "12px 0",
     fontSize: 15,
     fontWeight: 600,
     cursor: "pointer",
     marginTop: 4,
+    transition: "transform 0.15s, box-shadow 0.15s",
+    boxShadow: "0 4px 14px rgba(13,148,136,0.25)",
+  },
+  footer: {
+    textAlign: "center",
+    fontSize: 11,
+    color: "#94a3b8",
+    marginTop: 20,
+    marginBottom: 0,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
   },
 };

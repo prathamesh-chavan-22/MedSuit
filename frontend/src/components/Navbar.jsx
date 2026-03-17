@@ -1,8 +1,25 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { LogOut, Activity } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useIsMobile } from "../hooks/useWindowWidth";
+
+/* Custom SVG logo matching the login page */
+function MedSuiteLogo() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="12" fill="url(#navLogoGrad)" />
+      <path d="M20 10v20M10 20h20" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M14 14l12 12M26 14L14 26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+      <defs>
+        <linearGradient id="navLogoGrad" x1="0" y1="0" x2="40" y2="40">
+          <stop stopColor="#0d9488" />
+          <stop offset="1" stopColor="#2dd4bf" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -28,34 +45,34 @@ export default function Navbar() {
   return (
     <nav style={styles.nav}>
       <div style={styles.brand}>
-        <Activity size={22} color="#3b82f6" />
+        <MedSuiteLogo />
         <span style={styles.brandText}>MedSuite IPD</span>
       </div>
 
       <div style={isMobile ? { ...styles.links, ...styles.linksMobile } : styles.links}>
-        {navLinks.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            style={
-              location.pathname === item.to
-                ? { ...styles.link, ...styles.linkActive }
-                : styles.link
-            }
-          >
-            {item.label}
-          </Link>
-        ))}
+        {navLinks.map((item) => {
+          const isActive = location.pathname === item.to;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              style={isActive ? { ...styles.link, ...styles.linkActive } : styles.link}
+            >
+              {item.label}
+              {isActive && <span style={styles.activeDot} />}
+            </Link>
+          );
+        })}
       </div>
 
-      {/* Desktop actions */}
-        <div style={styles.actions}>
-          {!isMobile && (
-            <span style={styles.userLabel}>
-              {user?.full_name} ({user?.role})
-            </span>
-          )}
-          <button style={styles.iconBtn} onClick={handleLogout} title="Logout" disabled={isLoggingOut}>
+      <div style={styles.actions}>
+        {!isMobile && (
+          <span style={styles.userLabel}>
+            {user?.full_name}
+            <span style={styles.roleBadge}>{user?.role}</span>
+          </span>
+        )}
+        <button style={styles.iconBtn} onClick={handleLogout} title="Logout" disabled={isLoggingOut}>
           <LogOut size={18} />
         </button>
       </div>
@@ -71,101 +88,83 @@ const styles = {
     right: 0,
     height: 70,
     zIndex: 100,
-    background: "rgba(255, 255, 255, 0.92)",
-    backdropFilter: "blur(8px)",
-    borderBottom: "1px solid #dbe3ee",
+    background: "rgba(255, 255, 255, 0.88)",
+    backdropFilter: "blur(14px) saturate(1.5)",
+    WebkitBackdropFilter: "blur(14px) saturate(1.5)",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.7)",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     padding: "0 max(12px, calc((100vw - 1220px) / 2))",
     gap: 16,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
   },
-  brand: { display: "flex", alignItems: "center", gap: 8 },
-  brandText: { fontWeight: 700, fontSize: 18, color: "#1e3a5f" },
-  links: { display: "flex", gap: 20, flexWrap: "wrap" },
+  brand: { display: "flex", alignItems: "center", gap: 10 },
+  brandText: {
+    fontWeight: 700,
+    fontSize: 18,
+    color: "#134e4a",
+    letterSpacing: "-0.02em",
+  },
+  links: { display: "flex", gap: 6, flexWrap: "wrap" },
   linksMobile: {
     flexWrap: "nowrap",
     overflowX: "auto",
-    gap: 10,
+    gap: 4,
     paddingBottom: 2,
     scrollbarWidth: "thin",
   },
   link: {
+    position: "relative",
     textDecoration: "none",
-    color: "#374151",
+    color: "#64748b",
     fontWeight: 600,
-    fontSize: 15,
-    padding: "8px 10px",
-    borderRadius: 8,
-    borderBottom: "2px solid transparent",
-    transition: "background-color 120ms ease, color 120ms ease, border-color 120ms ease",
+    fontSize: 14,
+    padding: "8px 14px",
+    borderRadius: 10,
+    transition: "all 0.18s ease",
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
   },
   linkActive: {
-    color: "#1e3a5f",
-    background: "#eaf2fb",
-    borderBottom: "2px solid #2563eb",
+    color: "#0d9488",
+    background: "rgba(13, 148, 136, 0.08)",
+  },
+  activeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: "50%",
+    background: "#0d9488",
+    display: "inline-block",
   },
   actions: { display: "flex", alignItems: "center", gap: 12 },
   iconBtn: {
     background: "none",
-    border: "none",
+    border: "1px solid #e2e8f0",
     cursor: "pointer",
-    position: "relative",
-    padding: 6,
-    borderRadius: 8,
+    padding: 8,
+    borderRadius: 10,
     display: "flex",
     alignItems: "center",
+    color: "#64748b",
+    transition: "all 0.15s ease",
   },
-  badge: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    background: "#ef4444",
-    color: "#fff",
-    borderRadius: "50%",
-    fontSize: 10,
-    width: 16,
-    height: 16,
+  userLabel: {
+    fontSize: 13,
+    color: "#475569",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 8,
   },
-  userLabel: { fontSize: 13, color: "#6b7280" },
-  alertDropdown: {
-    position: "absolute",
-    top: 40,
-    right: 0,
-    width: 320,
-    background: "#fff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 8,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    zIndex: 200,
-    maxHeight: 400,
-    overflowY: "auto",
+  roleBadge: {
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    color: "#0d9488",
+    background: "rgba(13, 148, 136, 0.08)",
+    borderRadius: 6,
+    padding: "2px 8px",
   },
-  alertHeader: {
-    padding: "10px 14px",
-    fontWeight: 600,
-    fontSize: 14,
-    borderBottom: "1px solid #e5e7eb",
-  },
-  alertEmpty: { padding: "12px 14px", color: "#9ca3af", fontSize: 13 },
-  alertItem: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: 10,
-    padding: "10px 14px",
-    cursor: "pointer",
-    borderBottom: "1px solid #f3f4f6",
-  },
-  severityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: "50%",
-    marginTop: 4,
-    flexShrink: 0,
-  },
-  alertMsg: { fontSize: 13, color: "#111827" },
-  alertTime: { fontSize: 11, color: "#9ca3af", marginTop: 2 },
 };

@@ -1,8 +1,57 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ShieldAlert, Bug, AlertTriangle } from "lucide-react";
 import api from "../api";
+
+/* ---------- SVG Illustrations ---------- */
+
+function NoPatientsSvg() {
+  return (
+    <svg width="140" height="100" viewBox="0 0 140 100" fill="none">
+      <rect x="25" y="10" width="90" height="70" rx="14" fill="#f0fdfa" stroke="#99f6e4" strokeWidth="2" />
+      <circle cx="70" cy="35" r="12" fill="none" stroke="#0d9488" strokeWidth="2" strokeDasharray="4 3" />
+      <path d="M64 35l4 4 8-8" fill="none" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="45" y1="58" x2="95" y2="58" stroke="#ccfbf1" strokeWidth="2" strokeLinecap="round" />
+      <line x1="55" y1="66" x2="85" y2="66" stroke="#ccfbf1" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="115" cy="18" r="3" fill="#99f6e4" />
+      <circle cx="25" cy="75" r="2" fill="#99f6e4" />
+    </svg>
+  );
+}
+
+function SeriousSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 3 }}>
+      <circle cx="7" cy="7" r="6" fill="#fee2e2" stroke="#ef4444" strokeWidth="1.5" />
+      <line x1="7" y1="4" x2="7" y2="8" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="7" cy="10" r="0.8" fill="#ef4444" />
+    </svg>
+  );
+}
+
+function InfectionSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 3 }}>
+      <circle cx="7" cy="7" r="5" fill="#fef3c7" stroke="#d97706" strokeWidth="1.5" />
+      <circle cx="7" cy="7" r="2" fill="none" stroke="#d97706" strokeWidth="1" />
+      <circle cx="7" cy="2" r="1" fill="#d97706" opacity="0.6" />
+      <circle cx="12" cy="7" r="1" fill="#d97706" opacity="0.6" />
+      <circle cx="7" cy="12" r="1" fill="#d97706" opacity="0.6" />
+      <circle cx="2" cy="7" r="1" fill="#d97706" opacity="0.6" />
+    </svg>
+  );
+}
+
+function FallRiskSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 3 }}>
+      <path d="M7 1L1 13h12L7 1z" fill="#e5e7eb" stroke="#6b7280" strokeWidth="1" strokeLinejoin="round" />
+      <line x1="7" y1="5" x2="7" y2="9" stroke="#6b7280" strokeWidth="1.2" strokeLinecap="round" />
+      <circle cx="7" cy="11" r="0.6" fill="#6b7280" />
+    </svg>
+  );
+}
 
 const EMPTY_FORM = {
   full_name: "",
@@ -86,15 +135,18 @@ export default function Patients() {
 
   return (
     <div className="page-pad" style={styles.page}>
-      <div style={styles.header}>
-        <h2 style={styles.heading}>Patients</h2>
+      <div className="anim-slide-up" style={styles.header}>
+        <div>
+          <h2 style={styles.heading}>Patients</h2>
+          <p style={styles.subText}>Manage admissions, profiles, and risk flags</p>
+        </div>
         <button style={styles.btn} onClick={() => setShowForm(!showForm)}>
           <Plus size={16} /> Add Patient
         </button>
       </div>
 
       {showForm && (
-        <div style={styles.formCard}>
+        <div className="anim-fade-scale" style={styles.formCard}>
           <h3 style={styles.formTitle}>New Patient</h3>
           <form onSubmit={handleSubmit} className="grid-2col" style={styles.grid2}>
             {[
@@ -114,12 +166,7 @@ export default function Patients() {
               ["secondary_phone", "Secondary Phone", "text", false],
               ["emergency_contact_name", "Emergency Contact Name", "text", false],
               ["emergency_contact_phone", "Emergency Contact Phone", "text", false],
-              [
-                "emergency_contact_relationship",
-                "Emergency Contact Relationship",
-                "text",
-                false,
-              ],
+              ["emergency_contact_relationship", "Emergency Contact Relationship", "text", false],
               ["city", "City", "text", false],
               ["state", "State", "text", false],
               ["pincode", "Pincode", "text", false],
@@ -220,7 +267,7 @@ export default function Patients() {
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>
+              <label style={styles.checkLabel}>
                 <input
                   type="checkbox"
                   checked={form.fall_risk}
@@ -233,7 +280,7 @@ export default function Patients() {
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>
+              <label style={styles.checkLabel}>
                 <input
                   type="checkbox"
                   checked={form.infection_risk}
@@ -246,7 +293,7 @@ export default function Patients() {
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>
+              <label style={styles.checkLabel}>
                 <input
                   type="checkbox"
                   checked={form.is_serious}
@@ -281,8 +328,8 @@ export default function Patients() {
         </div>
       )}
 
-      <div style={styles.searchBox}>
-        <Search size={16} color="#9ca3af" />
+      <div className="anim-fade-in" style={styles.searchBox}>
+        <Search size={16} color="#94a3b8" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -293,80 +340,77 @@ export default function Patients() {
 
       {isLoading ? (
         <p>Loading...</p>
+      ) : filtered.length === 0 ? (
+        <div className="empty-state anim-fade-scale">
+          <NoPatientsSvg />
+          <p>No patients found</p>
+        </div>
       ) : (
-        <div className="table-scroll">
+        <div className="table-scroll anim-slide-up">
           <table style={styles.table}>
-          <thead>
-            <tr>
-              {[
-                "Name",
-                "UHID",
-                "MRN",
-                "Age",
-                "Gender",
-                "Diagnosis",
-                "Status",
-                "Allergies",
-                "Risk Flags",
-                "Actions",
-              ].map((h) => (
-                <th key={h} style={styles.th}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id}>
-                <td style={styles.td}>
-                  <Link to={`/patients/${p.id}`} style={styles.link}>
-                    {p.full_name}
-                  </Link>
-                </td>
-                <td style={styles.td}><span style={styles.uhidBadge}>{p.uhid || "-"}</span></td>
-                <td style={styles.td}>{p.mrn || "-"}</td>
-                <td style={styles.td}>{p.age || "-"}</td>
-                <td style={styles.td}>{p.gender || "-"}</td>
-                <td style={styles.td}>{p.diagnosis || "-"}</td>
-                <td style={styles.td}>{p.patient_status || "admitted"}</td>
-                <td style={styles.td}>{p.allergies || "-"}</td>
-                <td style={styles.td}>
-                  {p.is_serious && <span style={styles.badgeDanger}>Serious</span>}
-                  {p.infection_risk && (
-                    <span style={styles.badgeWarn}>Infection Risk</span>
-                  )}
-                  {p.fall_risk && <span style={styles.badgeGray}>Fall Risk</span>}
-                  {!p.is_serious && !p.infection_risk && !p.fall_risk && (
-                    <span style={styles.badgeOk}>Stable</span>
-                  )}
-                </td>
-                <td style={styles.td}>
-                  <button
-                    style={styles.btnDanger}
-                    onClick={() => {
-                      if (window.confirm(`Remove ${p.full_name}? This cannot be undone.`)) {
-                        deleteMut.mutate(p.id);
-                      }
-                    }}
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
+            <thead>
               <tr>
-                <td
-                  colSpan={10}
-                  style={{ ...styles.td, color: "#9ca3af", textAlign: "center" }}
-                >
-                  No patients found
-                </td>
+                {[
+                  "Name",
+                  "UHID",
+                  "MRN",
+                  "Age",
+                  "Gender",
+                  "Diagnosis",
+                  "Status",
+                  "Allergies",
+                  "Risk Flags",
+                  "Actions",
+                ].map((h) => (
+                  <th key={h} style={styles.th}>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((p) => (
+                <tr key={p.id} style={styles.row}>
+                  <td style={styles.td}>
+                    <Link to={`/patients/${p.id}`} style={styles.link}>
+                      {p.full_name}
+                    </Link>
+                  </td>
+                  <td style={styles.td}><span style={styles.uhidBadge}>{p.uhid || "-"}</span></td>
+                  <td style={styles.td}>{p.mrn || "-"}</td>
+                  <td style={styles.td}>{p.age || "-"}</td>
+                  <td style={styles.td}>{p.gender || "-"}</td>
+                  <td style={styles.td}>{p.diagnosis || "-"}</td>
+                  <td style={styles.td}>
+                    <span style={styles.statusBadge}>{p.patient_status || "admitted"}</span>
+                  </td>
+                  <td style={styles.td}>{p.allergies || "-"}</td>
+                  <td style={styles.td}>
+                    {p.is_serious && <span style={styles.badgeDanger}><SeriousSvg />Serious</span>}
+                    {p.infection_risk && (
+                      <span style={styles.badgeWarn}><InfectionSvg />Infection</span>
+                    )}
+                    {p.fall_risk && <span style={styles.badgeGray}><FallRiskSvg />Fall</span>}
+                    {!p.is_serious && !p.infection_risk && !p.fall_risk && (
+                      <span style={styles.badgeOk}>Stable</span>
+                    )}
+                  </td>
+                  <td style={styles.td}>
+                    <button
+                      style={styles.btnDanger}
+                      onClick={() => {
+                        if (window.confirm(`Remove ${p.full_name}? This cannot be undone.`)) {
+                          deleteMut.mutate(p.id);
+                        }
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -380,27 +424,32 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
+    flexWrap: "wrap",
+    gap: 12,
   },
-  heading: { margin: 0, fontSize: 22, fontWeight: 700, color: "#1e3a5f" },
+  heading: { margin: 0, fontSize: 24, fontWeight: 700, color: "#134e4a", letterSpacing: "-0.02em" },
+  subText: { margin: "4px 0 0", color: "#64748b", fontSize: 13 },
   btn: {
     display: "flex",
     alignItems: "center",
     gap: 6,
-    background: "#3b82f6",
+    background: "linear-gradient(135deg, #0d9488, #14b8a6)",
     color: "#fff",
     border: "none",
     borderRadius: 10,
-    padding: "10px 16px",
+    padding: "10px 18px",
     fontWeight: 600,
     cursor: "pointer",
     fontSize: 14,
+    boxShadow: "0 4px 12px rgba(13,148,136,0.2)",
+    transition: "transform 0.15s ease",
   },
   btnSecondary: {
-    background: "#f3f4f6",
-    color: "#374151",
-    border: "none",
+    background: "#f8fafc",
+    color: "#475569",
+    border: "1px solid #e2e8f0",
     borderRadius: 10,
-    padding: "10px 16px",
+    padding: "10px 18px",
     fontWeight: 600,
     cursor: "pointer",
     fontSize: 14,
@@ -408,105 +457,138 @@ const styles = {
   btnDanger: {
     background: "none",
     color: "#ef4444",
-    border: "1px solid #ef4444",
+    border: "1px solid #fecaca",
     borderRadius: 8,
     padding: "7px 12px",
     cursor: "pointer",
     fontSize: 13,
+    fontWeight: 600,
+    transition: "all 0.15s ease",
   },
   formCard: {
-    background: "#fff",
-    borderRadius: 12,
-    padding: "20px 22px",
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(10px)",
+    borderRadius: 14,
+    padding: "22px 24px",
     marginBottom: "16px",
-    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
+    border: "1px solid rgba(226, 232, 240, 0.7)",
+    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.06)",
   },
-  formTitle: { margin: "0 0 16px", fontSize: 16, fontWeight: 600 },
+  formTitle: { margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "#134e4a" },
   grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" },
   field: { display: "flex", flexDirection: "column", gap: 4 },
-  label: { fontSize: 13, fontWeight: 500, color: "#374151" },
+  label: { fontSize: 13, fontWeight: 600, color: "#475569" },
+  checkLabel: { fontSize: 13, fontWeight: 500, color: "#475569", display: "flex", alignItems: "center", gap: 6 },
   input: {
-    border: "1px solid #d1d5db",
+    border: "1px solid #e2e8f0",
     borderRadius: 10,
     padding: "10px 12px",
     fontSize: 14,
     outline: "none",
+    background: "rgba(255,255,255,0.7)",
+    transition: "border-color 0.2s, box-shadow 0.2s",
   },
   searchBox: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
-    background: "#fff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 10,
-    padding: "10px 12px",
-    marginBottom: "16px",
-    maxWidth: "460px",
+    gap: 10,
+    background: "rgba(255,255,255,0.9)",
+    backdropFilter: "blur(8px)",
+    border: "1px solid #e2e8f0",
+    borderRadius: 12,
+    padding: "11px 14px",
+    marginBottom: "18px",
+    maxWidth: "480px",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
   },
-  searchInput: { border: "none", outline: "none", fontSize: 14, flex: 1 },
+  searchInput: { border: "none", outline: "none", fontSize: 14, flex: 1, background: "transparent" },
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    background: "#fff",
-    borderRadius: 12,
+    background: "rgba(255,255,255,0.92)",
+    borderRadius: 14,
     overflow: "hidden",
-    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.08)",
+    boxShadow: "0 4px 14px rgba(30, 58, 95, 0.06)",
   },
   th: {
     textAlign: "left",
-    padding: "10px 14px",
-    fontSize: 12,
-    color: "#6b7280",
-    borderBottom: "1px solid #e5e7eb",
-    background: "#f9fafb",
+    padding: "12px 14px",
+    fontSize: 11,
+    color: "#64748b",
+    borderBottom: "1px solid #e2e8f0",
+    background: "#f8fafb",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
   },
   td: {
-    padding: "12px 14px",
+    padding: "14px 14px",
     fontSize: 14,
-    color: "#111827",
-    borderBottom: "1px solid #f3f4f6",
+    color: "#0f172a",
+    borderBottom: "1px solid #f1f5f9",
+    transition: "background 0.12s",
   },
-  link: { color: "#3b82f6", textDecoration: "none", fontWeight: 600 },
+  row: {
+    transition: "background 0.12s ease",
+  },
+  link: { color: "#0d9488", textDecoration: "none", fontWeight: 600 },
   badgeDanger: {
     background: "#fee2e2",
     color: "#ef4444",
     borderRadius: 99,
-    padding: "2px 8px",
+    padding: "3px 10px",
     fontSize: 12,
     fontWeight: 600,
     marginRight: 4,
+    display: "inline-flex",
+    alignItems: "center",
   },
   badgeWarn: {
     background: "#fef3c7",
     color: "#d97706",
     borderRadius: 99,
-    padding: "2px 8px",
+    padding: "3px 10px",
     fontSize: 12,
     fontWeight: 600,
     marginRight: 4,
+    display: "inline-flex",
+    alignItems: "center",
   },
   badgeGray: {
-    background: "#e5e7eb",
-    color: "#374151",
+    background: "#f1f5f9",
+    color: "#475569",
     borderRadius: 99,
-    padding: "2px 8px",
+    padding: "3px 10px",
     fontSize: 12,
     fontWeight: 600,
     marginRight: 4,
+    display: "inline-flex",
+    alignItems: "center",
   },
   badgeOk: {
     background: "#d1fae5",
     color: "#059669",
     borderRadius: 99,
-    padding: "2px 8px",
+    padding: "3px 10px",
     fontSize: 12,
     fontWeight: 600,
+    display: "inline-flex",
+    alignItems: "center",
+  },
+  statusBadge: {
+    background: "#f0fdfa",
+    color: "#0d9488",
+    borderRadius: 99,
+    padding: "3px 10px",
+    fontSize: 12,
+    fontWeight: 600,
+    textTransform: "capitalize",
   },
   uhidBadge: {
-    background: "#eff6ff",
-    color: "#1e40af",
+    background: "#f0fdfa",
+    color: "#134e4a",
     borderRadius: 6,
-    padding: "2px 6px",
+    padding: "2px 8px",
     fontSize: 12,
     fontWeight: 700,
     fontFamily: "monospace",
