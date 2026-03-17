@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
+import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -162,6 +163,7 @@ const MARKDOWN_COMPONENTS = {
 
 export default function ChatApp() {
   const patientId = usePatientIdFromUrl();
+  const [isMounted, setIsMounted] = useState(false);
 
   // ── Session state ───────────────────────────────────────────────────────────
   const [sessions, setSessions] = useState([]);
@@ -238,6 +240,10 @@ export default function ChatApp() {
   useEffect(() => {
     if (isOpen && inputRef.current) inputRef.current.focus();
   }, [isOpen]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // ── Session management ──────────────────────────────────────────────────────
   async function addSession() {
@@ -427,7 +433,9 @@ export default function ChatApp() {
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
 
-  return (
+  if (!isMounted) return null;
+
+  return createPortal(
     <div className="chatapp-root">
       {isOpen && (
         <section className="chatapp-panel" aria-label="AI Clinical Co-Pilot">
@@ -670,6 +678,7 @@ export default function ChatApp() {
           </>
         )}
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }

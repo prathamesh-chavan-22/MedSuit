@@ -29,7 +29,7 @@
   position: fixed;
   right: clamp(14px, 2vw, 24px);
   bottom: clamp(14px, 2vw, 24px);
-  z-index: 120;
+  z-index: 1200;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
