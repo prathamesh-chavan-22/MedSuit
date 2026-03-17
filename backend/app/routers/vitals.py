@@ -48,22 +48,74 @@ def ingest_mock_vitals(
     db.refresh(reading)
 
     # Auto-generate alert if serious thresholds are breached
-    alerts = []
-    if reading.heart_rate and (reading.heart_rate > 100 or reading.heart_rate < 60):
-        alerts.append(f"Abnormal heart rate: {reading.heart_rate} bpm")
-    if reading.spo2 and reading.spo2 < 95:
-        alerts.append(f"Low SpO2: {reading.spo2}%")
-    if reading.temperature and reading.temperature > 38.0:
-        alerts.append(f"Fever detected: {reading.temperature}°C")
+    # Each alert type has a "key" prefix. We deduplicate by only allowing one
+    # active (unread) alert per type per patient — updating its message if it
+    # already exists instead of inserting a redundant row.
+    triggered: list[tuple[str, str, models.AlertSeverity]] = []  # (key, message, severity)
 
-    for msg in alerts:
-        alert = models.Alert(
-            patient_id=patient_id,
-            severity=models.AlertSeverity.warning,
-            message=msg,
+    if reading.heart_rate and (reading.heart_rate > 100 or reading.heart_rate < 60):
+        triggered.append((
+            "Abnormal heart rate",
+            f"Abnormal heart rate: {int(reading.heart_rate)} bpm",
+            models.AlertSeverity.warning,
+        ))
+    if reading.spo2 and reading.spo2 < 95:
+        triggered.append((
+            "Low SpO2",
+            f"Low SpO2: {int(reading.spo2)}%",
+            models.AlertSeverity.critical if reading.spo2 < 90 else models.AlertSeverity.warning,
+        ))
+    if reading.temperature and reading.temperature > 38.0:
+        triggered.append((
+            "Fever detected",
+            f"Fever detected: {reading.temperature:.1f}°C",
+            models.AlertSeverity.critical if reading.temperature > 39.5 else models.AlertSeverity.warning,
+        ))
+
+    from datetime import datetime, timezone
+
+    changed = False
+    for key, msg, severity in triggered:
+        # Look for an existing unread alert of this type for this patient
+        existing = (
+            db.query(models.Alert)
+            .filter(
+                models.Alert.patient_id == patient_id,
+                models.Alert.is_read == False,
+                models.Alert.message.like(f"{key}:%"),
+            )
+            .first()
         )
-        db.add(alert)
-    if alerts:
+        if existing:
+            # Update in-place — no new row created
+            existing.message = msg
+            existing.severity = severity
+            existing.created_at = datetime.now(timezone.utc)
+            changed = True
+        else:
+            db.add(models.Alert(patient_id=patient_id, severity=severity, message=msg))
+            changed = True
+
+    # Also resolve alerts whose condition has cleared (e.g. hr is now normal)
+    # by marking them resolved (read) so they don't linger
+    all_keys = {"Abnormal heart rate", "Low SpO2", "Fever detected"}
+    triggered_keys = {t[0] for t in triggered}
+    cleared_keys = all_keys - triggered_keys
+    for key in cleared_keys:
+        resolved = (
+            db.query(models.Alert)
+            .filter(
+                models.Alert.patient_id == patient_id,
+                models.Alert.is_read == False,
+                models.Alert.message.like(f"{key}:%"),
+            )
+            .all()
+        )
+        for a in resolved:
+            a.is_read = True
+            changed = True
+
+    if changed:
         db.commit()
 
     return reading
