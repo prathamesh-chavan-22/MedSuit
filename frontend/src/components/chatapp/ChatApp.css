@@ -224,6 +224,74 @@
   animation: spin 1s linear infinite;
 }
 
+/* ── Nurse Avatar Animations ────────────────────────────────────────────── */
+@keyframes nurseFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes nurseBlink {
+  0%, 96%, 100% { transform: scaleY(1); }
+  98% { transform: scaleY(0.1); }
+}
+
+@keyframes nurseBreathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.02, 1.05); }
+}
+
+@keyframes nurseHaloPulse {
+  0% { transform: scale(0.9); opacity: 0.3; }
+  50% { transform: scale(1.1); opacity: 0.6; }
+  100% { transform: scale(0.9); opacity: 0.3; }
+}
+
+@keyframes nurseThinkSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes nurseThinkSpinReverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.nurse-avatar {
+  border-radius: 50%;
+  animation: nurseFloat 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.nurse-avatar-eyes {
+  transform-origin: center;
+  animation: nurseBlink 4s infinite;
+}
+
+.nurse-avatar-body {
+  transform-origin: bottom center;
+  animation: nurseBreathe 3.5s ease-in-out infinite;
+}
+
+.nurse-avatar--thinking {
+  animation: none; /* Disable float when thinking */
+  filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.5));
+}
+
+.nurse-think-ring {
+  transform-origin: 50px 50px;
+  animation: nurseThinkSpin 3s linear infinite;
+}
+
+.nurse-think-ring-inner {
+  transform-origin: 50px 50px;
+  animation: nurseThinkSpinReverse 2s linear infinite;
+}
+
+.nurse-halo {
+  animation: nurseHaloPulse 3s ease-in-out infinite;
+}
+
 /* ── Session Controls ───────────────────────────────────────────────────── */
 
 .chatapp-session-controls {

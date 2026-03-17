@@ -337,7 +337,357 @@ function TimelineEventCard({ evt }) {
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   InteractiveBodyMap — clickable anatomical SVG
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const BODY_REGIONS = [
+  { id: "head",     label: "Head",       keywords: ["head", "brain", "skull", "eye", "ear", "nose", "throat", "migraine", "headache", "facial"] },
+  { id: "chest",    label: "Chest",      keywords: ["chest", "heart", "lung", "pulmonary", "cardiac", "breath", "respiratory", "cough", "thorax", "rib"] },
+  { id: "abdomen",  label: "Abdomen",    keywords: ["abdomen", "stomach", "liver", "kidney", "bowel", "gut", "nausea", "vomit", "abdominal", "gastro", "renal", "pancrea"] },
+  { id: "left_arm", label: "Left Arm",   keywords: ["left arm", "left hand", "left wrist", "left elbow", "left shoulder", "left upper"] },
+  { id: "right_arm",label: "Right Arm",  keywords: ["right arm", "right hand", "right wrist", "right elbow", "right shoulder", "right upper"] },
+  { id: "left_leg", label: "Left Leg",   keywords: ["left leg", "left knee", "left ankle", "left foot", "left lower", "left hip", "left thigh"] },
+  { id: "right_leg",label: "Right Leg",  keywords: ["right leg", "right knee", "right ankle", "right foot", "right lower", "right hip", "right thigh"] },
+];
+
+function BodyMapPanel({ region, timeline, clinicalNotes }) {
+  if (!region) {
+    return (
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", gap: 12, padding: "32px 24px", color: "#94a3b8",
+        textAlign: "center",
+      }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.35">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>Click a body region to see related events</p>
+      </div>
+    );
+  }
+
+  const cfg = BODY_REGIONS.find(r => r.id === region);
+  const keywords = cfg?.keywords || [];
+
+  const matchEvent = (evt) => {
+    const haystack = [
+      evt.title || "",
+      evt.event_type || "",
+      JSON.stringify(evt.metadata || {}),
+    ].join(" ").toLowerCase();
+    return keywords.some(k => haystack.includes(k));
+  };
+
+  const matchNote = (note) => {
+    const haystack = [
+      note.subjective || "", note.objective || "",
+      note.assessment || "", note.plan || "",
+    ].join(" ").toLowerCase();
+    return keywords.some(k => haystack.includes(k));
+  };
+
+  const relEvents = timeline.filter(matchEvent);
+  const relNotes  = clinicalNotes.filter(matchNote);
+  const hasItems  = relEvents.length > 0 || relNotes.length > 0;
+
+  return (
+    <div style={{
+      flex: 1, display: "flex", flexDirection: "column",
+      overflowY: "auto", padding: "14px 16px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div style={{
+          width: 10, height: 10, borderRadius: "50%", background: "#0d9488", flexShrink: 0,
+        }} />
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{cfg?.label} Region</span>
+        <span style={{
+          marginLeft: "auto", fontSize: 11, background: "#f0fdfa",
+          border: "1px solid #99f6e4", borderRadius: 10, padding: "1px 8px",
+          color: "#0d9488", fontWeight: 600,
+        }}>{relEvents.length + relNotes.length} events</span>
+      </div>
+
+      {!hasItems ? (
+        <div style={{
+          padding: "20px 0", textAlign: "center", color: "#94a3b8",
+          fontSize: 13, fontWeight: 500,
+        }}>
+          No recorded events for {cfg?.label} region
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {relEvents.map((evt, i) => {
+            const evtCfg = EVENT_CONFIG[evt.event_type];
+            return (
+              <div key={i} style={{
+                border: `1px solid ${evtCfg?.border || "#e2e8f0"}`,
+                borderLeft: `3px solid ${evtCfg?.color || "#0d9488"}`,
+                borderRadius: 10, padding: "8px 12px",
+                background: evtCfg?.bg || "#f8fafc",
+                fontSize: 12,
+              }}>
+                <div style={{ fontWeight: 700, color: evtCfg?.color || "#0d9488", marginBottom: 2, textTransform: "uppercase", fontSize: 10 }}>
+                  {evt.event_type}
+                </div>
+                <div style={{ fontWeight: 600, color: "#1e293b", marginBottom: 2 }}>{evt.title}</div>
+                <div style={{ color: "#64748b", fontSize: 11 }}>
+                  {new Date(evt.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </div>
+              </div>
+            );
+          })}
+          {relNotes.map((note, i) => (
+            <div key={`note-${i}`} style={{
+              border: "1px solid #bfdbfe", borderLeft: "3px solid #2563eb",
+              borderRadius: 10, padding: "8px 12px",
+              background: "#eff6ff", fontSize: 12,
+            }}>
+              <div style={{ fontWeight: 700, color: "#2563eb", marginBottom: 2, textTransform: "uppercase", fontSize: 10 }}>
+                clinical note
+              </div>
+              <div style={{ fontWeight: 600, color: "#1e293b", marginBottom: 2 }}>
+                {note.note_type || "Note"} — {new Date(note.created_at).toLocaleDateString()}
+              </div>
+              {note.assessment && (
+                <div style={{ color: "#3730a3", fontSize: 11, fontStyle: "italic" }}>
+                  {note.assessment.slice(0, 80)}{note.assessment.length > 80 ? "…" : ""}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectRegion }) {
+  const [hoveredRegion, setHoveredRegion] = useState(null);
+
+  const regionFill = (id) => {
+    if (id === selectedRegion) return "rgba(20, 184, 166, 0.3)";
+    if (id === hoveredRegion) return "rgba(45, 212, 191, 0.15)";
+    return "rgba(255, 255, 255, 0.03)";
+  };
+
+  const regionStroke = (id) => {
+    if (id === selectedRegion) return "#14b8a6";
+    if (id === hoveredRegion) return "#2dd4bf";
+    return "rgba(203, 213, 225, 0.4)";
+  };
+
+  const regionStrokeW = (id) => (id === selectedRegion || id === hoveredRegion) ? 2 : 1;
+
+  const regionProps = (id) => ({
+    fill: regionFill(id),
+    stroke: regionStroke(id),
+    strokeWidth: regionStrokeW(id),
+    className: `bodymap-region ${id === selectedRegion ? 'selected' : ''}`,
+    style: { cursor: "pointer", transition: "all 0.3s ease" },
+    onMouseEnter: () => setHoveredRegion(id),
+    onMouseLeave: () => setHoveredRegion(null),
+    onClick: () => onSelectRegion(id === selectedRegion ? null : id),
+  });
+
+  // Compute dot count per region for badge
+  const regionCounts = {};
+  BODY_REGIONS.forEach(({ id, keywords }) => {
+    const c = timeline.filter(evt => {
+      const h = [evt.title, evt.event_type, JSON.stringify(evt.metadata || {})].join(" ").toLowerCase();
+      return keywords.some(k => h.includes(k));
+    }).length + clinicalNotes.filter(n => {
+      const h = [n.subjective, n.objective, n.assessment, n.plan].join(" ").toLowerCase();
+      return keywords.some(k => h.includes(k));
+    }).length;
+    regionCounts[id] = c;
+  });
+
+  return (
+    <div style={{
+      background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", // High-tech dark background
+      borderRadius: 14, border: "1px solid rgba(45,212,191,0.2)",
+      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(20,184,166,0.05)",
+      padding: "18px 20px 20px", marginBottom: 24, position: "relative", overflow: "hidden"
+    }}>
+      <style>{`
+        .bodymap-region:hover { filter: drop-shadow(0 0 8px rgba(45,212,191,0.5)); }
+        .bodymap-region.selected { filter: drop-shadow(0 0 12px rgba(20,184,166,0.8)); }
+        @keyframes heartbeatPulse {
+          0% { transform: scale(1); opacity: 0.6; }
+          15% { transform: scale(1.15); opacity: 1; }
+          30% { transform: scale(1); opacity: 0.8; }
+          45% { transform: scale(1.15); opacity: 1; }
+          60%, 100% { transform: scale(1); opacity: 0.6; }
+        }
+        .bodymap-heart { animation: heartbeatPulse 1.2s infinite ease-out; transform-origin: center; }
+        @keyframes scanlineDrop {
+          0% { transform: translateY(-340px); opacity: 0; }
+          10% { opacity: 0.5; }
+          90% { opacity: 0.5; }
+          100% { transform: translateY(340px); opacity: 0; }
+        }
+        .bodymap-scanner { animation: scanlineDrop 4s linear infinite; pointer-events: none; }
+      `}</style>
+
+      {/* Grid Background Pattern */}
+      <div style={{
+        position: "absolute", inset: 0, opacity: 0.1, pointerEvents: "none",
+        backgroundImage: 'linear-gradient(rgba(45,212,191,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(45,212,191,0.3) 1px, transparent 1px)',
+        backgroundSize: '20px 20px'
+      }} />
+
+      <div style={{ marginBottom: 16, position: "relative", zIndex: 2 }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#f8fafc" }}>Interactive Body Map</h3>
+        <p style={{ margin: "3px 0 0", fontSize: 12, color: "#94a3b8" }}>
+          <span style={{color: "#2dd4bf", marginRight: 5}}>● LIVE SCAN</span>
+          Click a region to view specific clinical events
+        </p>
+      </div>
+
+      <div style={{ display: "flex", gap: 30, alignItems: "flex-start", flexWrap: "wrap", position: "relative", zIndex: 2 }}>
+        {/* SVG Body (Tech HUD Style) */}
+        <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative" }}>
+          <svg width="180" height="340" viewBox="0 0 180 340" fill="none">
+            <defs>
+              <radialGradient id="techGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#2dd4bf" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            <rect width="180" height="340" fill="url(#techGlow)" pointerEvents="none" />
+
+            {/* Glowing scan line */}
+            <rect x="10" y="0" width="160" height="2" fill="#2dd4bf" className="bodymap-scanner" />
+
+            <g transform="translate(10, 0)">
+              {/* ── HEAD ── */}
+              <g {...regionProps("head")}>
+                {/* More realistic head shape: wider top, narrower jaw */}
+                <path d="M80 15 C 60 15, 50 30, 50 45 C 50 65, 65 75, 80 75 C 95 75, 110 65, 110 45 C 110 30, 100 15, 80 15 Z" />
+                {/* HUD rings instead of eyes */}
+                <circle cx="68" cy="44" r="4" stroke={selectedRegion === "head" || hoveredRegion === "head" ? "#2dd4bf" : "rgba(203,213,225,0.3)"} strokeWidth="1" fill="none" />
+                <circle cx="92" cy="44" r="4" stroke={selectedRegion === "head" || hoveredRegion === "head" ? "#2dd4bf" : "rgba(203,213,225,0.3)"} strokeWidth="1" fill="none" />
+                {/* Neural link dots */}
+                <circle cx="80" cy="30" r="1.5" fill={selectedRegion === "head" || hoveredRegion === "head" ? "#2dd4bf" : "transparent"} />
+              </g>
+
+              {/* ── NECK connector (fused into chest/head nicely) ── */}
+              <path d="M70 73 L70 88 C 70 88, 80 92, 90 88 L90 73 Z" fill="rgba(255,255,255,0.02)" stroke="rgba(203,213,225,0.2)" strokeWidth="1" />
+
+              {/* ── CHEST ── */}
+              <g {...regionProps("chest")}>
+                {/* Broad shoulders, tapering down */}
+                <path d="M35 95 C 45 88, 60 85, 80 85 C 100 85, 115 88, 125 95 C 130 100, 128 120, 120 150 C 115 165, 95 170, 80 170 C 65 170, 45 165, 40 150 C 32 120, 30 100, 35 95 Z" />
+                
+                {/* Ribcage HUD lines */}
+                <path d="M55 110 Q 80 120 105 110 M55 125 Q 80 135 105 125 M60 140 Q 80 148 100 140" stroke="rgba(45,212,191,0.2)" strokeWidth="1" fill="none" strokeDasharray="4 2" />
+
+                {/* Animated Heart */}
+                <g className="bodymap-heart" style={{ transformOrigin: "80px 115px" }}>
+                  <path d="M75 112 C 71 106, 62 106, 62 114 C 62 121, 75 130, 75 130 C 75 130, 88 121, 88 114 C 88 106, 79 106, 75 112 Z" 
+                    fill="#f43f5e" filter="drop-shadow(0 0 5px rgba(244,63,94,0.6))" />
+                </g>
+              </g>
+
+              {/* ── ABDOMEN ── */}
+              <g {...regionProps("abdomen")}>
+                {/* Tapering from chest to hips */}
+                <path d="M41 168 C 47 165, 65 172, 80 172 C 95 172, 113 165, 119 168 C 117 190, 115 220, 110 240 C 105 248, 95 252, 80 252 C 65 252, 55 248, 50 240 C 45 220, 43 190, 41 168 Z" />
+                {/* Center axis UI line */}
+                <line x1="80" y1="172" x2="80" y2="245" stroke="rgba(45,212,191,0.2)" strokeWidth="1" strokeDasharray="2 4" />
+                <circle cx="80" cy="210" r="4" fill="transparent" stroke={selectedRegion === "abdomen" || hoveredRegion === "abdomen" ? "#2dd4bf" : "rgba(203,213,225,0.3)"} />
+              </g>
+
+              {/* ── LEFT ARM (Patient's Right = Our Left Visually) ── */}
+              <g {...regionProps("left_arm")}>
+                {/* Tapered upper and lower arm */}
+                <path d="M34 94 C 20 100, 18 120, 15 140 C 12 165, 8 185, 15 190 C 22 195, 28 175, 30 150 C 32 130, 36 105, 40 98 Z" />
+                {/* Joint markers */}
+                <circle cx="23" cy="142" r="3" fill="rgba(45,212,191,0.3)" />
+              </g>
+
+              {/* ── RIGHT ARM (Patient's Left = Our Right Visually) ── */}
+              <g {...regionProps("right_arm")}>
+                <path d="M126 94 C 140 100, 142 120, 145 140 C 148 165, 152 185, 145 190 C 138 195, 132 175, 130 150 C 128 130, 124 105, 120 98 Z" />
+                <circle cx="137" cy="142" r="3" fill="rgba(45,212,191,0.3)" />
+              </g>
+
+              {/* ── LEFT LEG (Our Left Visually) ── */}
+              <g {...regionProps("left_leg")}>
+                {/* Tapered thigh and calf */}
+                <path d="M52 249 C 45 270, 42 300, 38 325 C 36 335, 52 335, 55 325 C 60 300, 65 270, 68 250 Z" />
+                <circle cx="53" cy="285" r="3" fill="rgba(45,212,191,0.3)" />
+              </g>
+
+              {/* ── RIGHT LEG (Our Right Visually) ── */}
+              <g {...regionProps("right_leg")}>
+                <path d="M108 249 C 115 270, 118 300, 122 325 C 124 335, 108 335, 105 325 C 100 300, 95 270, 92 250 Z" />
+                <circle cx="107" cy="285" r="3" fill="rgba(45,212,191,0.3)" />
+              </g>
+
+              {/* Event count badges */}
+              {BODY_REGIONS.map(({ id }) => {
+                const count = regionCounts[id];
+                if (!count) return null;
+                // Badge anchor points per region
+                const positions = {
+                  head: [120, 20], chest: [125, 110], abdomen: [125, 205],
+                  left_arm: [-2, 130], right_arm: [162, 130],
+                  left_leg: [20, 290], right_leg: [140, 290],
+                };
+                const [bx, by] = positions[id] || [0, 0];
+                return (
+                  <g key={id} style={{ pointerEvents: 'none' }}>
+                    <circle cx={bx} cy={by} r="12" fill="#0f172a" stroke="#2dd4bf" strokeWidth="1.5" />
+                    <text x={bx} y={by + 4} textAnchor="middle" fontSize="11" fill="#2dd4bf" fontWeight="700">{count}</text>
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+
+          {/* Legend strip */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", maxWidth: 160 }}>
+            {BODY_REGIONS.map(r => (
+              <button key={r.id} onClick={() => onSelectRegion(r.id === selectedRegion ? null : r.id)}
+                style={{
+                  border: `1px solid ${r.id === selectedRegion ? "#2dd4bf" : "rgba(203,213,225,0.2)"}`,
+                  borderRadius: 99, padding: "2px 10px", fontSize: 10, fontWeight: 600,
+                  cursor: "pointer",
+                  background: r.id === selectedRegion ? "rgba(45,212,191,0.2)" : "rgba(15,23,42,0.5)",
+                  color: r.id === selectedRegion ? "#2dd4bf" : "#94a3b8",
+                  transition: "all 0.2s",
+                }}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Events panel */}
+        <div style={{
+          flex: 1, minWidth: 220, maxHeight: 360,
+          border: "1px solid rgba(45,212,191,0.2)", borderRadius: 12,
+          background: "rgba(15,23,42,0.8)", display: "flex", flexDirection: "column",
+          overflowY: "auto",
+        }}>
+          <BodyMapPanel
+            region={selectedRegion}
+            timeline={timeline}
+            clinicalNotes={clinicalNotes}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PatientTimeline({ timeline }) {
+
   if (!timeline.length) {
     return (
       <div style={{
@@ -535,6 +885,9 @@ export default function PatientDetail() {
   const [aiQuestion, setAiQuestion] = useState("");
   const [aiChatHistory, setAiChatHistory] = useState([]);
   const [aiChatLoading, setAiChatLoading] = useState(false);
+
+  // Body Map state
+  const [selectedRegion, setSelectedRegion] = useState(null);
 
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -879,6 +1232,13 @@ export default function PatientDetail() {
               )}
             </div>
           </div>
+
+          <InteractiveBodyMap
+            timeline={timeline}
+            clinicalNotes={clinicalNotes}
+            selectedRegion={selectedRegion}
+            onSelectRegion={setSelectedRegion}
+          />
         </>
       )}
 

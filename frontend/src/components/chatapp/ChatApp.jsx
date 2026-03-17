@@ -6,7 +6,6 @@ import {
   Lightbulb,
   X,
   Link2,
-  Bot,
   AlertTriangle,
   Send,
   Plus,
@@ -16,6 +15,126 @@ import {
 } from "lucide-react";
 import api from "../../api";
 import "./ChatApp.css";
+
+/* ── Female Nurse SVG Avatar ─────────────────────────────────────────────── */
+function NurseAvatar({ isThinking = false, size = "normal" }) {
+  const s = size === "small" ? 28 : 44;
+  return (
+    <svg
+      width={s}
+      height={s}
+      viewBox="0 0 100 100"
+      fill="none"
+      className={`nurse-avatar${isThinking ? " nurse-avatar--thinking" : ""}`}
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="nurseGrad" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#14b8a6" />
+          <stop offset="60%" stopColor="#0d9488" />
+          <stop offset="100%" stopColor="#0f766e" />
+        </radialGradient>
+        <radialGradient id="nurseGradDark" cx="50%" cy="80%" r="50%">
+          <stop offset="0%" stopColor="#0d9488" />
+          <stop offset="100%" stopColor="#042f2e" />
+        </radialGradient>
+        <radialGradient id="skinGrad" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#ffe4c4" />
+          <stop offset="60%" stopColor="#fab088" />
+          <stop offset="100%" stopColor="#e3956a" />
+        </radialGradient>
+        <linearGradient id="capGrad" x1="50" y1="18" x2="50" y2="36" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#e2e8f0" />
+        </linearGradient>
+      </defs>
+
+      {/* Thinking rings */}
+      {isThinking && (
+        <>
+          <circle cx="50" cy="50" r="47" stroke="#2dd4bf" strokeWidth="2"
+            strokeDasharray="16 8" className="nurse-think-ring" />
+          <circle cx="50" cy="50" r="43" stroke="#0d9488" strokeWidth="1"
+            strokeDasharray="6 12 18 12" className="nurse-think-ring-inner" />
+        </>
+      )}
+
+      {/* Hair (back) */}
+      <path d="M30 45 Q26 65 38 75 Q50 82 62 75 Q74 65 70 45 Z" fill="#4a2c17" opacity="0.8" />
+
+      {/* Uniform body (Animated breathing) */}
+      <g className="nurse-avatar-body">
+        <path d="M15 100 Q15 65 30 58 Q40 54 50 54 Q60 54 70 58 Q85 65 85 100Z"
+          fill="url(#nurseGrad)" />
+        <path d="M15 100 Q15 65 30 58 Q40 54 50 54 Q60 54 70 58 Q85 65 85 100Z"
+          fill="url(#nurseGradDark)" opacity="0.4" style={{ mixBlendMode: 'multiply' }} />
+
+        {/* White lapels/collar */}
+        <path d="M40 60 L50 78 L60 60 Q55 57 50 56 Q45 57 40 60Z"
+          fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+        <path d="M30 58 Q40 65 42 75 L40 60 Z" fill="#e2e8f0" />
+        <path d="M70 58 Q60 65 58 75 L60 60 Z" fill="#e2e8f0" />
+
+        {/* Name Badge */}
+        <rect x="62" y="68" width="10" height="6" rx="1" fill="#f1f5f9" transform="rotate(5 67 71)" />
+        <rect x="63" y="70" width="8" height="2" rx="0.5" fill="#94a3b8" transform="rotate(5 67 71)" />
+        
+        {/* Stethoscope around neck */}
+        <path d="M36 68 Q32 80 40 85 Q48 90 54 84"
+          stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <circle cx="55" cy="83" r="4" fill="#cbd5e1" stroke="#334155" strokeWidth="1.5" />
+        <circle cx="55" cy="83" r="1.5" fill="#f1f5f9" />
+      </g>
+
+      {/* Head */}
+      <ellipse cx="50" cy="45" rx="16" ry="19" fill="url(#skinGrad)" />
+
+      {/* Hair (front) */}
+      <path d="M34 40 Q32 20 50 20 Q68 20 66 40 Q63 32 50 30 Q37 32 34 40Z"
+        fill="#5a361d" />
+      {/* Hair highlights */}
+      <path d="M38 34 Q45 23 50 26" stroke="#7a4b2b" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+
+      {/* Nurse cap */}
+      <path d="M30 32 Q30 14 50 14 Q70 14 70 32 C68 32 68 22 50 22 C32 22 32 32 30 32Z"
+        fill="url(#capGrad)" />
+      <rect x="33" y="29" width="34" height="6" rx="2" fill="#ffffff" />
+      {/* Red Cross */}
+      <rect x="44" y="21" width="12" height="3" rx="1" fill="#ef4444" />
+      <rect x="48.5" y="16.5" width="3" height="12" rx="1" fill="#ef4444" />
+
+      {/* Face features */}
+      {/* Brows */}
+      <path d="M40 38 Q43 36 46 38" stroke="#3d2110" strokeWidth="1" fill="none" strokeLinecap="round" />
+      <path d="M54 38 Q57 36 60 38" stroke="#3d2110" strokeWidth="1" fill="none" strokeLinecap="round" />
+
+      {/* Animated Eyes */}
+      <g className="nurse-avatar-eyes">
+        {/* Eye whites */}
+        <ellipse cx="43" cy="43" rx="3.5" ry="4" fill="#ffffff" />
+        <ellipse cx="57" cy="43" rx="3.5" ry="4" fill="#ffffff" />
+        {/* Irises */}
+        <ellipse cx="43" cy="43" rx="2" ry="2.5" fill="#1e3a8a" />
+        <ellipse cx="57" cy="43" rx="2" ry="2.5" fill="#1e3a8a" />
+        {/* Highlights */}
+        <circle cx="43.5" cy="42" r="0.8" fill="#ffffff" />
+        <circle cx="57.5" cy="42" r="0.8" fill="#ffffff" />
+      </g>
+
+      {/* Nose */}
+      <path d="M49 48 L50 51 L52 50" stroke="#d5855f" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Cheeks */}
+      <ellipse cx="38" cy="50" rx="3" ry="2" fill="#ef4444" opacity="0.2" />
+      <ellipse cx="62" cy="50" rx="3" ry="2" fill="#ef4444" opacity="0.2" />
+
+      {/* Smile */}
+      <path d="M44 55 Q50 60 56 55" stroke="#b95842" strokeWidth="1.5"
+        strokeLinecap="round" fill="transparent" />
+      <path d="M46 56 Q50 62 54 56 Z" fill="#ffffff" opacity="0.8" />
+    </svg>
+  );
+}
 
 const STORAGE_KEY = "medsuit.chat.sessions.v2";
 const ACTIVE_SESSION_KEY = "medsuit.chat.activeSession.v2";
@@ -279,20 +398,13 @@ export default function ChatApp() {
       {isOpen && (
         <section className="chatapp-panel" aria-label="AI Clinical Co-Pilot">
           <header className="chatapp-header">
-            <div className="chatapp-header-info">
-              <strong>
-                <Bot
-                  size={16}
-                  style={{
-                    display: "inline",
-                    verticalAlign: "middle",
-                    marginRight: 6,
-                    opacity: 0.9,
-                  }}
-                />
-                MedSuite AI Co-Pilot
-              </strong>
-              <p>
+            <div className="chatapp-header-info" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <NurseAvatar isThinking={isLoading} size="normal" />
+            <div>
+            <strong style={{ display: "flex", alignItems: "center", fontSize: 15.5, fontWeight: 700, letterSpacing: "-0.01em" }}>
+              MedSuite AI Co-Pilot
+            </strong>
+              <p style={{ margin: "3px 0 0", fontSize: 12, opacity: 0.88, fontWeight: 500 }}>
                 {patientId ? (
                   <>
                     <Link2
@@ -309,6 +421,7 @@ export default function ChatApp() {
                   "General mode — open a patient for context"
                 )}
               </p>
+            </div>
             </div>
             <div className="chatapp-header-actions">
               {patientId && (
@@ -554,15 +667,8 @@ export default function ChatApp() {
           <X size={20} />
         ) : (
           <>
-            <Bot
-              size={18}
-              style={{
-                display: "inline",
-                verticalAlign: "middle",
-                marginRight: 8,
-              }}
-            />
-            AI Co-Pilot
+            <NurseAvatar size="small" />
+            <span style={{ marginLeft: 8 }}>AI Co-Pilot</span>
           </>
         )}
       </button>
