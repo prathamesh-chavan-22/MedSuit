@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Mic, MicOff, RefreshCw } from "lucide-react";
@@ -19,6 +19,7 @@ const TABS = [
   { id: "notes", label: "Clinical Notes" },
   { id: "labs", label: "Labs" },
   { id: "timeline", label: "Timeline" },
+  { id: "ai-insights", label: "🤖 AI Insights" },
 ];
 
 export default function PatientDetail() {
@@ -35,6 +36,13 @@ export default function PatientDetail() {
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingSoapFields, setEditingSoapFields] = useState({});
   const [savingNoteId, setSavingNoteId] = useState(null);
+
+  // AI Insights state
+  const [aiRiskFlags, setAiRiskFlags] = useState([]);
+  const [aiScanning, setAiScanning] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [aiChatHistory, setAiChatHistory] = useState([]);
+  const [aiChatLoading, setAiChatLoading] = useState(false);
 
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -708,6 +716,182 @@ export default function PatientDetail() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "ai-insights" && (
+        <div style={styles.panelWide}>
+          <div style={styles.panelHeader}>
+            <span style={styles.panelTitle}>🤖 AI Clinical Decision Support</span>
+            <button
+              style={{
+                ...styles.btnRecord,
+                background: aiScanning ? "#9ca3af" : "linear-gradient(135deg, #1d4ed8, #3b82f6)",
+              }}
+              onClick={async () => {
+                setAiScanning(true);
+                setAiRiskFlags([]);
+                try {
+                  const { data } = await api.post(`/ai/risk-scan/${id}`);
+                  setAiRiskFlags(data.flags || []);
+                } catch (err) {
+                  setAiRiskFlags([{
+                    severity: "warning",
+                    title: "Scan Failed",
+                    message: err?.response?.data?.detail || "Could not complete risk scan.",
+                    recommendation: "Try again later.",
+                  }]);
+                } finally {
+                  setAiScanning(false);
+                }
+              }}
+              disabled={aiScanning}
+            >
+              {aiScanning ? "⏳ Scanning..." : "🛡️ Run Risk Scan"}
+            </button>
+          </div>
+
+          {/* Risk Flags */}
+          {aiScanning && (
+            <div style={{ padding: "20px 0", textAlign: "center", color: "#64748b", fontSize: 14 }}>
+              Analyzing patient data with Mistral AI...
+            </div>
+          )}
+
+          {aiRiskFlags.length > 0 && (
+            <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
+              {aiRiskFlags.map((flag, i) => {
+                const colors = {
+                  critical: { bg: "#fef2f2", border: "#fca5a5", text: "#991b1b", icon: "🔴" },
+                  warning: { bg: "#fffbeb", border: "#fcd34d", text: "#92400e", icon: "🟡" },
+                  info: { bg: "#eff6ff", border: "#93c5fd", text: "#1e40af", icon: "🔵" },
+                };
+                const c = colors[flag.severity] || colors.info;
+                return (
+                  <div key={i} style={{
+                    background: c.bg,
+                    border: `1px solid ${c.border}`,
+                    borderRadius: 12,
+                    padding: "12px 16px",
+                    color: c.text,
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
+                      {c.icon} {flag.title}
+                    </div>
+                    <div style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 4 }}>
+                      {flag.message}
+                    </div>
+                    {flag.recommendation && (
+                      <div style={{ fontSize: 12, fontStyle: "italic", opacity: 0.85 }}>
+                        💡 {flag.recommendation}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Inline AI Chat */}
+          <div style={{
+            border: "1px solid #dbe5f0",
+            borderRadius: 12,
+            background: "#f8fbff",
+            padding: 16,
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#1e3a5f", marginBottom: 12 }}>
+              Ask AI about this patient
+            </div>
+
+            <div style={{
+              maxHeight: 300,
+              overflowY: "auto",
+              marginBottom: 12,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}>
+              {aiChatHistory.length === 0 && (
+                <div style={{ color: "#9ca3af", fontSize: 13, fontStyle: "italic" }}>
+                  Try: "Summarize this patient's status" or "Any drug interactions to watch for?"
+                </div>
+              )}
+              {aiChatHistory.map((msg, i) => (
+                <div key={i} style={{
+                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "85%",
+                  background: msg.role === "user" ? "#dbeafe" : "#ffffff",
+                  border: `1px solid ${msg.role === "user" ? "#a5c4e8" : "#e2e8f0"}`,
+                  borderRadius: 12,
+                  padding: "10px 14px",
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                  color: "#1e293b",
+                  whiteSpace: "pre-wrap",
+                }}>
+                  {msg.text}
+                </div>
+              ))}
+              {aiChatLoading && (
+                <div style={{
+                  alignSelf: "flex-start",
+                  background: "#f1f5f9",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: "10px 14px",
+                  fontSize: 13,
+                  color: "#64748b",
+                }}>
+                  Thinking...
+                </div>
+              )}
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!aiQuestion.trim() || aiChatLoading) return;
+                const q = aiQuestion.trim();
+                setAiQuestion("");
+                setAiChatHistory((prev) => [...prev, { role: "user", text: q }]);
+                setAiChatLoading(true);
+                try {
+                  const history = aiChatHistory.map((m) => ({ role: m.role, text: m.text }));
+                  const { data } = await api.post(`/ai/chat/${id}`, {
+                    message: q,
+                    history,
+                  });
+                  setAiChatHistory((prev) => [...prev, { role: "assistant", text: data.reply }]);
+                } catch (err) {
+                  setAiChatHistory((prev) => [
+                    ...prev,
+                    { role: "assistant", text: `⚠ Error: ${err?.response?.data?.detail || err.message}` },
+                  ]);
+                } finally {
+                  setAiChatLoading(false);
+                }
+              }}
+              style={{ display: "flex", gap: 8 }}
+            >
+              <input
+                value={aiQuestion}
+                onChange={(e) => setAiQuestion(e.target.value)}
+                placeholder="Ask a clinical question..."
+                style={{ ...styles.input, flex: 1 }}
+                disabled={aiChatLoading}
+              />
+              <button
+                type="submit"
+                disabled={!aiQuestion.trim() || aiChatLoading}
+                style={{
+                  ...styles.btnRecord,
+                  opacity: !aiQuestion.trim() || aiChatLoading ? 0.5 : 1,
+                }}
+              >
+                {aiChatLoading ? "..." : "Ask AI"}
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>

@@ -11,48 +11,60 @@
 .chatapp-fab {
   border: none;
   border-radius: 999px;
-  padding: 12px 18px;
+  padding: 12px 20px;
   font-weight: 700;
+  font-size: 14px;
   letter-spacing: 0.02em;
   cursor: pointer;
   color: #f8fafc;
   background: linear-gradient(135deg, #0f4c81, #1f6aa8 62%, #2d8ac8);
   box-shadow: 0 12px 24px rgba(15, 76, 129, 0.3);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.chatapp-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(15, 76, 129, 0.4);
 }
 
 .chatapp-panel {
-  width: min(420px, calc(100vw - 18px));
-  height: min(620px, calc(100vh - 100px));
+  width: min(440px, calc(100vw - 18px));
+  height: min(650px, calc(100vh - 100px));
   border-radius: 18px;
   border: 1px solid #d9e3f2;
   overflow: hidden;
   background: #ffffff;
   box-shadow: 0 28px 48px rgba(10, 34, 66, 0.22);
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto auto 1fr auto;
 }
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
 
 .chatapp-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 14px;
+  gap: 10px;
   padding: 14px 16px;
   color: #f8fbff;
-  background: linear-gradient(135deg, #123f68, #1c588e);
+  background: linear-gradient(135deg, #0c2d48, #1a5276 60%, #1f6aa8);
 }
-
 .chatapp-header strong {
   display: block;
   font-size: 15px;
+  letter-spacing: 0.02em;
 }
-
 .chatapp-header p {
-  margin-top: 2px;
-  font-size: 12px;
-  opacity: 0.9;
+  margin-top: 3px;
+  font-size: 11.5px;
+  opacity: 0.88;
 }
-
+.chatapp-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
 .chatapp-close {
   border: none;
   border-radius: 8px;
@@ -60,22 +72,49 @@
   height: 30px;
   cursor: pointer;
   color: #fff;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+  transition: background 150ms;
 }
+.chatapp-close:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.chatapp-risk-btn {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 150ms;
+  white-space: nowrap;
+}
+.chatapp-risk-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+}
+.chatapp-risk-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* ── Session Controls ────────────────────────────────────────────────────── */
 
 .chatapp-session-controls {
   display: flex;
   gap: 6px;
-  padding: 10px 10px 8px;
+  padding: 8px 10px;
   border-bottom: 1px solid #e7edf5;
   background: #f7fbff;
 }
-
 .chatapp-session-controls select {
   flex: 1;
   min-width: 0;
 }
-
 .chatapp-session-controls button,
 .chatapp-session-controls select,
 .chatapp-input button,
@@ -83,47 +122,185 @@
   border: 1px solid #cfdbec;
   border-radius: 8px;
   font-size: 13px;
-  padding: 8px 10px;
+  padding: 7px 10px;
   background: #fff;
 }
-
 .chatapp-session-controls button {
   cursor: pointer;
   font-weight: 600;
 }
-
 .chatapp-session-controls button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
 
+/* ── Risk Scan Panel ─────────────────────────────────────────────────────── */
+
+.chatapp-risk-panel {
+  border-bottom: 1px solid #e7edf5;
+  background: #f9fafb;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.chatapp-risk-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: #f0f4f8;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+}
+.chatapp-risk-dismiss {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #64748b;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.chatapp-risk-dismiss:hover {
+  background: #e2e8f0;
+}
+
+.chatapp-risk-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.chatapp-risk-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+}
+.chatapp-risk-card {
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.chatapp-risk-card-title {
+  font-weight: 700;
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+.chatapp-risk-card-msg {
+  opacity: 0.9;
+}
+.chatapp-risk-card-rec {
+  margin-top: 4px;
+  font-style: italic;
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+/* ── Messages ────────────────────────────────────────────────────────────── */
+
 .chatapp-messages {
   padding: 12px;
   overflow-y: auto;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   background-image: radial-gradient(circle at 10% 0%, #f6faff 0%, #ffffff 35%);
 }
 
 .chatapp-bubble {
-  max-width: 86%;
-  border-radius: 12px;
-  padding: 9px 12px;
-  line-height: 1.38;
+  max-width: 88%;
+  border-radius: 14px;
+  padding: 10px 14px;
+  line-height: 1.45;
   font-size: 13px;
+  word-wrap: break-word;
 }
-
 .chatapp-bubble-user {
-  margin-left: auto;
-  background: #dff0ff;
-  border: 1px solid #b5d9fa;
+  align-self: flex-end;
+  background: linear-gradient(135deg, #dbeafe, #c7d9f5);
+  border: 1px solid #a5c4e8;
+  color: #1e3a5f;
+}
+.chatapp-bubble-assistant {
+  align-self: flex-start;
+  background: #f8f9fc;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
 }
 
-.chatapp-bubble-assistant {
-  margin-right: auto;
-  background: #f5f7fb;
-  border: 1px solid #e2e8f0;
+/* Markdown inside bubbles */
+.chatapp-bubble strong {
+  font-weight: 700;
+  color: #0f172a;
 }
+.chatapp-bubble em {
+  font-style: italic;
+}
+.chat-code-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  overflow-x: auto;
+  margin: 6px 0;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+}
+.chat-inline-code {
+  background: #e2e8f0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+.chat-list {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.chat-list-item {
+  margin-bottom: 2px;
+}
+
+/* ── Typing Indicator ────────────────────────────────────────────────────── */
+
+.chatapp-typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 2px 0;
+}
+.chatapp-typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: chatTypingPulse 1.4s infinite;
+}
+.chatapp-typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.chatapp-typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes chatTypingPulse {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Input ───────────────────────────────────────────────────────────────── */
 
 .chatapp-input {
   display: flex;
@@ -132,36 +309,37 @@
   border-top: 1px solid #e7edf5;
   background: #ffffff;
 }
-
 .chatapp-input input {
   flex: 1;
   min-width: 0;
 }
-
+.chatapp-input input:disabled {
+  opacity: 0.6;
+}
 .chatapp-input button {
   font-weight: 700;
   cursor: pointer;
   color: #f8fafc;
   border-color: #1f6aa8;
-  background: #1f6aa8;
+  background: linear-gradient(135deg, #1a5276, #1f6aa8);
+  transition: opacity 150ms;
 }
-
 .chatapp-input button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .chatapp-root {
     right: 8px;
     bottom: 8px;
   }
-
   .chatapp-panel {
     width: calc(100vw - 16px);
-    height: min(70vh, 560px);
+    height: min(75vh, 580px);
   }
-
   .chatapp-fab {
     padding: 10px 14px;
     font-size: 13px;

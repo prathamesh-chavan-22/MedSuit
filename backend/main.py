@@ -15,6 +15,7 @@ from app.routers import (
     clinical_notes,
     labs,
     timeline,
+    ai_chat,
 )
 
 # Create all tables on startup
@@ -58,6 +59,7 @@ app.include_router(rounding.router)
 app.include_router(clinical_notes.router)
 app.include_router(labs.router)
 app.include_router(timeline.router)
+app.include_router(ai_chat.router)
 
 
 @app.get("/", tags=["Health"])
