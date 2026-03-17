@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { ShieldAlert, Loader2, Lightbulb, X, Link2, Bot, AlertTriangle } from "lucide-react";
+import {
+  ShieldAlert,
+  Loader2,
+  Lightbulb,
+  X,
+  Link2,
+  Bot,
+  AlertTriangle,
+  Send,
+  Plus,
+  Pencil,
+  Trash2,
+  MessageSquare,
+} from "lucide-react";
 import api from "../../api";
 import "./ChatApp.css";
 
@@ -74,7 +87,7 @@ function renderMarkdown(text) {
   html = html.replace(/^[-•] (.+)$/gm, '<li class="chat-list-item">$1</li>');
   html = html.replace(
     /(<li class="chat-list-item">[\s\S]*?<\/li>)/g,
-    '<ul class="chat-list">$1</ul>'
+    '<ul class="chat-list">$1</ul>',
   );
   // Collapse consecutive <ul> tags
   html = html.replace(/<\/ul>\s*<ul class="chat-list">/g, "");
@@ -106,14 +119,14 @@ export default function ChatApp() {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const [activeSessionId, setActiveSessionId] = useState(
-    initialStateRef.current.activeSessionId
+    initialStateRef.current.activeSessionId,
   );
 
   const patientId = usePatientIdFromUrl();
 
   const activeSession = useMemo(
     () => sessions.find((s) => s.id === activeSessionId) || sessions[0],
-    [sessions, activeSessionId]
+    [sessions, activeSessionId],
   );
 
   useEffect(() => {
@@ -148,8 +161,8 @@ export default function ChatApp() {
     if (!nextName) return;
     setSessions((prev) =>
       prev.map((s) =>
-        s.id === activeSession.id ? { ...s, title: nextName.trim() || s.title } : s
-      )
+        s.id === activeSession.id ? { ...s, title: nextName.trim() || s.title } : s,
+      ),
     );
   }
 
@@ -176,7 +189,7 @@ export default function ChatApp() {
         if (s.id !== activeSession.id) return s;
         const updated = updater(s);
         return { ...updated, updatedAt: new Date().toISOString() };
-      })
+      }),
     );
   }
 
@@ -266,12 +279,35 @@ export default function ChatApp() {
       {isOpen && (
         <section className="chatapp-panel" aria-label="AI Clinical Co-Pilot">
           <header className="chatapp-header">
-            <div>
-              <strong>MedSuite AI Co-Pilot</strong>
+            <div className="chatapp-header-info">
+              <strong>
+                <Bot
+                  size={16}
+                  style={{
+                    display: "inline",
+                    verticalAlign: "middle",
+                    marginRight: 6,
+                    opacity: 0.9,
+                  }}
+                />
+                MedSuite AI Co-Pilot
+              </strong>
               <p>
-                {patientId
-                  ? <><Link2 size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />Patient #{patientId} context active</>
-                  : "General mode — open a patient for context"}
+                {patientId ? (
+                  <>
+                    <Link2
+                      size={12}
+                      style={{
+                        display: "inline",
+                        verticalAlign: "middle",
+                        marginRight: 4,
+                      }}
+                    />
+                    Patient #{patientId} context active
+                  </>
+                ) : (
+                  "General mode — open a patient for context"
+                )}
               </p>
             </div>
             <div className="chatapp-header-actions">
@@ -283,7 +319,12 @@ export default function ChatApp() {
                   disabled={isScanning}
                   title="AI Risk Scan"
                 >
-                  {isScanning ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <ShieldAlert size={13} />} Risk Scan
+                  {isScanning ? (
+                    <Loader2 size={13} className="chatapp-spin-icon" />
+                  ) : (
+                    <ShieldAlert size={13} />
+                  )}{" "}
+                  Risk Scan
                 </button>
               )}
               <button
@@ -298,42 +339,72 @@ export default function ChatApp() {
           </header>
 
           <div className="chatapp-session-controls">
-            <select
-              value={activeSession?.id}
-              onChange={(e) => {
-                setActiveSessionId(e.target.value);
-                setShowRiskPanel(false);
-                setRiskFlags([]);
-              }}
-              aria-label="Select chat session"
-            >
-              {sessions.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
-              ))}
-            </select>
-            <button type="button" onClick={addSession} title="New session">
-              New
-            </button>
-            <button type="button" onClick={renameSession} title="Rename session">
-              Rename
-            </button>
-            <button
-              type="button"
-              onClick={deleteSession}
-              disabled={sessions.length === 1}
-              title={sessions.length === 1 ? "At least one session must exist" : "Delete"}
-            >
-              Delete
-            </button>
+            <div className="chatapp-session-selector">
+              <MessageSquare size={14} className="chatapp-session-icon" />
+              <select
+                value={activeSession?.id}
+                onChange={(e) => {
+                  setActiveSessionId(e.target.value);
+                  setShowRiskPanel(false);
+                  setRiskFlags([]);
+                }}
+                aria-label="Select chat session"
+              >
+                {sessions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="chatapp-session-actions">
+              <button
+                type="button"
+                onClick={addSession}
+                title="New session"
+                className="chatapp-icon-btn"
+              >
+                <Plus size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={renameSession}
+                title="Rename session"
+                className="chatapp-icon-btn"
+              >
+                <Pencil size={13} />
+              </button>
+              <button
+                type="button"
+                className="chatapp-icon-btn chatapp-icon-btn--danger"
+                onClick={deleteSession}
+                disabled={sessions.length === 1}
+                title={
+                  sessions.length === 1
+                    ? "At least one session must exist"
+                    : "Delete session"
+                }
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
           </div>
 
           {/* Risk Scan Panel */}
           {showRiskPanel && (
             <div className="chatapp-risk-panel">
               <div className="chatapp-risk-panel-header">
-                <strong><ShieldAlert size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5 }} />AI Risk Scan Results</strong>
+                <strong>
+                  <ShieldAlert
+                    size={14}
+                    style={{
+                      display: "inline",
+                      verticalAlign: "middle",
+                      marginRight: 5,
+                    }}
+                  />
+                  AI Risk Scan Results
+                </strong>
                 <button
                   type="button"
                   className="chatapp-risk-dismiss"
@@ -345,7 +416,9 @@ export default function ChatApp() {
               {isScanning ? (
                 <div className="chatapp-risk-loading">
                   <div className="chatapp-typing-dots">
-                    <span></span><span></span><span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
                   </div>
                   <span>Analyzing patient data...</span>
                 </div>
@@ -363,14 +436,36 @@ export default function ChatApp() {
                           color: sty.color,
                         }}
                       >
-                        <div className="chatapp-risk-card-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                          <span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', background: sty.dotColor, flexShrink: 0 }} />
+                        <div
+                          className="chatapp-risk-card-title"
+                          style={{ display: "flex", alignItems: "center", gap: 7 }}
+                        >
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 9,
+                              height: 9,
+                              borderRadius: "50%",
+                              background: sty.dotColor,
+                              flexShrink: 0,
+                            }}
+                          />
                           {flag.title}
                         </div>
                         <div className="chatapp-risk-card-msg">{flag.message}</div>
                         {flag.recommendation && (
-                          <div className="chatapp-risk-card-rec" style={{ display: 'flex', alignItems: 'flex-start', gap: 5 }}>
-                            <Lightbulb size={11} style={{ marginTop: 1, flexShrink: 0 }} />
+                          <div
+                            className="chatapp-risk-card-rec"
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 5,
+                            }}
+                          >
+                            <Lightbulb
+                              size={11}
+                              style={{ marginTop: 1, flexShrink: 0 }}
+                            />
                             {flag.recommendation}
                           </div>
                         )}
@@ -384,7 +479,10 @@ export default function ChatApp() {
 
           <div className="chatapp-disclaimer">
             <AlertTriangle size={12} style={{ flexShrink: 0, marginTop: 1 }} />
-            <span>AI responses are for support only and may be inaccurate. Do not rely on them as a substitute for professional medical judgment.</span>
+            <span>
+              AI responses are for support only and may be inaccurate. Do not rely on them
+              as a substitute for professional medical judgment.
+            </span>
           </div>
 
           <div className="chatapp-messages" ref={scrollRef}>
@@ -407,39 +505,66 @@ export default function ChatApp() {
             {isLoading && (
               <article className="chatapp-bubble chatapp-bubble-assistant">
                 <div className="chatapp-typing-dots">
-                  <span></span><span></span><span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
               </article>
             )}
           </div>
 
           <form className="chatapp-input" onSubmit={submitMessage}>
-            <input
-              ref={inputRef}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={
-                patientId
-                  ? "Ask about this patient..."
-                  : "Ask anything about workflows, medicine..."
-              }
-              aria-label="Type your message"
-              disabled={isLoading}
-            />
-            <button type="submit" disabled={!draft.trim() || isLoading}>
-              {isLoading ? "..." : "Send"}
-            </button>
+            <div className="chatapp-input-wrapper">
+              <input
+                ref={inputRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={
+                  patientId
+                    ? "Ask about this patient..."
+                    : "Ask anything about workflows, medicine..."
+                }
+                aria-label="Type your message"
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                className="chatapp-send-btn"
+                disabled={!draft.trim() || isLoading}
+                aria-label="Send"
+              >
+                {isLoading ? (
+                  <Loader2 size={16} className="chatapp-spin-icon" />
+                ) : (
+                  <Send size={16} />
+                )}
+              </button>
+            </div>
           </form>
         </section>
       )}
 
       <button
         type="button"
-        className="chatapp-fab"
+        className={`chatapp-fab${isOpen ? " chatapp-fab--open" : ""}`}
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? "Minimize chat" : "Open AI Co-Pilot"}
       >
-        {isOpen ? "Hide" : <><Bot size={15} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />AI Co-Pilot</>}
+        {isOpen ? (
+          <X size={20} />
+        ) : (
+          <>
+            <Bot
+              size={18}
+              style={{
+                display: "inline",
+                verticalAlign: "middle",
+                marginRight: 8,
+              }}
+            />
+            AI Co-Pilot
+          </>
+        )}
       </button>
     </div>
   );
