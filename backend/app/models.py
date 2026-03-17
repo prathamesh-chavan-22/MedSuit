@@ -158,6 +158,8 @@ class Patient(Base):
     audit_events = orm_relationship("AuditLog", back_populates="patient")
     clinical_notes = orm_relationship("ClinicalNote", back_populates="patient")
     lab_results = orm_relationship("LabResult", back_populates="patient")
+    medication_intakes = orm_relationship("MedicationIntake", back_populates="patient")
+    food_intakes = orm_relationship("FoodIntake", back_populates="patient")
 
 
 # ─── Beds ─────────────────────────────────────────────────────────────────────
@@ -348,6 +350,43 @@ class LabResult(Base):
     measured_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     patient = orm_relationship("Patient", back_populates="lab_results")
+
+
+# ─── Medication Intake ────────────────────────────────────────────────────────
+
+class MedicationIntake(Base):
+    __tablename__ = "medication_intakes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
+    medication_name = Column(String, nullable=False)
+    dosage = Column(String, nullable=True)        # e.g. "500mg"
+    route = Column(String, nullable=True)         # e.g. "oral", "IV", "topical"
+    taken_at = Column(DateTime(timezone=True), nullable=False)
+    scheduled_at = Column(DateTime(timezone=True), nullable=True)  # for future scheduled doses
+    is_scheduled = Column(Boolean, default=False)  # True = future/scheduled, False = already given
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    patient = orm_relationship("Patient", back_populates="medication_intakes")
+
+
+# ─── Food Intake ──────────────────────────────────────────────────────────────
+
+class FoodIntake(Base):
+    __tablename__ = "food_intakes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
+    food_item = Column(String, nullable=False)    # e.g. "Rice and Dal", "Clear Soup"
+    quantity = Column(String, nullable=True)      # e.g. "1 bowl", "200ml"
+    meal_type = Column(String, nullable=True)     # "breakfast", "lunch", "dinner", "snack"
+    calories = Column(Float, nullable=True)
+    taken_at = Column(DateTime(timezone=True), nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    patient = orm_relationship("Patient", back_populates="food_intakes")
 
 
 class UserSession(Base):

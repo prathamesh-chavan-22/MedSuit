@@ -41,12 +41,12 @@ DEFAULT_INTERVAL = 0.5
 
 # ─── Walk Configuration ───────────────────────────────────────────────────────
 VITAL_CONFIG = {
-    "heart_rate":         dict(baseline=75.0,  lo=50.0,  hi=115.0, step=1.0,  spike=25.0,  spike_prob=0.04),
-    "spo2":               dict(baseline=98.0,  lo=88.0,  hi=100.0, step=0.3,  spike=-5.0,  spike_prob=0.03),
-    "blood_pressure_sys": dict(baseline=120.0, lo=90.0,  hi=160.0, step=1.5,  spike=20.0,  spike_prob=0.03),
-    "blood_pressure_dia": dict(baseline=80.0,  lo=55.0,  hi=100.0, step=1.0,  spike=15.0,  spike_prob=0.03),
-    "temperature":        dict(baseline=36.8,  lo=35.5,  hi=40.0,  step=0.05, spike=1.2,   spike_prob=0.02),
-    "ecg_value":          dict(baseline=0.0,   lo=-1.0,  hi=1.0,   step=0.15, spike=0.5,   spike_prob=0.04),
+    "heart_rate":         dict(baseline=75.0,  lo=50.0,  hi=115.0, step=1.0,  spike=25.0,  spike_prob=0.001),
+    "spo2":               dict(baseline=98.0,  lo=88.0,  hi=100.0, step=0.3,  spike=-5.0,  spike_prob=0.001),
+    "blood_pressure_sys": dict(baseline=120.0, lo=90.0,  hi=160.0, step=1.5,  spike=20.0,  spike_prob=0.001),
+    "blood_pressure_dia": dict(baseline=80.0,  lo=55.0,  hi=100.0, step=1.0,  spike=15.0,  spike_prob=0.001),
+    "temperature":        dict(baseline=36.8,  lo=35.5,  hi=40.0,  step=0.05, spike=1.2,   spike_prob=0.001),
+    "ecg_value":          dict(baseline=0.0,   lo=-1.0,  hi=1.0,   step=0.15, spike=0.5,   spike_prob=0.001),
 }
 
 
@@ -62,14 +62,14 @@ class VitalWalker:
         self.spike = spike
         self.spike_prob = spike_prob
 
-    def next(self) -> float:
+    def next(self) -> int:
         if random.random() < self.spike_prob:
             delta = random.choice([self.spike, -self.spike])
         else:
             delta = random.uniform(-self.step, self.step)
 
         self.value = max(self.lo, min(self.hi, self.value + delta))
-        return round(self.value, 3)
+        return int(round(self.value))
 
 
 def build_walkers() -> dict:
@@ -163,11 +163,11 @@ def run(patient_ids: list[int], api_url: str, token: str, interval: float):
                     icon = "✅" if resp.status_code == 201 else "⚠️ "
                     print(
                         f"{icon} [{reading_count:>4}] P{pid:<3} "
-                        f"HR={vitals['heart_rate']:>5.1f} bpm  "
-                        f"SpO₂={vitals['spo2']:>5.1f}%  "
-                        f"Temp={vitals['temperature']:>4.1f}°C  "
-                        f"BP={vitals['blood_pressure_sys']:.0f}/{vitals['blood_pressure_dia']:.0f} mmHg  "
-                        f"ECG={vitals['ecg_value']:+.3f}  "
+                        f"HR={vitals['heart_rate']:>3d} bpm  "
+                        f"SpO₂={vitals['spo2']:>3d}%  "
+                        f"Temp={vitals['temperature']:>2d}°C  "
+                        f"BP={vitals['blood_pressure_sys']:d}/{vitals['blood_pressure_dia']:d} mmHg  "
+                        f"ECG={vitals['ecg_value']:+2d}  "
                         f"[HTTP {resp.status_code}]"
                     )
                     if resp.status_code not in (200, 201):

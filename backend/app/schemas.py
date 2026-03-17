@@ -432,3 +432,55 @@ class TimelineEventOut(BaseModel):
     created_at: datetime
     severity: Optional[str] = None
     metadata: dict = {}
+
+
+# ─── Medication Intake ────────────────────────────────────────────────────────
+
+class MedicationIntakeCreate(BaseModel):
+    medication_name: str
+    dosage: Optional[str] = None
+    route: Optional[str] = None
+    taken_at: datetime
+    scheduled_at: Optional[datetime] = None
+    is_scheduled: bool = False
+    notes: Optional[str] = None
+
+
+class MedicationIntakeOut(BaseModel):
+    id: int
+    patient_id: int
+    medication_name: str
+    dosage: Optional[str] = None
+    route: Optional[str] = None
+    taken_at: datetime
+    scheduled_at: Optional[datetime] = None
+    is_scheduled: bool
+    notes: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ─── Food Intake ──────────────────────────────────────────────────────────────
+
+class FoodIntakeCreate(BaseModel):
+    food_item: str
+    quantity: Optional[str] = None
+    meal_type: Optional[str] = None
+    calories: Optional[float] = None
+    taken_at: datetime
+    notes: Optional[str] = None
+
+
+class FoodIntakeOut(BaseModel):
+    id: int
+    patient_id: int
+    food_item: str
+    quantity: Optional[str] = None
+    meal_type: Optional[str] = None
+    calories: Optional[float] = None
+    taken_at: datetime
+    notes: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

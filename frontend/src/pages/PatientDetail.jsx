@@ -71,6 +71,370 @@ function VitalWaveform({ color = "#0d9488" }) {
 }
 import { useAuth } from "../context/AuthContext";
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   PatientTimeline — Jira-style grouped timeline
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const EVENT_CONFIG = {
+  vital: {
+    label: "Vitals",
+    color: "#0ea5e9",
+    bg: "#f0f9ff",
+    border: "#bae6fd",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </svg>
+    ),
+  },
+  alert: {
+    label: "Alert",
+    color: "#ef4444",
+    bg: "#fef2f2",
+    border: "#fecaca",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    ),
+  },
+  task: {
+    label: "Task",
+    color: "#8b5cf6",
+    bg: "#faf5ff",
+    border: "#d8b4fe",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+      </svg>
+    ),
+  },
+  medication: {
+    label: "Medication",
+    color: "#0d9488",
+    bg: "#f0fdfa",
+    border: "#99f6e4",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="1" width="8" height="4" rx="1.5" />
+        <path d="M17 5H7a4 4 0 00-4 4v10a4 4 0 004 4h10a4 4 0 004-4V9a4 4 0 00-4-4z" />
+        <line x1="12" y1="10" x2="12" y2="18" />
+        <line x1="8" y1="14" x2="16" y2="14" />
+      </svg>
+    ),
+  },
+  food: {
+    label: "Food",
+    color: "#f59e0b",
+    bg: "#fffbeb",
+    border: "#fde68a",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
+        <path d="M7 2v20" />
+        <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
+      </svg>
+    ),
+  },
+  lab: {
+    label: "Lab",
+    color: "#7c3aed",
+    bg: "#f5f3ff",
+    border: "#c4b5fd",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2v17.5c0 1.4-1.1 2.5-2.5 2.5h0c-1.4 0-2.5-1.1-2.5-2.5V2" />
+        <path d="M8.5 2h7" />
+        <path d="M14.5 16h-5" />
+      </svg>
+    ),
+  },
+  audio_note: {
+    label: "Audio Note",
+    color: "#ec4899",
+    bg: "#fdf4ff",
+    border: "#f5d0fe",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2c-1.7 0-3 1.2-3 2.6v6.8C9 12.8 10.3 14 12 14c1.7 0 3-1.2 3-2.6V4.6C15 3.2 13.7 2 12 2z" />
+        <path d="M19 10v2a7 7 0 01-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="23" />
+        <line x1="8" y1="23" x2="16" y2="23" />
+      </svg>
+    ),
+  },
+  clinical_note: {
+    label: "Clinical Note",
+    color: "#2563eb",
+    bg: "#eff6ff",
+    border: "#bfdbfe",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>
+    ),
+  },
+  consent: {
+    label: "Consent",
+    color: "#059669",
+    bg: "#ecfdf5",
+    border: "#a7f3d0",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    ),
+  },
+};
+
+function formatRelativeDate(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMins = Math.round((d - now) / 60000);
+  const diffHours = Math.round((d - now) / 3600000);
+  const diffDays = Math.round((d - now) / 86400000);
+  if (Math.abs(diffMins) < 1) return "just now";
+  if (diffMins > 0) {
+    if (diffMins < 60) return `in ${diffMins}m`;
+    if (diffHours < 24) return `in ${diffHours}h`;
+    return `in ${diffDays}d`;
+  } else {
+    if (Math.abs(diffMins) < 60) return `${Math.abs(diffMins)}m ago`;
+    if (Math.abs(diffHours) < 24) return `${Math.abs(diffHours)}h ago`;
+    return `${Math.abs(diffDays)}d ago`;
+  }
+}
+
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
+function TimelineEventCard({ evt, isLast }) {
+  const cfg = EVENT_CONFIG[evt.event_type] || {
+    label: evt.event_type,
+    color: "#6b7280",
+    bg: "#f9fafb",
+    border: "#e5e7eb",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg>,
+  };
+  const isFuture = evt.metadata?.is_future;
+  const isWarning = evt.severity === "warning" || evt.severity === "critical";
+  const severityColor = evt.severity === "critical" ? "#ef4444" : evt.severity === "warning" ? "#f59e0b" : null;
+
+  const chips = [];
+  const m = evt.metadata || {};
+  if (evt.event_type === "vital") {
+    if (m.heart_rate != null) chips.push({ label: "HR", val: `${m.heart_rate} bpm` });
+    if (m.spo2 != null) chips.push({ label: "SpO2", val: `${m.spo2}%` });
+    if (m.temperature != null) chips.push({ label: "Temp", val: `${m.temperature}\u00b0C` });
+    if (m.blood_pressure_sys != null) chips.push({ label: "BP", val: `${m.blood_pressure_sys}/${m.blood_pressure_dia} mmHg` });
+  } else if (evt.event_type === "task") {
+    if (m.status) chips.push({ label: "Status", val: m.status });
+    if (m.priority != null) chips.push({ label: "Priority", val: m.priority === 3 ? "High" : m.priority === 2 ? "Medium" : "Low" });
+    if (m.due_at) chips.push({ label: "Due", val: new Date(m.due_at).toLocaleString() });
+  } else if (evt.event_type === "medication") {
+    if (m.dosage) chips.push({ label: "Dose", val: m.dosage });
+    if (m.route) chips.push({ label: "Route", val: m.route });
+    if (m.notes) chips.push({ label: "Notes", val: m.notes, wide: true });
+  } else if (evt.event_type === "food") {
+    if (m.quantity) chips.push({ label: "Qty", val: m.quantity });
+    if (m.meal_type) chips.push({ label: "Meal", val: m.meal_type });
+    if (m.calories != null) chips.push({ label: "kcal", val: m.calories });
+  } else if (evt.event_type === "lab") {
+    if (m.value != null) chips.push({ label: "Value", val: `${m.value}${m.unit ? ` ${m.unit}` : ""}` });
+    if (m.abnormal) chips.push({ label: "\u26a0 Abnormal", val: null, warn: true });
+  } else if (evt.event_type === "clinical_note") {
+    if (m.note_type) chips.push({ label: "Type", val: m.note_type });
+    if (m.confidence != null) chips.push({ label: "Confidence", val: `${Math.round(m.confidence * 100)}%` });
+    if (m.subjective_preview) chips.push({ label: "Preview", val: m.subjective_preview, wide: true });
+  } else if (evt.event_type === "audio_note") {
+    if (m.transcript_preview) chips.push({ label: "Transcript", val: m.transcript_preview, wide: true });
+  } else if (evt.event_type === "consent") {
+    if (m.basis) chips.push({ label: "Basis", val: m.basis });
+    if (m.expires_at) chips.push({ label: "Expires", val: new Date(m.expires_at).toLocaleDateString() });
+  }
+
+  return (
+    <div style={{ display: "flex", gap: 0, position: "relative" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 40, flexShrink: 0, paddingTop: 8 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%",
+          background: isFuture ? `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}44)` : cfg.color,
+          border: `2px solid ${isFuture ? cfg.color + "88" : cfg.color}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: isFuture ? cfg.color : "#fff", flexShrink: 0, zIndex: 1,
+          boxShadow: isWarning ? `0 0 0 4px ${(severityColor || cfg.color)}33` : `0 2px 8px ${cfg.color}33`,
+        }}>
+          {cfg.icon}
+        </div>
+        {!isLast && (
+          <div style={{
+            width: 2, flex: 1, minHeight: 24,
+            background: `linear-gradient(to bottom, ${cfg.color}66, #e2e8f0)`,
+            marginTop: 2,
+          }} />
+        )}
+      </div>
+      <div style={{
+        flex: 1, marginLeft: 12, marginBottom: isLast ? 0 : 16,
+        background: isFuture ? `linear-gradient(135deg, ${cfg.bg}, #f8faff)` : "#ffffff",
+        border: `1px solid ${isWarning ? (severityColor || cfg.border) + "88" : cfg.border}`,
+        borderLeft: `3px solid ${isFuture ? cfg.color + "88" : cfg.color}`,
+        borderRadius: 10, padding: "10px 14px",
+        boxShadow: isWarning ? `0 2px 12px ${(severityColor || cfg.color)}22` : "0 1px 6px rgba(0,0,0,0.05)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
+            color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
+            borderRadius: 6, padding: "2px 8px",
+          }}>{cfg.label}</span>
+          {isFuture && (
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: "#7c3aed",
+              background: "#f5f3ff", border: "1px solid #c4b5fd",
+              borderRadius: 6, padding: "2px 8px", letterSpacing: "0.05em",
+            }}>SCHEDULED</span>
+          )}
+          {evt.severity && (
+            <span style={{
+              fontSize: 11, fontWeight: 700,
+              color: evt.severity === "critical" ? "#991b1b" : evt.severity === "warning" ? "#92400e" : "#1e40af",
+              background: evt.severity === "critical" ? "#fee2e2" : evt.severity === "warning" ? "#fef3c7" : "#dbeafe",
+              borderRadius: 6, padding: "2px 8px", textTransform: "uppercase",
+            }}>{evt.severity}</span>
+          )}
+          <span style={{ marginLeft: "auto", fontSize: 11, color: "#94a3b8", whiteSpace: "nowrap", flexShrink: 0 }}>
+            {new Date(evt.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+            {" \u00b7 "}
+            <span style={{ color: "#64748b" }}>{formatRelativeDate(evt.created_at)}</span>
+          </span>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", marginBottom: chips.length > 0 ? 8 : 0 }}>
+          {evt.title}
+        </div>
+        {chips.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {chips.map((chip, i) => (
+              <span key={i} style={{
+                fontSize: 12,
+                color: chip.warn ? "#92400e" : "#475569",
+                background: chip.warn ? "#fef3c7" : "#f1f5f9",
+                border: `1px solid ${chip.warn ? "#fcd34d" : "#e2e8f0"}`,
+                borderRadius: 6, padding: "2px 8px",
+                maxWidth: chip.wide ? "100%" : 240,
+                overflow: "hidden", textOverflow: "ellipsis",
+                whiteSpace: chip.wide ? "normal" : "nowrap",
+                fontFamily: "monospace",
+              }}>
+                <strong style={{ fontFamily: "inherit" }}>{chip.label}</strong>
+                {chip.val != null ? `: ${chip.val}` : ""}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TimelineSection({ title, events, color, icon }) {
+  if (!events.length) return null;
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8, marginBottom: 14,
+        paddingBottom: 8, borderBottom: `2px solid ${color}33`,
+      }}>
+        <span style={{
+          display: "flex", alignItems: "center", justifyContent: "center",
+          width: 26, height: 26, borderRadius: 8,
+          background: color + "22", color,
+        }}>{icon}</span>
+        <span style={{ fontWeight: 700, fontSize: 13, color, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          {title}
+        </span>
+        <span style={{
+          fontSize: 12, fontWeight: 600, background: color + "22", color,
+          borderRadius: 12, padding: "1px 8px",
+        }}>{events.length}</span>
+      </div>
+      <div>
+        {events.map((evt, i) => (
+          <TimelineEventCard
+            key={`${evt.event_type}-${i}`}
+            evt={evt}
+            isLast={i === events.length - 1}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PatientTimeline({ timeline }) {
+  const now = new Date();
+  const future = timeline.filter(e => { const d = new Date(e.created_at); return d > now && !isSameDay(d, now); }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const today = timeline.filter(e => isSameDay(new Date(e.created_at), now)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const past = timeline.filter(e => { const d = new Date(e.created_at); return d < now && !isSameDay(d, now); }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const clockIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+  const calIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+  const historyIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="12 8 12 12 14 14"/><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z"/></svg>;
+
+  if (!timeline.length) {
+    return (
+      <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8" }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: "0 auto 12px", display: "block", opacity: 0.4 }}>
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        No timeline events yet.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "4px 0 8px" }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid #e2e8f0",
+      }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#0f172a" }}>Patient Timeline</h3>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+            {timeline.length} event{timeline.length !== 1 ? "s" : ""}
+            {future.length > 0 ? ` \u00b7 ${future.length} upcoming` : ""}
+            {` \u00b7 ${today.length} today \u00b7 ${past.length} past`}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxWidth: 260 }}>
+          {Object.entries(EVENT_CONFIG).map(([key, cfg]) => (
+            <span key={key} title={cfg.label} style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: cfg.bg, border: `1px solid ${cfg.border}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: cfg.color, flexShrink: 0,
+            }}>{cfg.icon}</span>
+          ))}
+        </div>
+      </div>
+      <TimelineSection title="Upcoming" events={future} color="#7c3aed" icon={clockIcon} />
+      <TimelineSection title="Today" events={today} color="#0ea5e9" icon={calIcon} />
+      <TimelineSection title="History" events={past} color="#64748b" icon={historyIcon} />
+    </div>
+  );
+}
+
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "notes", label: "Clinical Notes" },
@@ -705,75 +1069,7 @@ export default function PatientDetail() {
         </div>
       )}
 
-      {activeTab === "timeline" && (
-        <div style={styles.panelWide}>
-          <div style={styles.panelHeader}>
-            <span style={styles.panelTitle}>Patient Timeline</span>
-          </div>
-          {timeline.length === 0 ? (
-            <p style={styles.empty}>No timeline events yet.</p>
-          ) : (
-            <div style={styles.timelineContainer}>
-              {timeline.slice(0, 20).map((evt, idx) => {
-                const dotColor =
-                  evt.event_type === "admission"
-                    ? "#10b981"
-                    : evt.event_type === "discharge"
-                      ? "#ef4444"
-                      : evt.event_type === "clinical_note"
-                        ? "#3b82f6"
-                        : evt.event_type === "vitals"
-                          ? "#9ca3af"
-                          : "#6b7280";
-
-                return (
-                  <div key={`${evt.event_type}-${idx}`} style={styles.timelineItem}>
-                    <div
-                      style={{
-                        ...styles.timelineDot,
-                        background: dotColor,
-                      }}
-                    />
-                    {idx < timeline.length - 1 && (
-                      <div
-                        style={{
-                          ...styles.timelineLine,
-                          borderLeftColor: dotColor,
-                        }}
-                      />
-                    )}
-                    <div style={styles.timelineContent}>
-                      <div style={styles.consentStatusRow}>
-                        <span
-                          style={{
-                            ...styles.badgeGray,
-                            background:
-                              evt.event_type === "clinical_note"
-                                ? "#eff6ff"
-                                : "#f3f4f6",
-                            color:
-                              evt.event_type === "clinical_note"
-                                ? "#1e40af"
-                                : "#374151",
-                          }}
-                        >
-                          {evt.event_type}
-                        </span>
-                        <span style={styles.consentMeta}>
-                          {new Date(evt.created_at).toLocaleString()}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 14, color: "#111827", marginTop: 6 }}>
-                        {evt.title}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+      {activeTab === "timeline" && <PatientTimeline timeline={timeline} />}
 
       {activeTab === "ai-insights" && (
         <div style={styles.panelWide}>
