@@ -110,6 +110,7 @@ PATIENT_DATA = [
         "age": 45, "gender": "M", "blood_group": "O+",
         "weight_kg": 75.5, "height_cm": 180,
         "diagnosis": "Hypertension, Type 2 Diabetes",
+        "disease_locations": "chest,abdomen",  # Heart (BP) + pancreas (diabetes)
         "comorbidities": "Obesity",
         "medications": "Metformin, Lisinopril",
         "allergies": "Penicillin",
@@ -129,6 +130,7 @@ PATIENT_DATA = [
         "age": 62, "gender": "F", "blood_group": "A+",
         "weight_kg": 68.0, "height_cm": 165,
         "diagnosis": "Acute Coronary Syndrome",
+        "disease_locations": "chest",  # Heart/chest
         "comorbidities": "Hypertension",
         "medications": "Aspirin, Beta-blocker, Statin",
         "allergies": "None",
@@ -148,6 +150,7 @@ PATIENT_DATA = [
         "age": 38, "gender": "M", "blood_group": "B+",
         "weight_kg": 82.3, "height_cm": 185,
         "diagnosis": "Community Acquired Pneumonia",
+        "disease_locations": "chest",  # Lungs/chest
         "comorbidities": "Asthma",
         "medications": "Amoxicillin, Albuterol",
         "allergies": "Sulfa drugs",
@@ -167,6 +170,7 @@ PATIENT_DATA = [
         "age": 55, "gender": "F", "blood_group": "AB-",
         "weight_kg": 70.0, "height_cm": 162,
         "diagnosis": "Post-surgical recovery (Laparoscopic Cholecystectomy)",
+        "disease_locations": "abdomen",  # Gallbladder/abdomen
         "comorbidities": "None",
         "medications": "Paracetamol, Pantoprazole",
         "allergies": "Morphine",
@@ -186,6 +190,7 @@ PATIENT_DATA = [
         "age": 30, "gender": "M", "blood_group": "B-",
         "weight_kg": 68.0, "height_cm": 175,
         "diagnosis": "Acute Kidney Injury",
+        "disease_locations": "abdomen",  # Kidneys/abdomen
         "comorbidities": "Type 1 Diabetes",
         "medications": "Insulin, IV Fluids",
         "allergies": "Contrast dye",
@@ -205,6 +210,7 @@ PATIENT_DATA = [
         "age": 72, "gender": "F", "blood_group": "O-",
         "weight_kg": 58.0, "height_cm": 155,
         "diagnosis": "Hip Fracture (post ORIF)",
+        "disease_locations": "left_leg",  # Hip/left leg region
         "comorbidities": "Osteoporosis, Atrial Fibrillation",
         "medications": "Warfarin, Calcium, Vitamin D",
         "allergies": "NSAIDs",
@@ -224,6 +230,7 @@ PATIENT_DATA = [
         "age": 25, "gender": "M", "blood_group": "A-",
         "weight_kg": 78.0, "height_cm": 182,
         "diagnosis": "Appendicitis (post appendectomy)",
+        "disease_locations": "abdomen",  # Appendix/abdomen
         "comorbidities": "None",
         "medications": "Ceftriaxone, Metronidazole",
         "allergies": "None",
@@ -243,6 +250,7 @@ PATIENT_DATA = [
         "age": 48, "gender": "F", "blood_group": "AB+",
         "weight_kg": 55.0, "height_cm": 158,
         "diagnosis": "Stroke (Ischemic)",
+        "disease_locations": "head",  # Brain/head
         "comorbidities": "Hypertension, Hyperlipidemia",
         "medications": "Aspirin, Clopidogrel, Atorvastatin",
         "allergies": "Codeine",
@@ -262,6 +270,7 @@ PATIENT_DATA = [
         "age": 65, "gender": "M", "blood_group": "O+",
         "weight_kg": 90.0, "height_cm": 178,
         "diagnosis": "COPD Exacerbation",
+        "disease_locations": "chest",  # Lungs + heart/chest
         "comorbidities": "Heart Failure, Hypertension",
         "medications": "Budesonide, Furosemide, Spironolactone",
         "allergies": "Erythromycin",
@@ -281,6 +290,7 @@ PATIENT_DATA = [
         "age": 19, "gender": "F", "blood_group": "B+",
         "weight_kg": 52.0, "height_cm": 160,
         "diagnosis": "Dengue Fever with Thrombocytopenia",
+        "disease_locations": "abdomen",  # Liver/abdomen
         "comorbidities": "None",
         "medications": "Paracetamol, IV Fluids",
         "allergies": "None",

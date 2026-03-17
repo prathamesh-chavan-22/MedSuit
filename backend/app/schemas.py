@@ -87,6 +87,7 @@ class PatientCreate(BaseModel):
     weight_kg: Optional[float] = Field(default=None, ge=0, le=500)
     height_cm: Optional[float] = Field(default=None, ge=0, le=300)
     diagnosis: Optional[str] = None
+    disease_locations: Optional[str] = None  # comma-separated: head,chest,abdomen,left_arm,right_arm,left_leg,right_leg
     comorbidities: Optional[str] = None
     medications: Optional[str] = None
     allergies: Optional[str] = None
@@ -133,6 +134,7 @@ class PatientUpdate(BaseModel):
     weight_kg: Optional[float] = Field(default=None, ge=0, le=500)
     height_cm: Optional[float] = Field(default=None, ge=0, le=300)
     diagnosis: Optional[str] = None
+    disease_locations: Optional[str] = None
     comorbidities: Optional[str] = None
     medications: Optional[str] = None
     allergies: Optional[str] = None

@@ -465,29 +465,33 @@ function BodyMapPanel({ region, timeline, clinicalNotes }) {
   );
 }
 
-function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectRegion }) {
+function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectRegion, diseaseLocations = [] }) {
   const [hoveredRegion, setHoveredRegion] = useState(null);
+
+  const isDiseasedRegion = (id) => diseaseLocations.includes(id);
 
   const regionFill = (id) => {
     if (id === selectedRegion) return "rgba(20, 184, 166, 0.3)";
+    if (isDiseasedRegion(id)) return "rgba(239, 68, 68, 0.18)";
     if (id === hoveredRegion) return "rgba(45, 212, 191, 0.15)";
     return "rgba(255, 255, 255, 0.03)";
   };
 
   const regionStroke = (id) => {
     if (id === selectedRegion) return "#14b8a6";
+    if (isDiseasedRegion(id)) return "#ef4444";
     if (id === hoveredRegion) return "#2dd4bf";
     return "rgba(203, 213, 225, 0.4)";
   };
 
-  const regionStrokeW = (id) => (id === selectedRegion || id === hoveredRegion) ? 2 : 1;
+  const regionStrokeW = (id) => (id === selectedRegion || id === hoveredRegion || isDiseasedRegion(id)) ? 2 : 1;
 
   const regionProps = (id) => ({
     fill: regionFill(id),
     stroke: regionStroke(id),
     strokeWidth: regionStrokeW(id),
-    className: `bodymap-region ${id === selectedRegion ? 'selected' : ''}`,
-    style: { cursor: "pointer", transition: "all 0.3s ease" },
+    className: `bodymap-region${id === selectedRegion ? ' selected' : ''}${isDiseasedRegion(id) ? ' diseased' : ''}`,
+    style: { cursor: "pointer", transition: "fill 0.3s ease, stroke 0.3s ease" },
     onMouseEnter: () => setHoveredRegion(id),
     onMouseLeave: () => setHoveredRegion(null),
     onClick: () => onSelectRegion(id === selectedRegion ? null : id),
@@ -531,6 +535,12 @@ function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectR
           100% { transform: translateY(340px); opacity: 0; }
         }
         .bodymap-scanner { animation: scanlineDrop 4s linear infinite; pointer-events: none; }
+        @keyframes diseasePulse {
+          0%, 100% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.4)); }
+          50% { filter: drop-shadow(0 0 14px rgba(239,68,68,0.9)); }
+        }
+        .bodymap-region.diseased { animation: diseasePulse 1.8s ease-in-out infinite; }
+        .bodymap-region.diseased.selected { animation: none; filter: drop-shadow(0 0 14px rgba(20,184,166,0.8)); }
       `}</style>
 
       {/* Grid Background Pattern */}
@@ -542,10 +552,26 @@ function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectR
 
       <div style={{ marginBottom: 16, position: "relative", zIndex: 2 }}>
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#f8fafc" }}>Interactive Body Map</h3>
-        <p style={{ margin: "3px 0 0", fontSize: 12, color: "#94a3b8" }}>
-          <span style={{color: "#2dd4bf", marginRight: 5}}>● LIVE SCAN</span>
-          Click a region to view specific clinical events
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4, flexWrap: "wrap" }}>
+          <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>
+            <span style={{color: "#2dd4bf", marginRight: 5}}>● LIVE SCAN</span>
+            Click a region to view specific clinical events
+          </p>
+          {diseaseLocations.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+                textTransform: "uppercase", color: "#ef4444",
+                background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)",
+                borderRadius: 99, padding: "2px 8px",
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
+                Primary Disease Site
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: 30, alignItems: "flex-start", flexWrap: "wrap", position: "relative", zIndex: 2 }}>
@@ -655,14 +681,14 @@ function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectR
             {BODY_REGIONS.map(r => (
               <button key={r.id} onClick={() => onSelectRegion(r.id === selectedRegion ? null : r.id)}
                 style={{
-                  border: `1px solid ${r.id === selectedRegion ? "#2dd4bf" : "rgba(203,213,225,0.2)"}`,
+                  border: `1px solid ${r.id === selectedRegion ? "#2dd4bf" : isDiseasedRegion(r.id) ? "rgba(239,68,68,0.6)" : "rgba(203,213,225,0.2)"}`,
                   borderRadius: 99, padding: "2px 10px", fontSize: 10, fontWeight: 600,
                   cursor: "pointer",
-                  background: r.id === selectedRegion ? "rgba(45,212,191,0.2)" : "rgba(15,23,42,0.5)",
-                  color: r.id === selectedRegion ? "#2dd4bf" : "#94a3b8",
+                  background: r.id === selectedRegion ? "rgba(45,212,191,0.2)" : isDiseasedRegion(r.id) ? "rgba(239,68,68,0.15)" : "rgba(15,23,42,0.5)",
+                  color: r.id === selectedRegion ? "#2dd4bf" : isDiseasedRegion(r.id) ? "#f87171" : "#94a3b8",
                   transition: "all 0.2s",
                 }}>
-                {r.label}
+                {isDiseasedRegion(r.id) ? "⚠ " : ""}{r.label}
               </button>
             ))}
           </div>
@@ -1238,6 +1264,7 @@ export default function PatientDetail() {
             clinicalNotes={clinicalNotes}
             selectedRegion={selectedRegion}
             onSelectRegion={setSelectedRegion}
+            diseaseLocations={(patient?.disease_locations || "").split(",").map(s => s.trim()).filter(Boolean)}
           />
         </>
       )}

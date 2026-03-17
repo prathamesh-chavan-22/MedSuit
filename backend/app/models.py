@@ -117,6 +117,7 @@ class Patient(Base):
     weight_kg = Column(Float)
     height_cm = Column(Float)
     diagnosis = Column(Text)
+    disease_locations = Column(String, nullable=True)  # comma-separated body region IDs: head,chest,abdomen,left_arm,right_arm,left_leg,right_leg
     comorbidities = Column(Text)
     medications = Column(Text)
     allergies = Column(Text)          # comma-separated or JSON string
