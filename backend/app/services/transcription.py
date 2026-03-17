@@ -1,29 +1,15 @@
-from faster_whisper import WhisperModel
+"""Audio transcription wrapper – uses Sarvam AI STT (replaces faster-whisper)."""
+from app.services.sarvam_ai import transcribe_audio_sarvam
 
 
-_model = None  # lazy-loaded singleton
-
-
-def _get_model():
-    """Load the Whisper model once and reuse it."""
-    global _model
-    if _model is None:
-        _model = WhisperModel("small", device="cpu", compute_type="int8")
-    return _model
-
-
-def transcribe_with_google(file_path: str) -> str:
-    """Transcribe audio using local Whisper model.
+def transcribe_with_google(file_path: str, language_code: str = "en-IN") -> str:
+    """Transcribe audio using Sarvam AI STT.
 
     Args:
         file_path: Path to audio file (WebM/OPUS, MP3, WAV, etc.)
+        language_code: BCP-47 language code (default: en-IN).
 
     Returns:
         Transcribed text, or error message if transcription fails.
     """
-    try:
-        model = _get_model()
-        segments, _ = model.transcribe(file_path, language="en")
-        return " ".join(seg.text.strip() for seg in segments)
-    except Exception as exc:
-        return f"[Transcription failed: {exc}]"
+    return transcribe_audio_sarvam(file_path, language_code=language_code)

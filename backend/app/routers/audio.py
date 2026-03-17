@@ -1,7 +1,10 @@
+import io
 import os
 import uuid
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List
 from celery.result import AsyncResult
@@ -12,12 +15,67 @@ from app.auth import get_current_user, require_role
 from app.celery_app import celery_app
 from app.database import get_db
 from app.services.transcription import transcribe_with_google
+from app.services.sarvam_ai import generate_tts_bytes
 from app.tasks.audio_tasks import transcribe_audio_note
 
 router = APIRouter(prefix="/audio", tags=["Audio Notes"])
 
 UPLOAD_DIR = "uploads/audio"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+class TTSRequest(BaseModel):
+    text: str
+    language_code: str = "en-IN"
+
+
+@router.post("/tts", summary="Text-to-Speech via Sarvam AI")
+async def text_to_speech(
+    payload: TTSRequest,
+    _: models.User = Depends(get_current_user),
+):
+    """Convert text to speech using Sarvam AI and stream back MP3 audio."""
+    if not payload.text.strip():
+        raise HTTPException(status_code=400, detail="text must not be empty")
+
+    audio_bytes = generate_tts_bytes(payload.text, language_code=payload.language_code)
+    if audio_bytes is None:
+        raise HTTPException(status_code=502, detail="TTS service unavailable or API key not configured")
+
+    return StreamingResponse(
+        io.BytesIO(audio_bytes),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "inline; filename=speech.mp3"},
+    )
+
+
+@router.post("/stt", summary="Speech-to-Text via Sarvam AI (no patient required)")
+async def speech_to_text(
+    file: UploadFile = File(...),
+    _: models.User = Depends(get_current_user),
+):
+    """Transcribe an uploaded audio file using Sarvam AI STT.
+
+    Returns {"transcript": "..."}.
+    """
+    ext = os.path.splitext(file.filename)[-1] or ".webm"
+    filename = f"stt_{uuid.uuid4()}{ext}"
+    file_path = os.path.join(UPLOAD_DIR, filename)
+
+    async with aiofiles.open(file_path, "wb") as out:
+        content = await file.read()
+        await out.write(content)
+
+    try:
+        transcript = transcribe_with_google(file_path)
+    finally:
+        # Clean up temp file
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+
+    return {"transcript": transcript}
 
 
 @router.post("/{patient_id}", response_model=schemas.AudioNoteOut, status_code=201)

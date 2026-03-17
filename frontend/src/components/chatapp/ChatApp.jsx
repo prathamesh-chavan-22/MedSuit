@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import {
   ShieldAlert,
@@ -12,6 +12,10 @@ import {
   Pencil,
   Trash2,
   MessageSquare,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import api from "../../api";
 import "./ChatApp.css";
@@ -241,6 +245,15 @@ export default function ChatApp() {
     initialStateRef.current.activeSessionId,
   );
 
+  // ── Voice state ────────────────────────────────────────────────────────────
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false); // auto-play TTS
+  const [isPlayingTts, setIsPlayingTts] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const audioPlayerRef = useRef(null);
+
   const patientId = usePatientIdFromUrl();
 
   const activeSession = useMemo(
@@ -312,6 +325,91 @@ export default function ChatApp() {
     );
   }
 
+  // ── Voice helpers ──────────────────────────────────────────────────────────
+  const startRecording = useCallback(async () => {
+    if (isRecording || isTranscribing) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        await sendAudioForTranscription(blob);
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Microphone permission denied:", err);
+    }
+  }, [isRecording, isTranscribing]);
+
+  const stopRecording = useCallback(() => {
+    if (!isRecording || !mediaRecorderRef.current) return;
+    mediaRecorderRef.current.stop();
+    mediaRecorderRef.current = null;
+    setIsRecording(false);
+  }, [isRecording]);
+
+  async function sendAudioForTranscription(blob) {
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", blob, "recording.webm");
+      // Re-use the first available patient endpoint; for general chat we still need a patient_id
+      // so we use the generic audio endpoint tied to patient 0 (server will 404 for unknown patient)
+      // Instead, we directly call the STT route which doesn't need a patient:
+      const response = await api.post("/audio/stt", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const text = response.data?.transcript || "";
+      if (text.trim()) {
+        setDraft(text.trim());
+      }
+    } catch (err) {
+      console.error("Transcription error:", err);
+    } finally {
+      setIsTranscribing(false);
+    }
+  }
+
+  async function playTts(text) {
+    if (!text || !voiceMode) return;
+    // Stop any currently playing audio
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current = null;
+    }
+    setIsPlayingTts(true);
+    try {
+      const response = await api.post(
+        "/audio/tts",
+        { text },
+        { responseType: "blob" },
+      );
+      const url = URL.createObjectURL(response.data);
+      const audio = new Audio(url);
+      audioPlayerRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        setIsPlayingTts(false);
+        audioPlayerRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsPlayingTts(false);
+        audioPlayerRef.current = null;
+      };
+      await audio.play();
+    } catch (err) {
+      console.error("TTS error:", err);
+      setIsPlayingTts(false);
+    }
+  }
+
   async function submitMessage(event) {
     event.preventDefault();
     if (!activeSession || !draft.trim() || isLoading) return;
@@ -354,6 +452,9 @@ export default function ChatApp() {
         messages: [...s.messages, userMessage, assistantMessage],
         patientId: patientId,
       }));
+
+      // Auto-play TTS if voice mode is active
+      playTts(data.reply);
     } catch (err) {
       const errorMsg = {
         id: `m_${Date.now()}_error`,
@@ -627,18 +728,64 @@ export default function ChatApp() {
           </div>
 
           <form className="chatapp-input" onSubmit={submitMessage}>
+            {/* Voice mode toggle */}
+            <div className="chatapp-voice-bar">
+              <button
+                type="button"
+                className={`chatapp-voice-mode-btn${voiceMode ? " chatapp-voice-mode-btn--active" : ""}`}
+                onClick={() => {
+                  setVoiceMode((v) => !v);
+                  if (isPlayingTts && audioPlayerRef.current) {
+                    audioPlayerRef.current.pause();
+                    setIsPlayingTts(false);
+                  }
+                }}
+                title={voiceMode ? "Voice mode ON – Click to disable auto-play" : "Enable voice mode"}
+              >
+                {voiceMode ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                {voiceMode ? "Voice mode ON" : "Voice mode OFF"}
+                {isPlayingTts && (
+                  <span className="chatapp-tts-playing-dot" title="Playing audio" />
+                )}
+              </button>
+            </div>
+
             <div className="chatapp-input-wrapper">
+              {/* Microphone button */}
+              <button
+                type="button"
+                className={`chatapp-mic-btn${
+                  isRecording ? " chatapp-mic-btn--recording" : ""
+                }`}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isLoading || isTranscribing}
+                aria-label={isRecording ? "Stop recording" : "Start voice input"}
+                title={isRecording ? "Stop recording" : "Speak your message"}
+              >
+                {isTranscribing ? (
+                  <Loader2 size={16} className="chatapp-spin-icon" />
+                ) : isRecording ? (
+                  <MicOff size={16} />
+                ) : (
+                  <Mic size={16} />
+                )}
+              </button>
+
               <input
                 ref={inputRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder={
-                  patientId
-                    ? "Ask about this patient..."
-                    : "Ask anything about workflows, medicine..."
+                  isRecording
+                    ? "🎙 Listening..."
+                    : isTranscribing
+                    ? "Transcribing..."
+                    : patientId
+                    ? "Speak or type about this patient..."
+                    : "Speak or type anything..."
                 }
                 aria-label="Type your message"
-                disabled={isLoading}
+                disabled={isLoading || isRecording || isTranscribing}
               />
               <button
                 type="submit"
