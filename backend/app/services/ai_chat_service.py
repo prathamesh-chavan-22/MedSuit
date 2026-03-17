@@ -310,13 +310,23 @@ def chat_with_context(
     # Build messages array
     messages = [{"role": "system", "content": system_prompt}]
 
-    # Add conversation history (last 10 exchanges max)
-    for msg in history[-20:]:
-        role = msg.get("role", "user")
-        if role in ("user", "assistant"):
-            messages.append({"role": role, "content": msg.get("text", "")})
+    # Add conversation history (last 20 messages max).
+    # Mistral requires the turn order after 'system' to begin with a 'user' message.
+    # DB sessions always start with a welcome 'assistant' message, so we strip
+    # any leading assistant turns before sending to the API.
+    recent_history = [
+        msg for msg in history[-20:]
+        if msg.get("role") in ("user", "assistant")
+    ]
+    # Drop leading assistant messages so the first non-system message is 'user'
+    while recent_history and recent_history[0].get("role") == "assistant":
+        recent_history.pop(0)
+
+    for msg in recent_history:
+        messages.append({"role": msg["role"], "content": msg.get("text", "")})
 
     messages.append({"role": "user", "content": user_message})
+
 
     try:
         response = httpx.post(
