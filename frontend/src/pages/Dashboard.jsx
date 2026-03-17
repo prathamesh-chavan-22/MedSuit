@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
+import AnimatedNumber from "../components/AnimatedNumber";
 
 /* ========== Inline SVG Illustrations for stat cards ========== */
 
@@ -208,6 +209,7 @@ const svgMap = {
   "Total Users": <UsersSvg />,
   "Total Patients": <PatientsSvg />,
   "My Patients Pool": <PatientsSvg />,
+  "Bed Occupancy": <BedsSvg />,
   "Occupied Beds": <BedsSvg />,
   "Available Beds": <BedsSvg />,
   "Unread Alerts": <AlertsSvg />,
@@ -254,11 +256,14 @@ export default function Dashboard() {
   const availableBeds = beds.filter((b) => b.status === "available").length;
   const seriousPatients = patients.filter((p) => p.is_serious);
 
+  const bedOccupancyPct =
+    beds.length > 0 ? Math.round((occupiedBeds / beds.length) * 100) : 0;
+
   const cardsByRole = {
     admin: [
       { label: "Total Users", value: users.length, to: "/users" },
       { label: "Total Patients", value: patients.length, to: "/patients" },
-      { label: "Occupied Beds", value: `${occupiedBeds} / ${beds.length}`, to: "/beds" },
+      { label: "Bed Occupancy", value: bedOccupancyPct, suffix: "%", to: "/beds" },
       { label: "Unread Alerts", value: alerts.length, to: "/" },
     ],
     doctor: [
@@ -298,7 +303,13 @@ export default function Dashboard() {
             <div className={`anim-slide-up stagger-${idx + 1}`} style={styles.card}>
               <div style={styles.cardSvg}>{svgMap[c.label]}</div>
               <div>
-                <div style={styles.cardValue}>{c.value}</div>
+                <div style={styles.cardValue}>
+                  {typeof c.value === "number" ? (
+                    <AnimatedNumber value={c.value} suffix={c.suffix || ""} />
+                  ) : (
+                    c.value
+                  )}
+                </div>
                 <div style={styles.cardLabel}>{c.label}</div>
               </div>
             </div>
@@ -322,7 +333,9 @@ export default function Dashboard() {
               { label: "Nurses", val: users.filter((u) => u.role === "nurse").length },
             ].map((s) => (
               <div key={s.label} style={styles.summaryCard}>
-                <div style={styles.summaryValue}>{s.val}</div>
+                <div style={styles.summaryValue}>
+                  <AnimatedNumber value={s.val} />
+                </div>
                 <div style={styles.summaryLabel}>{s.label}</div>
               </div>
             ))}
