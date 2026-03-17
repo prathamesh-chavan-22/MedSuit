@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Heart, Activity, AlertTriangle } from "lucide-react";
 import api from "../api";
@@ -95,6 +96,7 @@ function BedVisual({ status, emergency }) {
 
 export default function Beds() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
@@ -252,11 +254,24 @@ export default function Beds() {
                   <article
                     key={bed.id}
                     className={`bed-card-wrapper${emergency ? " bed-emergency" : ""}`}
+                    onClick={() => patient && navigate(`/patients/${patient.id}`)}
                     style={{
                       ...styles.bedCard,
                       borderTopColor: emergency
                         ? "#ef4444"
                         : statusColor[bed.status] || "#cbd5e1",
+                      cursor: patient ? "pointer" : "default",
+                      transition: "box-shadow 0.18s ease, transform 0.18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (patient) {
+                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(30, 58, 95, 0.14)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(30, 58, 95, 0.06)";
+                      e.currentTarget.style.transform = "translateY(0)";
                     }}
                   >
                     <div style={styles.bedTop}>
