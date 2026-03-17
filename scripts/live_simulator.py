@@ -2,18 +2,24 @@
 """
 MedSuite Live Patient Simulator
 ================================
-Continuously pushes mock vital-sign readings to a patient every 0.5 seconds,
-simulating a live bedside monitor.
+Continuously pushes mock vital-sign readings for **all current patients**
+(or a single patient via ``--patient-id``) every N seconds, simulating
+live bedside monitors.
 
 Vitals are generated using a *stateful random walk* so successive readings
 change smoothly (e.g. HR 72 → 72.3 → 71.8) rather than jumping randomly
 across the full physiological range each tick.
 
 Usage:
-    python scripts/live_simulator.py --patient-id <ID> [--url <API_BASE_URL>] [--token <JWT>]
+    # Simulate ALL patients (auto-discovers via API):
+    python scripts/live_simulator.py
+
+    # Simulate a single patient:
+    python scripts/live_simulator.py --patient-id 3
 
 Arguments:
-    --patient-id  (required)  The numeric ID of the patient to simulate.
+    --patient-id  (optional)  Limit simulation to this single patient ID.
+                              If omitted, ALL patients are simulated.
     --url         (optional)  Base URL of the MedSuite API.
                               Defaults to http://localhost:8000
     --token       (optional)  Bearer JWT token for authentication.
@@ -34,9 +40,6 @@ DEFAULT_URL = "http://localhost:8000"
 DEFAULT_INTERVAL = 0.5
 
 # ─── Walk Configuration ───────────────────────────────────────────────────────
-# Each entry: (baseline, min_clamp, max_clamp, step_size, spike_delta, spike_probability)
-# step_size   = maximum change per tick under normal conditions
-# spike_delta = magnitude of an occasional anomalous jump (5 % chance)
 VITAL_CONFIG = {
     "heart_rate":         dict(baseline=75.0,  lo=50.0,  hi=115.0, step=1.0,  spike=25.0,  spike_prob=0.04),
     "spo2":               dict(baseline=98.0,  lo=88.0,  hi=100.0, step=0.3,  spike=-5.0,  spike_prob=0.03),
@@ -61,7 +64,6 @@ class VitalWalker:
 
     def next(self) -> float:
         if random.random() < self.spike_prob:
-            # Occasional anomalous spike – direction determined by sign of spike config
             delta = self.spike * (1 if self.spike >= 0 else -1)
         else:
             delta = random.uniform(-self.step, self.step)
@@ -78,7 +80,10 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="MedSuite Live Patient Simulator – pushes vital readings every N seconds."
     )
-    parser.add_argument("--patient-id", type=int, required=True, help="Target patient ID")
+    parser.add_argument(
+        "--patient-id", type=int, default=None,
+        help="Target patient ID. If omitted, ALL patients are simulated.",
+    )
     parser.add_argument("--url", default=os.getenv("MEDSUITE_API_URL", DEFAULT_URL), help="API base URL")
     parser.add_argument(
         "--token",
@@ -94,53 +99,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def run(patient_id: int, api_url: str, token: str, interval: float):
-    endpoint = f"{api_url.rstrip('/')}/vitals/mock/{patient_id}"
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-
-    print("🏥  MedSuite Live Patient Simulator  [smooth random-walk mode]")
-    print(f"    Patient ID : {patient_id}")
-    print(f"    Endpoint   : {endpoint}")
-    print(f"    Interval   : {interval}s")
-    print(f"    Auth token : {'present' if token else 'NOT SET (may fail with 401)'}")
-    print("─" * 60)
-    print("Press Ctrl+C to stop.\n")
-
-    walkers = build_walkers()
-    reading_count = 0
-
-    try:
-        while True:
-            try:
-                vitals = {name: walker.next() for name, walker in walkers.items()}
-                resp = requests.post(endpoint, json=vitals, headers=headers, timeout=5)
-                reading_count += 1
-                status_icon = "✅" if resp.status_code == 201 else "⚠️ "
-                print(
-                    f"{status_icon} [{reading_count:>4}] "
-                    f"HR={vitals['heart_rate']:>5.1f} bpm  "
-                    f"SpO₂={vitals['spo2']:>5.1f}%  "
-                    f"Temp={vitals['temperature']:>4.1f}°C  "
-                    f"BP={vitals['blood_pressure_sys']:.0f}/{vitals['blood_pressure_dia']:.0f} mmHg  "
-                    f"ECG={vitals['ecg_value']:+.3f}  "
-                    f"[HTTP {resp.status_code}]"
-                )
-                if resp.status_code not in (200, 201):
-                    print(f"    ↳ Response: {resp.text[:200]}")
-            except requests.exceptions.ConnectionError:
-                print("❌  Could not connect to API. Is the backend running?")
-            except requests.exceptions.Timeout:
-                print("⏱️  Request timed out.")
-            except Exception as exc:  # noqa: BLE001
-                print(f"❌  Unexpected error: {exc}")
-
-            time.sleep(interval)
-    except KeyboardInterrupt:
-        print(f"\n\n🛑  Simulator stopped after {reading_count} readings.")
-        sys.exit(0)
-
-
-def auto_login(api_url: str, username: str = "tushar.dayma", password: str = "test@123") -> str:
+def auto_login(api_url: str, username: str = "admin", password: str = "admin123") -> str:
     """Attempt to log in with default credentials and return a JWT token."""
     login_url = f"{api_url.rstrip('/')}/auth/login"
     print(f"🔑  Auto-login: POST {login_url}  (user={username})")
@@ -161,18 +120,98 @@ def auto_login(api_url: str, username: str = "tushar.dayma", password: str = "te
     return ""
 
 
+def fetch_all_patient_ids(api_url: str, headers: dict) -> list[int]:
+    """Fetch all patient IDs from the API."""
+    url = f"{api_url.rstrip('/')}/patients/"
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            patients = resp.json()
+            ids = [p["id"] for p in patients if "id" in p]
+            return ids
+        print(f"⚠️  Failed to fetch patients (HTTP {resp.status_code}): {resp.text[:200]}")
+    except Exception as exc:
+        print(f"❌  Error fetching patients: {exc}")
+    return []
+
+
+def run(patient_ids: list[int], api_url: str, token: str, interval: float):
+    """Run the simulator loop for one or more patients."""
+    base = api_url.rstrip("/")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+    print("🏥  MedSuite Live Patient Simulator  [smooth random-walk mode]")
+    print(f"    Patients   : {patient_ids}")
+    print(f"    Interval   : {interval}s")
+    print(f"    Auth token : {'present' if token else 'NOT SET (may fail with 401)'}")
+    print("─" * 60)
+    print("Press Ctrl+C to stop.\n")
+
+    # Each patient gets its own independent set of walkers
+    walkers_per_patient: dict[int, dict] = {pid: build_walkers() for pid in patient_ids}
+    reading_count = 0
+
+    try:
+        while True:
+            for pid in patient_ids:
+                try:
+                    walkers = walkers_per_patient[pid]
+                    vitals = {name: walker.next() for name, walker in walkers.items()}
+                    endpoint = f"{base}/vitals/mock/{pid}"
+                    resp = requests.post(endpoint, json=vitals, headers=headers, timeout=5)
+                    reading_count += 1
+                    icon = "✅" if resp.status_code == 201 else "⚠️ "
+                    print(
+                        f"{icon} [{reading_count:>4}] P{pid:<3} "
+                        f"HR={vitals['heart_rate']:>5.1f} bpm  "
+                        f"SpO₂={vitals['spo2']:>5.1f}%  "
+                        f"Temp={vitals['temperature']:>4.1f}°C  "
+                        f"BP={vitals['blood_pressure_sys']:.0f}/{vitals['blood_pressure_dia']:.0f} mmHg  "
+                        f"ECG={vitals['ecg_value']:+.3f}  "
+                        f"[HTTP {resp.status_code}]"
+                    )
+                    if resp.status_code not in (200, 201):
+                        print(f"    ↳ Response: {resp.text[:200]}")
+                except requests.exceptions.ConnectionError:
+                    print(f"❌  P{pid} – Could not connect to API. Is the backend running?")
+                except requests.exceptions.Timeout:
+                    print(f"⏱️  P{pid} – Request timed out.")
+                except Exception as exc:  # noqa: BLE001
+                    print(f"❌  P{pid} – Unexpected error: {exc}")
+
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        print(f"\n\n🛑  Simulator stopped after {reading_count} readings across {len(patient_ids)} patient(s).")
+        sys.exit(0)
+
+
 if __name__ == "__main__":
     args = parse_args()
     token = args.token
+
     if not token:
         print("⚠️  No auth token provided – attempting auto-login with default credentials...\n")
         token = auto_login(args.url)
         if not token:
             print("   Could not auto-login. Set --token or the MEDSUITE_TOKEN environment variable.\n")
+
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+    if args.patient_id:
+        # Single patient mode
+        target_ids = [args.patient_id]
+    else:
+        # All-patients mode: fetch from API
+        print("📋  No --patient-id specified → fetching all patients from API...\n")
+        target_ids = fetch_all_patient_ids(args.url, headers)
+        if not target_ids:
+            print("❌  No patients found. Create patients first, then re-run the simulator.")
+            sys.exit(1)
+        print(f"✅  Found {len(target_ids)} patient(s): {target_ids}\n")
+
     run(
-        patient_id=args.patient_id,
+        patient_ids=target_ids,
         api_url=args.url,
         token=token,
         interval=args.interval,
     )
-

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { ShieldAlert, Loader2, Lightbulb, X, Link2, Bot, AlertTriangle } from "lucide-react";
 import api from "../../api";
 import "./ChatApp.css";
 
@@ -84,9 +85,9 @@ function renderMarkdown(text) {
 }
 
 const SEVERITY_STYLES = {
-  critical: { bg: "#fef2f2", border: "#fca5a5", color: "#991b1b", icon: "🔴" },
-  warning: { bg: "#fffbeb", border: "#fcd34d", color: "#92400e", icon: "🟡" },
-  info: { bg: "#eff6ff", border: "#93c5fd", color: "#1e40af", icon: "🔵" },
+  critical: { bg: "#fef2f2", border: "#fca5a5", color: "#991b1b", dotColor: "#ef4444" },
+  warning: { bg: "#fffbeb", border: "#fcd34d", color: "#92400e", dotColor: "#f59e0b" },
+  info: { bg: "#eff6ff", border: "#93c5fd", color: "#1e40af", dotColor: "#3b82f6" },
 };
 
 export default function ChatApp() {
@@ -225,7 +226,7 @@ export default function ChatApp() {
       const errorMsg = {
         id: `m_${Date.now()}_error`,
         role: "assistant",
-        text: `⚠ **Error:** ${err?.response?.data?.detail || err.message || "Failed to reach AI service."}`,
+        text: `**Error:** ${err?.response?.data?.detail || err.message || "Failed to reach AI service."}`,
         createdAt: new Date().toISOString(),
       };
       updateActiveSession((s) => ({
@@ -269,7 +270,7 @@ export default function ChatApp() {
               <strong>MedSuite AI Co-Pilot</strong>
               <p>
                 {patientId
-                  ? `🔗 Patient #${patientId} context active`
+                  ? <><Link2 size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />Patient #{patientId} context active</>
                   : "General mode — open a patient for context"}
               </p>
             </div>
@@ -282,7 +283,7 @@ export default function ChatApp() {
                   disabled={isScanning}
                   title="AI Risk Scan"
                 >
-                  {isScanning ? "⏳" : "🛡️"} Risk Scan
+                  {isScanning ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <ShieldAlert size={13} />} Risk Scan
                 </button>
               )}
               <button
@@ -291,7 +292,7 @@ export default function ChatApp() {
                 onClick={() => setIsOpen(false)}
                 aria-label="Close chat"
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
           </header>
@@ -332,13 +333,13 @@ export default function ChatApp() {
           {showRiskPanel && (
             <div className="chatapp-risk-panel">
               <div className="chatapp-risk-panel-header">
-                <strong>🛡️ AI Risk Scan Results</strong>
+                <strong><ShieldAlert size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5 }} />AI Risk Scan Results</strong>
                 <button
                   type="button"
                   className="chatapp-risk-dismiss"
                   onClick={() => setShowRiskPanel(false)}
                 >
-                  ✕
+                  <X size={13} />
                 </button>
               </div>
               {isScanning ? (
@@ -362,13 +363,15 @@ export default function ChatApp() {
                           color: sty.color,
                         }}
                       >
-                        <div className="chatapp-risk-card-title">
-                          {sty.icon} {flag.title}
+                        <div className="chatapp-risk-card-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', background: sty.dotColor, flexShrink: 0 }} />
+                          {flag.title}
                         </div>
                         <div className="chatapp-risk-card-msg">{flag.message}</div>
                         {flag.recommendation && (
-                          <div className="chatapp-risk-card-rec">
-                            💡 {flag.recommendation}
+                          <div className="chatapp-risk-card-rec" style={{ display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                            <Lightbulb size={11} style={{ marginTop: 1, flexShrink: 0 }} />
+                            {flag.recommendation}
                           </div>
                         )}
                       </div>
@@ -378,6 +381,11 @@ export default function ChatApp() {
               )}
             </div>
           )}
+
+          <div className="chatapp-disclaimer">
+            <AlertTriangle size={12} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>AI responses are for support only and may be inaccurate. Do not rely on them as a substitute for professional medical judgment.</span>
+          </div>
 
           <div className="chatapp-messages" ref={scrollRef}>
             {activeSession?.messages.map((msg) => (
@@ -431,7 +439,7 @@ export default function ChatApp() {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? "Minimize chat" : "Open AI Co-Pilot"}
       >
-        {isOpen ? "Hide" : "🤖 AI Co-Pilot"}
+        {isOpen ? "Hide" : <><Bot size={15} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />AI Co-Pilot</>}
       </button>
     </div>
   );

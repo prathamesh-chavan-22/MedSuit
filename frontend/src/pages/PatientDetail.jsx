@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mic, MicOff, RefreshCw } from "lucide-react";
+import { Mic, MicOff, RefreshCw, Bot, ShieldAlert, Loader2, Lightbulb, AlertTriangle, CheckCircle } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -19,7 +19,7 @@ const TABS = [
   { id: "notes", label: "Clinical Notes" },
   { id: "labs", label: "Labs" },
   { id: "timeline", label: "Timeline" },
-  { id: "ai-insights", label: "🤖 AI Insights" },
+  { id: "ai-insights", label: "AI Insights" },
 ];
 
 export default function PatientDetail() {
@@ -722,11 +722,11 @@ export default function PatientDetail() {
       {activeTab === "ai-insights" && (
         <div style={styles.panelWide}>
           <div style={styles.panelHeader}>
-            <span style={styles.panelTitle}>🤖 AI Clinical Decision Support</span>
+            <span style={styles.panelTitle}><Bot size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />AI Clinical Decision Support</span>
             <button
               style={{
                 ...styles.btnRecord,
-                background: aiScanning ? "#9ca3af" : "linear-gradient(135deg, #1d4ed8, #3b82f6)",
+                background: aiScanning ? "#9ca3af" : "linear-gradient(135deg, #0d9488, #14b8a6)",
               }}
               onClick={async () => {
                 setAiScanning(true);
@@ -747,7 +747,7 @@ export default function PatientDetail() {
               }}
               disabled={aiScanning}
             >
-              {aiScanning ? "⏳ Scanning..." : "🛡️ Run Risk Scan"}
+              {aiScanning ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Scanning...</> : <><ShieldAlert size={14} /> Run Risk Scan</>}
             </button>
           </div>
 
@@ -758,15 +758,21 @@ export default function PatientDetail() {
             </div>
           )}
 
+          {/* AI Disclaimer */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: '#fefce8', border: '1px solid #fde68a', borderRadius: 10, padding: '10px 14px', marginBottom: 18, fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
+            <AlertTriangle size={14} style={{ marginTop: 1, flexShrink: 0, color: '#d97706' }} />
+            <span>AI analysis is for informational support only. It can make mistakes and must not replace professional clinical judgment. Please verify all findings independently.</span>
+          </div>
+
           {aiRiskFlags.length > 0 && (
             <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
               {aiRiskFlags.map((flag, i) => {
-                const colors = {
-                  critical: { bg: "#fef2f2", border: "#fca5a5", text: "#991b1b", icon: "🔴" },
-                  warning: { bg: "#fffbeb", border: "#fcd34d", text: "#92400e", icon: "🟡" },
-                  info: { bg: "#eff6ff", border: "#93c5fd", text: "#1e40af", icon: "🔵" },
+                const severityStyles = {
+                  critical: { bg: "#fef2f2", border: "#fca5a5", text: "#991b1b", dotColor: "#ef4444" },
+                  warning: { bg: "#fffbeb", border: "#fcd34d", text: "#92400e", dotColor: "#f59e0b" },
+                  info: { bg: "#eff6ff", border: "#93c5fd", text: "#1e40af", dotColor: "#3b82f6" },
                 };
-                const c = colors[flag.severity] || colors.info;
+                const c = severityStyles[flag.severity] || severityStyles.info;
                 return (
                   <div key={i} style={{
                     background: c.bg,
@@ -775,15 +781,17 @@ export default function PatientDetail() {
                     padding: "12px 16px",
                     color: c.text,
                   }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
-                      {c.icon} {flag.title}
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: c.dotColor, flexShrink: 0 }} />
+                      {flag.title}
                     </div>
                     <div style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 4 }}>
                       {flag.message}
                     </div>
                     {flag.recommendation && (
-                      <div style={{ fontSize: 12, fontStyle: "italic", opacity: 0.85 }}>
-                        💡 {flag.recommendation}
+                      <div style={{ fontSize: 12, fontStyle: "italic", opacity: 0.85, display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                        <Lightbulb size={12} style={{ marginTop: 1, flexShrink: 0 }} />
+                        {flag.recommendation}
                       </div>
                     )}
                   </div>
@@ -865,7 +873,7 @@ export default function PatientDetail() {
                 } catch (err) {
                   setAiChatHistory((prev) => [
                     ...prev,
-                    { role: "assistant", text: `⚠ Error: ${err?.response?.data?.detail || err.message}` },
+                    { role: "assistant", text: `Error: ${err?.response?.data?.detail || err.message}` },
                   ]);
                 } finally {
                   setAiChatLoading(false);
@@ -1047,7 +1055,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 6,
-    background: "#2563eb",
+    background: "#0d9488",
     color: "#fff",
     border: "none",
     borderRadius: 8,
