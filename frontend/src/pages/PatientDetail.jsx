@@ -1188,12 +1188,11 @@ export default function PatientDetail() {
     });
   };
 
-  const chartData = [...vitals].reverse().map((v, i) => ({
-    name: `#${i + 1}`,
-    "HR (bpm)": v.heart_rate,
-    "SpO2 (%)": v.spo2,
-    "Temp (deg C)": v.temperature,
-  }));
+  const reversedVitals = [...vitals].reverse();
+  const hrData = reversedVitals.map((v, i) => ({ name: `#${i + 1}`, "HR": v.heart_rate }));
+  const spo2Data = reversedVitals.map((v, i) => ({ name: `#${i + 1}`, "SpO2": v.spo2 }));
+  const tempData = reversedVitals.map((v, i) => ({ name: `#${i + 1}`, "Temp": v.temperature }));
+  const bpData = reversedVitals.map((v, i) => ({ name: `#${i + 1}`, "Sys": v.blood_pressure_sys, "Dia": v.blood_pressure_dia }));
 
   if (isLoading) return <div style={{ padding: "40px" }}>Loading...</div>;
   if (!patient) return <div style={{ padding: "40px" }}>Patient not found.</div>;
@@ -1251,104 +1250,114 @@ export default function PatientDetail() {
 
       {activeTab === "overview" && (
         <>
-          <div className="detail-columns" style={styles.columns}>
+          {/* Vital Signs — 4 separate panels */}
+          {vitals.length === 0 ? (
             <div style={styles.panel}>
-              <div style={styles.panelHeader}>
-                <span style={styles.panelTitle}>Doctor Audio Notes</span>
-                <button
-                        style={recording ? styles.btnStop : styles.btnRecord}
-                        onClick={recording ? stopRecording : startRecording}
-                      >
-                        {recording ? (
-                          <>
-                            <MicOff size={14} /> Stop
-                          </>
-                        ) : (
-                          <>
-                            <Mic size={14} /> Record
-                          </>
-                        )}
-                      </button>
-              </div>
-
-              {audioFeedback && <div style={styles.feedback}>{audioFeedback}</div>}
-
-              {notes.length === 0 ? (
-                <p style={styles.empty}>No audio notes yet.</p>
-              ) : (
-                notes.map((n) => (
-                  <div key={n.id} style={styles.noteCard}>
-                    <div style={styles.noteDate}>{new Date(n.created_at).toLocaleString()}</div>
-                    <div style={styles.noteTranscript}>{n.transcript || "Transcribing..."}</div>
-                  </div>
-                ))
-              )}
+              <div style={styles.panelHeader}><span style={styles.panelTitle}>Vital Signs</span></div>
+              <p style={styles.empty}>No vitals recorded.</p>
             </div>
-
-            <div style={styles.panel}>
-              <div style={styles.panelHeader}>
-                <span style={styles.panelTitle}>Vital Signs</span>
-              </div>
-
-              {vitals.length > 0 && (
-                <div style={styles.latestVitals}>
-                  {[
-                    [
-                      "Heart Rate",
-                      vitals[0].heart_rate,
-                      "bpm",
-                      vitals[0].heart_rate > 100 || vitals[0].heart_rate < 60,
-                    ],
-                    ["SpO2", vitals[0].spo2, "%", vitals[0].spo2 < 95],
-                    ["Temp", vitals[0].temperature, "deg C", vitals[0].temperature > 38],
-                    [
-                      "BP",
-                      `${vitals[0].blood_pressure_sys}/${vitals[0].blood_pressure_dia}`,
-                      "mmHg",
-                      false,
-                    ],
-                  ].map(([label, val, unit, warn]) => (
-                    <div
-                      key={label}
-                      className={warn ? "vital-warn" : ""}
-                      style={{
-                        ...styles.vitalBox,
-                        borderColor: warn ? "rgba(239, 68, 68, 0.5)" : "rgba(255, 255, 255, 0.4)",
-                        background: warn ? "rgba(254, 226, 226, 0.5)" : "rgba(255, 255, 255, 0.25)",
-                      }}
-                    >
-                      <VitalWaveform color={warn ? "#ef4444" : "#0d9488"} />
-                      <div
-                        style={{
-                          ...styles.vitalValue,
-                          color: warn ? "#ef4444" : "#0f172a",
-                        }}
-                      >
-                        {val} <span style={{ ...styles.vitalUnit, color: warn ? "#f87171" : "#64748b" }}>{unit}</span>
-                      </div>
-                      <div style={{ ...styles.vitalLabel, color: warn ? "#ef4444" : "#64748b" }}>{label}</div>
+          ) : (
+            <div style={styles.vitalsGrid}>
+              {/* Heart Rate */}
+              {(() => {
+                const warn = vitals[0].heart_rate > 100 || vitals[0].heart_rate < 60;
+                return (
+                  <div style={{ ...styles.panel, ...styles.vitalPanelInner }}>
+                    <div style={styles.vitalPanelHeader}>
+                      <span style={{ ...styles.vitalPanelLabel, color: warn ? "#ef4444" : "#3b82f6" }}>Heart Rate</span>
+                      <span className={warn ? "vital-warn" : ""} style={{ ...styles.vitalPanelValue, color: warn ? "#ef4444" : "#0f172a" }}>
+                        {vitals[0].heart_rate} <span style={styles.vitalUnit}>bpm</span>
+                      </span>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <VitalWaveform color={warn ? "#ef4444" : "#3b82f6"} />
+                    <ResponsiveContainer width="100%" height={120}>
+                      <LineChart data={hrData}>
+                        <XAxis dataKey="name" hide />
+                        <YAxis tick={{ fontSize: 10 }} width={28} />
+                        <Tooltip formatter={(v) => [`${v} bpm`, "HR"]} />
+                        <Line type="monotone" dataKey="HR" stroke={warn ? "#ef4444" : "#3b82f6"} dot={false} strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
 
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={chartData}>
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="HR (bpm)" stroke="#3b82f6" dot={false} />
-                    <Line type="monotone" dataKey="SpO2 (%)" stroke="#10b981" dot={false} />
-                    <Line type="monotone" dataKey="Temp (deg C)" stroke="#f59e0b" dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <p style={styles.empty}>No vitals recorded.</p>
-              )}
+              {/* SpO2 */}
+              {(() => {
+                const warn = vitals[0].spo2 < 95;
+                return (
+                  <div style={{ ...styles.panel, ...styles.vitalPanelInner }}>
+                    <div style={styles.vitalPanelHeader}>
+                      <span style={{ ...styles.vitalPanelLabel, color: warn ? "#ef4444" : "#10b981" }}>SpO₂</span>
+                      <span className={warn ? "vital-warn" : ""} style={{ ...styles.vitalPanelValue, color: warn ? "#ef4444" : "#0f172a" }}>
+                        {vitals[0].spo2} <span style={styles.vitalUnit}>%</span>
+                      </span>
+                    </div>
+                    <VitalWaveform color={warn ? "#ef4444" : "#10b981"} />
+                    <ResponsiveContainer width="100%" height={120}>
+                      <LineChart data={spo2Data}>
+                        <XAxis dataKey="name" hide />
+                        <YAxis tick={{ fontSize: 10 }} width={28} domain={[85, 100]} />
+                        <Tooltip formatter={(v) => [`${v}%`, "SpO₂"]} />
+                        <Line type="monotone" dataKey="SpO2" stroke={warn ? "#ef4444" : "#10b981"} dot={false} strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
+
+              {/* Temperature */}
+              {(() => {
+                const warn = vitals[0].temperature > 38;
+                return (
+                  <div style={{ ...styles.panel, ...styles.vitalPanelInner }}>
+                    <div style={styles.vitalPanelHeader}>
+                      <span style={{ ...styles.vitalPanelLabel, color: warn ? "#ef4444" : "#f59e0b" }}>Temperature</span>
+                      <span className={warn ? "vital-warn" : ""} style={{ ...styles.vitalPanelValue, color: warn ? "#ef4444" : "#0f172a" }}>
+                        {vitals[0].temperature} <span style={styles.vitalUnit}>°C</span>
+                      </span>
+                    </div>
+                    <VitalWaveform color={warn ? "#ef4444" : "#f59e0b"} />
+                    <ResponsiveContainer width="100%" height={120}>
+                      <LineChart data={tempData}>
+                        <XAxis dataKey="name" hide />
+                        <YAxis tick={{ fontSize: 10 }} width={28} />
+                        <Tooltip formatter={(v) => [`${v}°C`, "Temp"]} />
+                        <Line type="monotone" dataKey="Temp" stroke={warn ? "#ef4444" : "#f59e0b"} dot={false} strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
+
+              {/* Blood Pressure */}
+              {(() => {
+                const sys = vitals[0].blood_pressure_sys;
+                const dia = vitals[0].blood_pressure_dia;
+                return (
+                  <div style={{ ...styles.panel, ...styles.vitalPanelInner }}>
+                    <div style={styles.vitalPanelHeader}>
+                      <span style={{ ...styles.vitalPanelLabel, color: "#8b5cf6" }}>Blood Pressure</span>
+                      <span style={{ ...styles.vitalPanelValue, color: "#0f172a" }}>
+                        {sys}/{dia} <span style={styles.vitalUnit}>mmHg</span>
+                      </span>
+                    </div>
+                    <VitalWaveform color="#8b5cf6" />
+                    <ResponsiveContainer width="100%" height={120}>
+                      <LineChart data={bpData}>
+                        <XAxis dataKey="name" hide />
+                        <YAxis tick={{ fontSize: 10 }} width={28} />
+                        <Tooltip formatter={(v, n) => [`${v} mmHg`, n]} />
+                        <Legend wrapperStyle={{ fontSize: 10 }} />
+                        <Line type="monotone" dataKey="Sys" stroke="#8b5cf6" dot={false} strokeWidth={2} />
+                        <Line type="monotone" dataKey="Dia" stroke="#c4b5fd" dot={false} strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
             </div>
-          </div>
+          )}
 
           <InteractiveBodyMap
             timeline={timeline}
@@ -1362,6 +1371,30 @@ export default function PatientDetail() {
 
       {activeTab === "notes" && (
         <div style={styles.panelWide}>
+          {/* Doctor Audio Notes — moved from Overview */}
+          <div style={{ ...styles.panel, marginBottom: 20 }}>
+            <div style={styles.panelHeader}>
+              <span style={styles.panelTitle}>Doctor Audio Notes</span>
+              <button
+                style={recording ? styles.btnStop : styles.btnRecord}
+                onClick={recording ? stopRecording : startRecording}
+              >
+                {recording ? (<><MicOff size={14} /> Stop</>) : (<><Mic size={14} /> Record</>)}
+              </button>
+            </div>
+            {audioFeedback && <div style={styles.feedback}>{audioFeedback}</div>}
+            {notes.length === 0 ? (
+              <p style={styles.empty}>No audio notes yet.</p>
+            ) : (
+              notes.map((n) => (
+                <div key={n.id} style={styles.noteCard}>
+                  <div style={styles.noteDate}>{new Date(n.created_at).toLocaleString()}</div>
+                  <div style={styles.noteTranscript}>{n.transcript || "Transcribing..."}</div>
+                </div>
+              ))
+            )}
+          </div>
+
           <div style={styles.panelHeader}>
             <span style={styles.panelTitle}>Clinical Notes (SOAP)</span>
             {canFinalizeNotes && (
@@ -1928,6 +1961,37 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "1fr 1.1fr",
     gap: 16,
+  },
+  vitalsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gap: 16,
+  },
+  vitalPanelInner: {
+    position: "relative",
+    overflow: "hidden",
+    paddingBottom: 8,
+  },
+  vitalPanelHeader: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    marginBottom: 6,
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  vitalPanelLabel: {
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    color: "#64748b",
+  },
+  vitalPanelValue: {
+    fontSize: 26,
+    fontWeight: 800,
+    letterSpacing: "-0.03em",
+    color: "#0f172a",
   },
   panel: {
     background: "rgba(255,255,255,0.9)",
