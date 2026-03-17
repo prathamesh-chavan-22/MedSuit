@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════════════
+   Bed Visual & Emergency Animation Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Emergency blink keyframes ─────────────────────────────── */
+@keyframes emergency-blink {
+  from { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: #e2e8f0; }
+  25%  { box-shadow: 0 0 18px 4px rgba(239, 68, 68, 0.55); border-color: #ef4444; }
+  50%  { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: #fca5a5; }
+  75%  { box-shadow: 0 0 18px 4px rgba(239, 68, 68, 0.55); border-color: #ef4444; }
+  to   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: #e2e8f0; }
+}
+
+@keyframes emergency-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+.bed-card-wrapper {
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bed-card-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 58, 95, 0.12);
+}
+
+/* Emergency state: whole card blinks red */
+.bed-card-wrapper.bed-emergency {
+  animation: emergency-blink 1.5s ease-in-out infinite;
+  background: #fff5f5 !important;
+  border-color: #ef4444 !important;
+}
+
+.bed-card-wrapper.bed-emergency .bed-visual {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.bed-card-wrapper.bed-emergency .bed-visual .bed-frame {
+  background: #f87171;
+  border-color: #dc2626;
+}
+
+.bed-card-wrapper.bed-emergency .bed-visual .bed-mattress {
+  background: linear-gradient(135deg, #fecaca, #fca5a5);
+  border-color: #f87171;
+}
+
+.bed-card-wrapper.bed-emergency .bed-visual .bed-pillow {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+/* ── Emergency badge ──────────────────────────────────────── */
+.emergency-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.emergency-badge .pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: emergency-pulse-dot 1s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Detailed SVG Hospital Bed
+   ═══════════════════════════════════════════════════════════════ */
+.proper-bed-svg {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  display: block;
+  margin: 16px auto;
+  overflow: visible;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.04));
+  transition: filter 0.3s;
+}
+
+.proper-bed-svg .bed-base {
+  fill: #64748b;
+  transition: fill 0.3s;
+}
+.proper-bed-svg .bed-rail {
+  stroke: #94a3b8;
+  fill: none;
+  stroke-width: 1.5;
+  transition: stroke 0.3s;
+}
+.proper-bed-svg .bed-rail-fill {
+  fill: #94a3b8;
+  transition: fill 0.3s;
+}
+.proper-bed-svg .bed-mattress {
+  fill: #bae6fd;
+  transition: fill 0.3s;
+}
+.proper-bed-svg .bed-pillow {
+  fill: #e0f2fe;
+  transition: fill 0.3s;
+}
+.proper-bed-svg .bed-wheel-tire {
+  fill: #334155;
+}
+.proper-bed-svg .bed-wheel-hub {
+  fill: #cbd5e1;
+}
+.proper-bed-svg .bed-stroke {
+  stroke: #94a3b8;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke 0.3s;
+}
+.proper-bed-svg .bed-iv-bag {
+  fill: #e2e8f0;
+  stroke: #cbd5e1;
+  stroke-width: 0.8;
+}
+.proper-bed-svg .bed-monitor {
+  fill: #475569;
+}
+.proper-bed-svg .bed-monitor-screen {
+  fill: #10b981;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Status colors on the SVG bed visual
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Available — green */
+.proper-bed-svg.bed-status-available .bed-base { fill: #22c55e; }
+.proper-bed-svg.bed-status-available .bed-rail { stroke: #4ade80; }
+.proper-bed-svg.bed-status-available .bed-rail-fill { fill: #4ade80; }
+.proper-bed-svg.bed-status-available .bed-mattress { fill: #bbf7d0; }
+.proper-bed-svg.bed-status-available .bed-pillow { fill: #dcfce7; }
+.proper-bed-svg.bed-status-available .bed-stroke { stroke: #22c55e; }
+
+/* Occupied — blue */
+.proper-bed-svg.bed-status-occupied .bed-base { fill: #3b82f6; }
+.proper-bed-svg.bed-status-occupied .bed-rail { stroke: #60a5fa; }
+.proper-bed-svg.bed-status-occupied .bed-rail-fill { fill: #60a5fa; }
+.proper-bed-svg.bed-status-occupied .bed-mattress { fill: #bfdbfe; }
+.proper-bed-svg.bed-status-occupied .bed-pillow { fill: #dbeafe; }
+.proper-bed-svg.bed-status-occupied .bed-stroke { stroke: #3b82f6; }
+
+/* Maintenance — amber */
+.proper-bed-svg.bed-status-maintenance .bed-base { fill: #f59e0b; }
+.proper-bed-svg.bed-status-maintenance .bed-rail { stroke: #fbbf24; }
+.proper-bed-svg.bed-status-maintenance .bed-rail-fill { fill: #fbbf24; }
+.proper-bed-svg.bed-status-maintenance .bed-mattress { fill: #fde68a; }
+.proper-bed-svg.bed-status-maintenance .bed-pillow { fill: #fef3c7; }
+.proper-bed-svg.bed-status-maintenance .bed-stroke { stroke: #f59e0b; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Emergency overrides for the SVG bed
+   ═══════════════════════════════════════════════════════════════ */
+.proper-bed-svg.bed-emergency-visual .bed-base { fill: #ef4444; }
+.proper-bed-svg.bed-emergency-visual .bed-rail { stroke: #f87171; }
+.proper-bed-svg.bed-emergency-visual .bed-rail-fill { fill: #f87171; }
+.proper-bed-svg.bed-emergency-visual .bed-mattress { fill: #fecaca; }
+.proper-bed-svg.bed-emergency-visual .bed-pillow { fill: #fee2e2; }
+.proper-bed-svg.bed-emergency-visual .bed-stroke { stroke: #ef4444; }
+.proper-bed-svg.bed-emergency-visual .bed-monitor-screen { 
+  fill: #ef4444; 
+  animation: monitor-warn 0.6s infinite alternate; 
+}
+
+@keyframes monitor-warn {
+  from { fill: #fca5a5; }
+  to { fill: #991b1b; }
+}

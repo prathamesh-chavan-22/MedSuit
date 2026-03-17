@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Heart, Activity } from "lucide-react";
+import { Plus, Heart, Activity, AlertTriangle } from "lucide-react";
 import api from "../api";
+import "./Beds.css";
 
 const statusColor = {
   available: "#10b981",
@@ -16,6 +17,81 @@ const statusBg = {
 };
 
 const EMPTY = { bed_number: "", ward: "", notes: "" };
+
+/* ── Helper: check if vitals are in the emergency zone ──────── */
+function isEmergency(vital) {
+  if (!vital) return false;
+  const hrBad = vital.heart_rate > 100 || vital.heart_rate < 60;
+  const spBad = vital.spo2 < 95;
+  return hrBad || spBad;
+}
+
+/* ── Detailed SVG hospital bed visual ────────────────────── */
+function BedVisual({ status, emergency }) {
+  return (
+    <svg 
+      viewBox="0 0 120 80" 
+      className={`proper-bed-svg bed-status-${status}${emergency ? " bed-emergency-visual" : ""}`}
+    >
+      {/* Floor line */}
+      <line x1="10" y1="75" x2="110" y2="75" stroke="#e2e8f0" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Wheels */}
+      <g className="bed-wheel">
+        <circle cx="30" cy="70" r="5" className="bed-wheel-tire" />
+        <circle cx="30" cy="70" r="2" className="bed-wheel-hub" />
+        <circle cx="90" cy="70" r="5" className="bed-wheel-tire" />
+        <circle cx="90" cy="70" r="2" className="bed-wheel-hub" />
+      </g>
+
+      {/* Wheel struts */}
+      <rect x="28" y="55" width="4" height="10" rx="1" className="bed-base" />
+      <rect x="88" y="55" width="4" height="10" rx="1" className="bed-base" />
+
+      {/* Lower base frame */}
+      <rect x="20" y="52" width="80" height="4" rx="2" className="bed-base" />
+
+      {/* Scissor lift mechanism (X shape) */}
+      <path d="M 35 53 L 85 40" className="bed-stroke" strokeLinecap="round" />
+      <path d="M 85 53 L 35 40" className="bed-stroke" strokeLinecap="round" />
+
+      {/* Upper base frame (under mattress) */}
+      <rect x="15" y="38" width="90" height="4" rx="2" className="bed-base" />
+
+      {/* Mattress */}
+      <rect x="15" y="24" width="90" height="14" rx="4" className="bed-mattress" />
+
+      {/* Headboard (Left side) */}
+      <rect x="10" y="10" width="6" height="32" rx="3" className="bed-base" />
+      
+      {/* Footboard (Right side - shorter) */}
+      <rect x="104" y="20" width="6" height="22" rx="3" className="bed-base" />
+
+      {/* Pillow (Left side, resting on mattress) */}
+      <rect x="18" y="16" width="18" height="8" rx="4" className="bed-pillow" />
+
+      {/* Hospital Bed Side Railings (Center of mattress) */}
+      <rect x="35" y="16" width="50" height="12" rx="3" className="bed-rail" />
+      <rect x="42" y="16" width="3" height="12" className="bed-rail-fill" />
+      <rect x="52" y="16" width="3" height="12" className="bed-rail-fill" />
+      <rect x="62" y="16" width="3" height="12" className="bed-rail-fill" />
+      <rect x="72" y="16" width="3" height="12" className="bed-rail-fill" />
+
+      {/* IV Pole (Attached to headboard) */}
+      <rect x="8" y="2" width="2" height="40" className="bed-iv-pole" />
+      {/* IV Hooks & Bag */}
+      <path d="M 4 6 Q 8 2 8 2 Q 12 2 12 6" className="bed-iv-pole-stroke" fill="none" />
+      <rect x="11" y="6" width="6" height="10" rx="1" className="bed-iv-bag" />
+      <path d="M 14 16 L 14 20" className="bed-iv-pole-stroke" />
+
+      {/* Patient Monitor (Mounted near headboard) */}
+      <path d="M 22 38 L 22 8 L 26 8" className="bed-iv-pole-stroke" />
+      <rect x="26" y="4" width="14" height="10" rx="2" className="bed-monitor" />
+      {/* Heartbeat line on monitor screen */}
+      <path d="M 28 9 L 30 9 L 31 7 L 33 11 L 34 9 L 38 9" strokeWidth="1" stroke="currentColor" fill="none" className="bed-monitor-screen" />
+    </svg>
+  );
+}
 
 export default function Beds() {
   const qc = useQueryClient();
@@ -170,26 +246,42 @@ export default function Beds() {
               {wardBeds.map((bed) => {
                 const patient = patients.find((p) => p.id === bed.patient_id);
                 const vital = bed.patient_id ? vitalsMap[bed.patient_id] : null;
+                const emergency = patient && isEmergency(vital);
+
                 return (
                   <article
                     key={bed.id}
+                    className={`bed-card-wrapper${emergency ? " bed-emergency" : ""}`}
                     style={{
                       ...styles.bedCard,
-                      borderTopColor: statusColor[bed.status] || "#cbd5e1",
+                      borderTopColor: emergency
+                        ? "#ef4444"
+                        : statusColor[bed.status] || "#cbd5e1",
                     }}
                   >
                     <div style={styles.bedTop}>
                       <div style={styles.bedNum}>Bed {bed.bed_number}</div>
-                      <span
-                        style={{
-                          ...styles.statusBadge,
-                          background: statusBg[bed.status] || "#f1f5f9",
-                          color: statusColor[bed.status] || "#334155",
-                        }}
-                      >
-                        {bed.status}
-                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {emergency && (
+                          <span className="emergency-badge">
+                            <span className="pulse-dot" />
+                            Emergency
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            ...styles.statusBadge,
+                            background: statusBg[bed.status] || "#f1f5f9",
+                            color: statusColor[bed.status] || "#334155",
+                          }}
+                        >
+                          {bed.status}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* ── Proper Bed Visual ────────────────────────── */}
+                    <BedVisual status={bed.status} emergency={emergency} />
 
                     <div style={styles.patientBlock}>
                       <div style={styles.patientLabel}>Patient</div>
