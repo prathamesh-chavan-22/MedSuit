@@ -33,7 +33,9 @@ export function AuthProvider({ children }) {
     const form = new URLSearchParams();
     form.append("username", username);
     form.append("password", password);
-    const res = await api.post("/auth/login", form);
+    const res = await api.post("/auth/login", form, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    });
     localStorage.setItem(ACCESS_TOKEN_KEY, res.data.access_token);
     if (res.data.refresh_token) {
       localStorage.setItem(REFRESH_TOKEN_KEY, res.data.refresh_token);

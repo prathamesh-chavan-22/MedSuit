@@ -205,6 +205,15 @@ class AudioNoteOut(BaseModel):
 
 # ─── Vitals ───────────────────────────────────────────────────────────────────
 
+class VitalReadingCreate(BaseModel):
+    heart_rate: Optional[float] = None
+    spo2: Optional[float] = None
+    blood_pressure_sys: Optional[float] = None
+    blood_pressure_dia: Optional[float] = None
+    temperature: Optional[float] = None
+    ecg_value: Optional[float] = None
+
+
 class VitalReadingOut(BaseModel):
     id: int
     patient_id: int

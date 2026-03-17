@@ -2,7 +2,7 @@ import random
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app import models, schemas
 from app.auth import get_current_user, require_role
@@ -11,10 +11,9 @@ from app.database import get_db
 router = APIRouter(prefix="/vitals", tags=["Vitals"])
 
 
-def _mock_vitals(patient_id: int) -> dict:
-    """Generate realistic but randomised vital signs for demo purposes."""
-    return {
-        "patient_id": patient_id,
+def _mock_vitals(patient_id: int, payload: Optional[schemas.VitalReadingCreate] = None) -> dict:
+    """Generate vital signs, honouring values from a simulator payload when present."""
+    defaults = {
         "heart_rate": round(random.uniform(58, 105), 1),
         "spo2": round(random.uniform(92, 100), 1),
         "blood_pressure_sys": round(random.uniform(100, 145), 1),
@@ -22,11 +21,16 @@ def _mock_vitals(patient_id: int) -> dict:
         "temperature": round(random.uniform(36.1, 38.5), 1),
         "ecg_value": round(random.uniform(-1.0, 1.0), 3),
     }
+    if payload:
+        supplied = payload.model_dump(exclude_none=True)
+        defaults.update(supplied)
+    return {"patient_id": patient_id, **defaults}
 
 
 @router.post("/mock/{patient_id}", response_model=schemas.VitalReadingOut, status_code=201)
 def ingest_mock_vitals(
     patient_id: int,
+    vitals_in: Optional[schemas.VitalReadingCreate] = None,
     db: Session = Depends(get_db),
     _: models.User = Depends(
         require_role(models.UserRole.admin, models.UserRole.doctor, models.UserRole.nurse)
@@ -37,7 +41,7 @@ def ingest_mock_vitals(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    data = _mock_vitals(patient_id)
+    data = _mock_vitals(patient_id, vitals_in)
     reading = models.VitalReading(**data)
     db.add(reading)
     db.commit()

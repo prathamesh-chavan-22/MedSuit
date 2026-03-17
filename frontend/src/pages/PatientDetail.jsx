@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Mic, MicOff, RefreshCw } from "lucide-react";
+import { Mic, MicOff, RefreshCw } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -28,24 +28,13 @@ export default function PatientDetail() {
 
   const [recording, setRecording] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [consentFeedback, setConsentFeedback] = useState("");
+  const [audioFeedback, setAudioFeedback] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [noteType, setNoteType] = useState("general");
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingSoapFields, setEditingSoapFields] = useState({});
   const [savingNoteId, setSavingNoteId] = useState(null);
-  const [consentForm, setConsentForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-    relationship: "guardian",
-    address: "",
-    basis: "clinical-care",
-    notes: "",
-    expires_at: "",
-  });
 
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -71,11 +60,7 @@ export default function PatientDetail() {
   const { data: vitals = [] } = useQuery({
     queryKey: ["vitals", id],
     queryFn: () => api.get(`/vitals/${id}`).then((r) => r.data),
-  });
-  const { data: consent } = useQuery({
-    queryKey: ["consent", id],
-    queryFn: () => api.get(`/consents/patients/${id}`).then((r) => r.data),
-    retry: false,
+    refetchInterval: 500,
   });
   const { data: clinicalNotes = [] } = useQuery({
     queryKey: ["clinical-notes", id],
@@ -90,57 +75,15 @@ export default function PatientDetail() {
     queryFn: () => api.get(`/patients/${id}/timeline?limit=20`).then((r) => r.data),
   });
 
-  const canManageConsent = useMemo(
-    () => ["admin", "doctor", "nurse"].includes(user?.role),
-    [user?.role]
-  );
-  const canRevokeConsent = useMemo(
-    () => ["admin", "doctor"].includes(user?.role),
-    [user?.role]
-  );
   const canFinalizeNotes = useMemo(
     () => ["admin", "doctor"].includes(user?.role),
     [user?.role]
   );
 
   const showFeedback = (msg) => {
-    setConsentFeedback(msg);
-    setTimeout(() => setConsentFeedback(""), 5000);
+    setAudioFeedback(msg);
+    setTimeout(() => setAudioFeedback(""), 5000);
   };
-
-  const grantConsentMut = useMutation({
-    mutationFn: () =>
-      api.post(`/consents/patients/${id}`, {
-        basis: "clinical-care",
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["consent", id] }),
-    onError: (err) =>
-      showFeedback(err?.response?.data?.detail || "Failed to grant consent. Please try again."),
-  });
-
-  const revokeConsentMut = useMutation({
-    mutationFn: () => api.post(`/consents/patients/${id}/revoke`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["consent", id] }),
-    onError: (err) =>
-      showFeedback(err?.response?.data?.detail || "Failed to revoke consent. Please try again."),
-  });
-
-  const requestConsentEmailMut = useMutation({
-    mutationFn: (payload) => api.post(`/consents/patients/${id}/request-email`, payload),
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ["consent", id] });
-      showFeedback(
-        res.data?.email_sent
-          ? `Consent action email sent to ${res.data.action_url_sent_to}.`
-          : "Consent created but email was not sent. Check SMTP settings."
-      );
-    },
-    onError: (err) => {
-      showFeedback(
-        err?.response?.data?.detail || "Failed to send consent action email."
-      );
-    },
-  });
 
   const createDraftMut = useMutation({
     mutationFn: () => api.post(`/clinical-notes/patients/${id}/draft-from-latest-audio`),
@@ -282,20 +225,6 @@ export default function PatientDetail() {
     "Temp (deg C)": v.temperature,
   }));
 
-  const handleConsentInputChange = (field, value) => {
-    setConsentForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const submitConsentRequest = (e) => {
-    e.preventDefault();
-    setConsentFeedback("");
-    requestConsentEmailMut.mutate({
-      ...consentForm,
-      expires_at: consentForm.expires_at || null,
-      notes: consentForm.notes || null,
-    });
-  };
-
   if (isLoading) return <div style={{ padding: "40px" }}>Loading...</div>;
   if (!patient) return <div style={{ padding: "40px" }}>Patient not found.</div>;
 
@@ -353,15 +282,9 @@ export default function PatientDetail() {
             <div style={styles.panel}>
               <div style={styles.panelHeader}>
                 <span style={styles.panelTitle}>Doctor Audio Notes</span>
-                {(() => {
-                  const canRecord = consent?.status === "active";
-                  return (
-                    <>
-                      <button
-                        style={recording ? styles.btnStop : canRecord ? styles.btnRecord : { ...styles.btnRecord, opacity: 0.5, cursor: "not-allowed" }}
+                <button
+                        style={recording ? styles.btnStop : styles.btnRecord}
                         onClick={recording ? stopRecording : startRecording}
-                        disabled={!canRecord && !recording}
-                        title={!canRecord && !recording ? "Active consent required to record audio" : undefined}
                       >
                         {recording ? (
                           <>
@@ -373,165 +296,9 @@ export default function PatientDetail() {
                           </>
                         )}
                       </button>
-                      {!canRecord && !recording && (
-                        <span style={{ color: "#b91c1c", fontSize: 12, marginLeft: 8 }}>
-                          Active consent required
-                        </span>
-                      )}
-                    </>
-                  );
-                })()}
               </div>
 
-              <div style={styles.consentBox}>
-                <div style={styles.consentTitle}>Recording Consent</div>
-                <div style={styles.consentStatusRow}>
-                  <span
-                    style={{
-                      ...styles.consentBadge,
-                      background:
-                        consent?.status === "active"
-                          ? "#dcfce7"
-                          : consent?.status === "pending"
-                            ? "#fef9c3"
-                            : "#fee2e2",
-                      color:
-                        consent?.status === "active"
-                          ? "#166534"
-                          : consent?.status === "pending"
-                            ? "#854d0e"
-                            : "#b91c1c",
-                    }}
-                  >
-                    {consent?.status || "missing"}
-                  </span>
-                  {consent?.expires_at && (
-                    <span style={styles.consentMeta}>
-                      Expires: {new Date(consent.expires_at).toLocaleString()}
-                    </span>
-                  )}
-                </div>
-
-                {(consent?.contact_first_name || consent?.contact_email) && (
-                  <div className="grid-2col" style={styles.consentMetaGrid}>
-                    <span>
-                      Contact: {consent?.contact_first_name || ""} {consent?.contact_last_name || ""}
-                    </span>
-                    <span>Email: {consent?.contact_email || "N/A"}</span>
-                    <span>Phone: {consent?.contact_phone || "N/A"}</span>
-                    <span>Relationship: {consent?.relationship || "N/A"}</span>
-                  </div>
-                )}
-
-                {canManageConsent && (
-                  <div style={styles.consentActions}>
-                    <button
-                      style={styles.btnRefresh}
-                      onClick={() => grantConsentMut.mutate()}
-                      disabled={grantConsentMut.isPending}
-                    >
-                      {grantConsentMut.isPending ? "Granting..." : "Grant Consent"}
-                    </button>
-                    {canRevokeConsent && (
-                      <button
-                        style={styles.btnStop}
-                        onClick={() => revokeConsentMut.mutate()}
-                        disabled={revokeConsentMut.isPending}
-                      >
-                        {revokeConsentMut.isPending ? "Revoking..." : "Revoke Consent"}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {canManageConsent && (
-                <form onSubmit={submitConsentRequest} style={styles.formCard}>
-                  <div style={styles.formHeader}>
-                    <Mail size={14} /> Send Consent Email Action
-                  </div>
-
-                  <div className="grid-2col" style={styles.formGrid2}>
-                    <input
-                      required
-                      placeholder="First name"
-                      value={consentForm.first_name}
-                      onChange={(e) => handleConsentInputChange("first_name", e.target.value)}
-                      style={styles.input}
-                    />
-                    <input
-                      required
-                      placeholder="Last name"
-                      value={consentForm.last_name}
-                      onChange={(e) => handleConsentInputChange("last_name", e.target.value)}
-                      style={styles.input}
-                    />
-                    <input
-                      required
-                      type="email"
-                      placeholder="Email"
-                      value={consentForm.email}
-                      onChange={(e) => handleConsentInputChange("email", e.target.value)}
-                      style={styles.input}
-                    />
-                    <input
-                      required
-                      placeholder="Phone"
-                      value={consentForm.phone}
-                      onChange={(e) => handleConsentInputChange("phone", e.target.value)}
-                      style={styles.input}
-                    />
-                    <input
-                      required
-                      placeholder="Relationship"
-                      value={consentForm.relationship}
-                      onChange={(e) => handleConsentInputChange("relationship", e.target.value)}
-                      style={styles.input}
-                    />
-                    <input
-                      type="datetime-local"
-                      value={consentForm.expires_at}
-                      onChange={(e) => handleConsentInputChange("expires_at", e.target.value)}
-                      style={styles.input}
-                    />
-                  </div>
-
-                  <input
-                    required
-                    placeholder="Address"
-                    value={consentForm.address}
-                    onChange={(e) => handleConsentInputChange("address", e.target.value)}
-                    style={{ ...styles.input, marginTop: 8 }}
-                  />
-
-                  <div className="grid-2col" style={styles.formGrid2}>
-                    <input
-                      placeholder="Consent basis"
-                      value={consentForm.basis}
-                      onChange={(e) => handleConsentInputChange("basis", e.target.value)}
-                      style={styles.input}
-                    />
-                    <input
-                      placeholder="Notes (optional)"
-                      value={consentForm.notes}
-                      onChange={(e) => handleConsentInputChange("notes", e.target.value)}
-                      style={styles.input}
-                    />
-                  </div>
-
-                  <div style={styles.formActions}>
-                    <button
-                      type="submit"
-                      style={styles.btnRecord}
-                      disabled={requestConsentEmailMut.isPending}
-                    >
-                      {requestConsentEmailMut.isPending ? "Sending..." : "Send Yes/No Email"}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {consentFeedback && <div style={styles.feedback}>{consentFeedback}</div>}
+              {audioFeedback && <div style={styles.feedback}>{audioFeedback}</div>}
 
               {notes.length === 0 ? (
                 <p style={styles.empty}>No audio notes yet.</p>

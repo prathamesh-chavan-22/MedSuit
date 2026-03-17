@@ -10,7 +10,6 @@ from app import models, schemas
 from app.audit import log_event
 from app.auth import get_current_user, require_role
 from app.celery_app import celery_app
-from app.consent import has_active_consent
 from app.database import get_db
 from app.services.transcription import transcribe_with_google
 from app.tasks.audio_tasks import transcribe_audio_note
@@ -33,17 +32,6 @@ async def upload_audio(
     patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-
-    if not has_active_consent(db, patient_id):
-        log_event(
-            db,
-            action="audio.upload_blocked_no_consent",
-            entity_type="audio_note",
-            actor_user_id=current_user.id,
-            patient_id=patient_id,
-            commit=True,
-        )
-        raise HTTPException(status_code=403, detail="Active consent is required for audio upload")
 
     # Save file
     ext = os.path.splitext(file.filename)[-1] or ".webm"
