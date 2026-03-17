@@ -9,46 +9,102 @@ import api from "../api";
 function NoPatientsSvg() {
   return (
     <svg width="140" height="100" viewBox="0 0 140 100" fill="none">
-      <rect x="25" y="10" width="90" height="70" rx="14" fill="#f0fdfa" stroke="#99f6e4" strokeWidth="2" />
-      <circle cx="70" cy="35" r="12" fill="none" stroke="#0d9488" strokeWidth="2" strokeDasharray="4 3" />
-      <path d="M64 35l4 4 8-8" fill="none" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="45" y1="58" x2="95" y2="58" stroke="#ccfbf1" strokeWidth="2" strokeLinecap="round" />
-      <line x1="55" y1="66" x2="85" y2="66" stroke="#ccfbf1" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="115" cy="18" r="3" fill="#99f6e4" />
-      <circle cx="25" cy="75" r="2" fill="#99f6e4" />
+      <defs>
+        <linearGradient id="nopt-bd" x1="0" y1="0" x2="140" y2="100">
+          <stop offset="0%" stopColor="#f0fdfa" />
+          <stop offset="100%" stopColor="#ccfbf1" />
+        </linearGradient>
+        <filter id="nopt-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#0d9488" floodOpacity="0.1" />
+        </filter>
+      </defs>
+      <style>
+        {`
+          @keyframes nopt-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+          }
+          @keyframes nopt-draw {
+            to { stroke-dashoffset: 0; }
+          }
+          .nopt-anim { animation: nopt-float 4s ease-in-out infinite; transform-origin: center; }
+          .nopt-check { stroke-dasharray: 24; stroke-dashoffset: 24; animation: nopt-draw 1s ease-out forwards 0.3s; }
+        `}
+      </style>
+      <rect x="25" y="10" width="90" height="74" rx="14" fill="url(#nopt-bd)" stroke="#5eead4" strokeWidth="2" filter="url(#nopt-glow)" className="nopt-anim" />
+      <g className="nopt-anim">
+        <circle cx="70" cy="35" r="14" fill="#14b8a6" stroke="#fff" strokeWidth="2" />
+        <path d="M64 35l4 4 8-8" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nopt-check" />
+        <line x1="45" y1="60" x2="95" y2="60" stroke="#99f6e4" strokeWidth="3" strokeLinecap="round" />
+        <line x1="55" y1="68" x2="85" y2="68" stroke="#99f6e4" strokeWidth="3" strokeLinecap="round" />
+      </g>
+      <circle cx="120" cy="22" r="4" fill="#5eead4" style={{ animation: "nopt-float 3s infinite 1s" }} />
+      <circle cx="20" cy="80" r="3" fill="#2dd4bf" style={{ animation: "nopt-float 3s infinite 0.5s" }} />
     </svg>
   );
 }
 
 function SeriousSvg() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 3 }}>
-      <circle cx="7" cy="7" r="6" fill="#fee2e2" stroke="#ef4444" strokeWidth="1.5" />
-      <line x1="7" y1="4" x2="7" y2="8" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="7" cy="10" r="0.8" fill="#ef4444" />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}>
+      <style>
+        {`
+          @keyframes srs-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+          }
+          .srs-anim { animation: srs-pulse 1.5s infinite; transform-origin: center; }
+        `}
+      </style>
+      <circle cx="8" cy="8" r="7" fill="#fef2f2" stroke="#ef4444" strokeWidth="1.5" className="srs-anim" />
+      <line x1="8" y1="4" x2="8" y2="9" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" className="srs-anim" />
+      <circle cx="8" cy="12" r="1.2" fill="#ef4444" className="srs-anim" />
     </svg>
   );
 }
 
 function InfectionSvg() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 3 }}>
-      <circle cx="7" cy="7" r="5" fill="#fef3c7" stroke="#d97706" strokeWidth="1.5" />
-      <circle cx="7" cy="7" r="2" fill="none" stroke="#d97706" strokeWidth="1" />
-      <circle cx="7" cy="2" r="1" fill="#d97706" opacity="0.6" />
-      <circle cx="12" cy="7" r="1" fill="#d97706" opacity="0.6" />
-      <circle cx="7" cy="12" r="1" fill="#d97706" opacity="0.6" />
-      <circle cx="2" cy="7" r="1" fill="#d97706" opacity="0.6" />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}>
+      <style>
+        {`
+          @keyframes inf-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          .inf-anim { animation: inf-spin 6s linear infinite; transform-origin: 8px 8px; }
+        `}
+      </style>
+      <g className="inf-anim">
+        <circle cx="8" cy="8" r="5" fill="#fffbeb" stroke="#d97706" strokeWidth="1.5" />
+        <circle cx="8" cy="8" r="2" fill="#d97706" />
+        <circle cx="8" cy="1.5" r="1.5" fill="#d97706" />
+        <circle cx="14.5" cy="8" r="1.5" fill="#d97706" />
+        <circle cx="8" cy="14.5" r="1.5" fill="#d97706" />
+        <circle cx="1.5" cy="8" r="1.5" fill="#d97706" />
+      </g>
     </svg>
   );
 }
 
 function FallRiskSvg() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 3 }}>
-      <path d="M7 1L1 13h12L7 1z" fill="#e5e7eb" stroke="#6b7280" strokeWidth="1" strokeLinejoin="round" />
-      <line x1="7" y1="5" x2="7" y2="9" stroke="#6b7280" strokeWidth="1.2" strokeLinecap="round" />
-      <circle cx="7" cy="11" r="0.6" fill="#6b7280" />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}>
+      <style>
+        {`
+          @keyframes fall-shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+          }
+          .fall-anim { animation: fall-shake 2s ease-in-out infinite; transform-origin: center 10px; }
+        `}
+      </style>
+      <g className="fall-anim">
+        <path d="M8 1L1 14h14L8 1z" fill="#f8fafc" stroke="#64748b" strokeWidth="1.5" strokeLinejoin="round" />
+        <line x1="8" y1="6" x2="8" y2="10" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="8" cy="12" r="1" fill="#64748b" />
+      </g>
     </svg>
   );
 }

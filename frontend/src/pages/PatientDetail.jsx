@@ -18,24 +18,47 @@ import api from "../api";
 function PatientAvatar() {
   return (
     <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-      <rect width="52" height="52" rx="16" fill="url(#avatarGrad)" />
-      <circle cx="26" cy="20" r="8" fill="rgba(255,255,255,0.3)" stroke="#fff" strokeWidth="2" />
-      <path d="M14 44c0-7 5-12 12-12s12 5 12 12" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
       <defs>
         <linearGradient id="avatarGrad" x1="0" y1="0" x2="52" y2="52">
           <stop stopColor="#0d9488" />
           <stop offset="1" stopColor="#2dd4bf" />
         </linearGradient>
+        <filter id="avatarGlow">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0d9488" floodOpacity="0.4" />
+        </filter>
       </defs>
+      <style>
+        {`
+          @keyframes av-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+          .av-anim { animation: av-pulse 4s ease-in-out infinite; transform-origin: center; filter: url(#avatarGlow); }
+        `}
+      </style>
+      <rect className="av-anim" width="52" height="52" rx="16" fill="url(#avatarGrad)" />
+      <circle cx="26" cy="20" r="8" fill="rgba(255,255,255,0.2)" stroke="#fff" strokeWidth="2" />
+      <path d="M14 44c0-7 5-12 12-12s12 5 12 12" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
 function VitalWaveform({ color = "#0d9488" }) {
   return (
-    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 30, opacity: 0.08, pointerEvents: "none" }} viewBox="0 0 200 30" preserveAspectRatio="none">
-      <polyline points="0,20 20,20 30,15 40,25 50,10 60,22 70,18 80,20 100,20 120,20 130,12 140,28 150,8 160,22 170,18 180,20 200,20"
-        fill="none" stroke={color} strokeWidth="2" />
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 30, opacity: 0.15, pointerEvents: "none" }} viewBox="0 0 200 30" preserveAspectRatio="none">
+      <style>
+        {`
+          @keyframes wave-slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100px); }
+          }
+          .wave-anim { animation: wave-slide 4s linear infinite; }
+        `}
+      </style>
+      <g className="wave-anim">
+        <polyline points="0,20 20,20 30,15 40,25 50,10 60,22 70,18 80,20 100,20 120,20 130,12 140,28 150,8 160,22 170,18 180,20 200,20 220,20 230,15 240,25 250,10 260,22 270,18 280,20 300,20"
+          fill="none" stroke={color} strokeWidth="2" />
+      </g>
     </svg>
   );
 }

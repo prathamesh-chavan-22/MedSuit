@@ -12,10 +12,34 @@ import api from "../api";
 function PatientsSvg() {
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="14" r="8" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2"/>
-      <path d="M10 42c0-8 6-14 14-14s14 6 14 14" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="36" cy="16" r="5" fill="#99f6e4" stroke="#0d9488" strokeWidth="1.5" opacity="0.6"/>
-      <path d="M44 38c0-5-3-9-8-9" fill="none" stroke="#0d9488" strokeWidth="1.5" opacity="0.6" strokeLinecap="round"/>
+      <defs>
+        <linearGradient id="pat-g1" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor="#f0fdfa" />
+          <stop offset="100%" stopColor="#ccfbf1" />
+        </linearGradient>
+        <linearGradient id="pat-g2" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor="#ccfbf1" />
+          <stop offset="100%" stopColor="#99f6e4" />
+        </linearGradient>
+      </defs>
+      <style>
+        {`
+          @keyframes pat-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+          }
+          .pat-anim1 { animation: pat-float 3s ease-in-out infinite; transform-origin: center; }
+          .pat-anim2 { animation: pat-float 3s ease-in-out infinite 0.5s; transform-origin: center; }
+        `}
+      </style>
+      <g className="pat-anim2">
+        <circle cx="36" cy="16" r="5" fill="url(#pat-g2)" stroke="#14b8a6" strokeWidth="1.5" />
+        <path d="M44 38c0-5-3-9-8-9" fill="url(#pat-g2)" stroke="#14b8a6" strokeWidth="1.5" strokeLinecap="round" />
+      </g>
+      <g className="pat-anim1">
+        <circle cx="20" cy="14" r="8" fill="url(#pat-g1)" stroke="#0f766e" strokeWidth="2" />
+        <path d="M6 42c0-8 6-14 14-14s14 6 14 14" fill="url(#pat-g1)" stroke="#0f766e" strokeWidth="2" strokeLinecap="round" />
+      </g>
     </svg>
   );
 }
@@ -23,12 +47,34 @@ function PatientsSvg() {
 function BedsSvg() {
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-      <rect x="4" y="24" width="40" height="12" rx="4" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2"/>
-      <rect x="8" y="18" width="14" height="8" rx="3" fill="#99f6e4" stroke="#0d9488" strokeWidth="1.5"/>
-      <line x1="8" y1="36" x2="8" y2="42" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="40" y1="36" x2="40" y2="42" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="38" cy="10" r="4" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.4"/>
-      <line x1="38" y1="14" x2="38" y2="22" stroke="#0d9488" strokeWidth="1.5" opacity="0.4"/>
+      <defs>
+        <linearGradient id="bed-g" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor="#f0fdfa"/>
+          <stop offset="100%" stopColor="#ccfbf1"/>
+        </linearGradient>
+      </defs>
+      <style>
+        {`
+          @keyframes bed-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+          }
+          @keyframes bed-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+          }
+          .bed-anim { animation: bed-float 3s ease-in-out infinite; }
+          .bed-pulse-anim { animation: bed-pulse 2s infinite; }
+        `}
+      </style>
+      <g className="bed-anim">
+        <rect x="4" y="24" width="40" height="12" rx="3" fill="url(#bed-g)" stroke="#0d9488" strokeWidth="2"/>
+        <rect x="8" y="18" width="14" height="8" rx="2" fill="#99f6e4" stroke="#0d9488" strokeWidth="1.5"/>
+        <line x1="8" y1="36" x2="8" y2="40" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="40" y1="36" x2="40" y2="40" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
+      </g>
+      <circle cx="38" cy="10" r="4" fill="none" stroke="#2dd4bf" strokeWidth="1.5" className="bed-pulse-anim" />
+      <line x1="38" y1="14" x2="38" y2="22" stroke="#2dd4bf" strokeWidth="1.5" className="bed-pulse-anim" />
     </svg>
   );
 }
@@ -36,11 +82,28 @@ function BedsSvg() {
 function TasksSvg() {
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-      <rect x="8" y="4" width="32" height="40" rx="6" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2"/>
-      <line x1="16" y1="16" x2="32" y2="16" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="16" y1="24" x2="28" y2="24" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
-      <line x1="16" y1="32" x2="24" y2="32" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
-      <polyline points="34,22 37,25 42,18" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <defs>
+        <linearGradient id="tsk-g" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor="#f0fdfa"/>
+          <stop offset="100%" stopColor="#ccfbf1"/>
+        </linearGradient>
+      </defs>
+      <style>
+        {`
+          @keyframes tsk-draw {
+            to { stroke-dashoffset: 0; }
+          }
+          .tsk-check { stroke-dasharray: 20; stroke-dashoffset: 20; animation: tsk-draw 1s ease-out forwards 0.5s; }
+          .tsk-hover:hover { transform: scale(1.05); transition: transform 0.2s; }
+        `}
+      </style>
+      <g className="tsk-hover" style={{ transformOrigin: 'center' }}>
+        <rect x="8" y="4" width="32" height="40" rx="4" fill="url(#tsk-g)" stroke="#0d9488" strokeWidth="2"/>
+        <line x1="16" y1="16" x2="32" y2="16" stroke="#0f766e" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="16" y1="24" x2="28" y2="24" stroke="#0f766e" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+        <line x1="16" y1="32" x2="24" y2="32" stroke="#0f766e" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
+        <polyline points="32,20 36,24 44,14" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="tsk-check"/>
+      </g>
     </svg>
   );
 }
@@ -48,9 +111,27 @@ function TasksSvg() {
 function AlertsSvg() {
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-      <path d="M24 6L4 42h40L24 6z" fill="#fef3c7" stroke="#f59e0b" strokeWidth="2" strokeLinejoin="round"/>
-      <line x1="24" y1="18" x2="24" y2="30" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round"/>
-      <circle cx="24" cy="35" r="2" fill="#f59e0b"/>
+      <defs>
+        <linearGradient id="alt-g" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor="#fef3c7"/>
+          <stop offset="100%" stopColor="#fde68a"/>
+        </linearGradient>
+        <filter id="alt-glow">
+          <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#f59e0b" floodOpacity="0.3" />
+        </filter>
+      </defs>
+      <style>
+        {`
+          @keyframes alt-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
+          .alt-anim { animation: alt-pulse 2s infinite; transform-origin: center; }
+        `}
+      </style>
+      <path d="M24 4L4 40h40L24 4z" fill="url(#alt-g)" stroke="#f59e0b" strokeWidth="2" strokeLinejoin="round" filter="url(#alt-glow)"/>
+      <line x1="24" y1="16" x2="24" y2="28" stroke="#d97706" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="24" cy="34" r="2.5" fill="#d97706" className="alt-anim"/>
     </svg>
   );
 }
@@ -58,22 +139,53 @@ function AlertsSvg() {
 function UsersSvg() {
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-      <circle cx="18" cy="14" r="6" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2"/>
-      <path d="M6 38c0-7 5-12 12-12s12 5 12 12" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="34" cy="16" r="5" fill="#99f6e4" stroke="#0d9488" strokeWidth="1.5"/>
-      <path d="M42 36c0-5-4-10-8-10" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeLinecap="round"/>
-      <rect x="30" y="6" width="8" height="4" rx="2" fill="none" stroke="#0d9488" strokeWidth="1.5" opacity="0.5"/>
+      <defs>
+        <linearGradient id="usrs-g1" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor="#f0fdfa"/>
+          <stop offset="100%" stopColor="#ccfbf1"/>
+        </linearGradient>
+      </defs>
+      <style>
+        {`
+          @keyframes usrs-slide {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(2px); }
+          }
+          .usrs-anim { animation: usrs-slide 3s ease-in-out infinite; }
+        `}
+      </style>
+      <g className="usrs-anim">
+        <circle cx="16" cy="14" r="6" fill="url(#usrs-g1)" stroke="#0d9488" strokeWidth="2"/>
+        <path d="M4 38c0-7 5-12 12-12s12 5 12 12" fill="url(#usrs-g1)" stroke="#0d9488" strokeWidth="2" strokeLinecap="round"/>
+      </g>
+      <circle cx="34" cy="18" r="5" fill="#99f6e4" stroke="#14b8a6" strokeWidth="1.5"/>
+      <path d="M44 38c0-5-4-10-8-10" fill="none" stroke="#14b8a6" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   );
 }
 
 function EmptyStateSvg() {
   return (
-    <svg width="120" height="90" viewBox="0 0 120 90" fill="none" style={{ opacity: 0.6 }}>
-      <rect x="20" y="15" width="80" height="55" rx="10" fill="#f0fdfa" stroke="#99f6e4" strokeWidth="2"/>
-      <circle cx="60" cy="38" r="10" fill="none" stroke="#0d9488" strokeWidth="2" strokeDasharray="4 3"/>
-      <line x1="45" y1="55" x2="75" y2="55" stroke="#99f6e4" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M55 38l4 4 8-8" fill="none" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
+      <defs>
+        <linearGradient id="es-g" x1="0" y1="0" x2="120" y2="90">
+          <stop offset="0%" stopColor="#f8fafc"/>
+          <stop offset="100%" stopColor="#f1f5f9"/>
+        </linearGradient>
+      </defs>
+      <style>
+        {`
+          @keyframes es-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+          }
+          .es-anim { animation: es-float 4s ease-in-out infinite; }
+        `}
+      </style>
+      <rect x="20" y="15" width="80" height="60" rx="8" fill="url(#es-g)" stroke="#cbd5e1" strokeWidth="2" className="es-anim"/>
+      <circle cx="60" cy="40" r="10" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 3"/>
+      <line x1="45" y1="58" x2="75" y2="58" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" className="es-anim"/>
+      <path d="M55 40l4 4 8-8" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }

@@ -7,15 +7,29 @@ import { useAuth } from "../context/AuthContext";
 function MedicalLogo() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-      <rect width="40" height="40" rx="12" fill="url(#logoGrad)" />
-      <path d="M20 10v20M10 20h20" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
-      <path d="M14 14l12 12M26 14L14 26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
       <defs>
         <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
           <stop stopColor="#0d9488" />
           <stop offset="1" stopColor="#2dd4bf" />
         </linearGradient>
+        <filter id="logoGlow">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0d9488" floodOpacity="0.4" />
+        </filter>
       </defs>
+      <style>
+        {`
+          @keyframes logo-pulse {
+            0%, 100% { transform: scale(1); filter: url(#logoGlow); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 6px 10px rgba(13,148,136,0.6)); }
+          }
+          .login-logo { animation: logo-pulse 3s ease-in-out infinite; transform-origin: center; }
+        `}
+      </style>
+      <rect className="login-logo" width="40" height="40" rx="12" fill="url(#logoGrad)" />
+      <g className="login-logo">
+        <path d="M20 10v20M10 20h20" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
+      </g>
+      <path d="M14 14l12 12M26 14L14 26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
     </svg>
   );
 }
@@ -27,6 +41,20 @@ function BackgroundPattern() {
       viewBox="0 0 800 600"
       preserveAspectRatio="xMidYMid slice"
     >
+      <style>
+        {`
+          @keyframes dash-draw-bg {
+            to { stroke-dashoffset: 0; }
+          }
+          @keyframes float-bg {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+          .bg-float-1 { animation: float-bg 6s ease-in-out infinite; }
+          .bg-float-2 { animation: float-bg 8s ease-in-out infinite 1s; }
+          .bg-float-3 { animation: float-bg 5s ease-in-out infinite 2s; }
+        `}
+      </style>
       {/* Heartbeat / ECG line */}
       <polyline
         points="0,300 120,300 140,300 160,250 180,360 200,280 220,300 800,300"
@@ -35,22 +63,22 @@ function BackgroundPattern() {
         strokeWidth="2"
         strokeDasharray="1200"
         strokeDashoffset="1200"
-        style={{ animation: "dash-draw 3s ease-out forwards" }}
+        style={{ animation: "dash-draw-bg 3s ease-out forwards" }}
       />
       {/* Cross markers */}
-      {[{x:100,y:120},{x:650,y:100},{x:400,y:480},{x:700,y:420},{x:180,y:500},{x:520,y:160}].map((p,i) => (
-        <g key={i} transform={`translate(${p.x},${p.y})`} opacity="0.5">
+      {[{x:100,y:120, c:"bg-float-1"},{x:650,y:100, c:"bg-float-2"},{x:400,y:480, c:"bg-float-3"},{x:700,y:420, c:"bg-float-1"},{x:180,y:500, c:"bg-float-2"},{x:520,y:160, c:"bg-float-3"}].map((p,i) => (
+        <g key={i} transform={`translate(${p.x},${p.y})`} opacity="0.5" className={p.c}>
           <line x1="-10" y1="0" x2="10" y2="0" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
           <line x1="0" y1="-10" x2="0" y2="10" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
         </g>
       ))}
       {/* Circles / atoms */}
-      {[{x:300,y:80,r:40},{x:600,y:500,r:55},{x:80,y:400,r:30}].map((c,i) => (
-        <circle key={i} cx={c.x} cy={c.y} r={c.r} fill="none" stroke="#0d9488" strokeWidth="1" strokeDasharray="6 4" />
+      {[{x:300,y:80,r:40, c:"bg-float-2"},{x:600,y:500,r:55, c:"bg-float-3"},{x:80,y:400,r:30, c:"bg-float-1"}].map((c,i) => (
+        <circle key={i} cx={c.x} cy={c.y} r={c.r} fill="none" stroke="#0d9488" strokeWidth="1" strokeDasharray="6 4" className={c.c} />
       ))}
       {/* DNA helix hint */}
-      <path d="M720 0 Q740 100 720 200 Q700 300 720 400 Q740 500 720 600" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="8 6" />
-      <path d="M740 0 Q720 100 740 200 Q760 300 740 400 Q720 500 740 600" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="8 6" />
+      <path d="M720 0 Q740 100 720 200 Q700 300 720 400 Q740 500 720 600" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="8 6" className="bg-float-1" />
+      <path d="M740 0 Q720 100 740 200 Q760 300 740 400 Q720 500 740 600" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="8 6" className="bg-float-2" />
     </svg>
   );
 }

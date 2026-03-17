@@ -8,12 +8,45 @@ import api from "../api";
 function AllCaughtUpSvg() {
   return (
     <svg width="140" height="100" viewBox="0 0 140 100" fill="none">
-      <rect x="30" y="12" width="80" height="70" rx="14" fill="#f0fdfa" stroke="#99f6e4" strokeWidth="2" />
-      <circle cx="70" cy="40" r="16" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" />
-      <polyline points="62,40 68,46 78,34" fill="none" stroke="#0d9488" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="48" y1="68" x2="92" y2="68" stroke="#ccfbf1" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="110" cy="20" r="3" fill="#99f6e4" />
-      <circle cx="30" cy="78" r="2.5" fill="#99f6e4" />
+      <defs>
+        <linearGradient id="cu-bg" x1="0" y1="0" x2="140" y2="100">
+          <stop offset="0%" stopColor="#f0fdfa"/>
+          <stop offset="100%" stopColor="#ccfbf1"/>
+        </linearGradient>
+        <filter id="cu-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#0d9488" floodOpacity="0.15" />
+        </filter>
+        <filter id="cu-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0d9488" floodOpacity="0.2" />
+        </filter>
+      </defs>
+      <style>
+        {`
+          @keyframes cu-float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+          }
+          @keyframes cu-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+          }
+          @keyframes cu-draw {
+            to { stroke-dashoffset: 0; }
+          }
+          .cu-floating { animation: cu-float 4s ease-in-out infinite; transform-origin: center; }
+          .cu-pulsing { animation: cu-pulse 3s ease-in-out infinite; transform-origin: center; }
+          .cu-check { stroke-dasharray: 40; stroke-dashoffset: 40; animation: cu-draw 1.2s ease-out forwards 0.3s; }
+        `}
+      </style>
+      <rect x="25" y="10" width="90" height="80" rx="16" fill="url(#cu-bg)" stroke="#5eead4" strokeWidth="2" filter="url(#cu-glow)"/>
+      <g className="cu-floating">
+        <circle cx="70" cy="40" r="18" fill="#14b8a6" stroke="#fff" strokeWidth="3" filter="url(#cu-shadow)"/>
+        <polyline className="cu-check" points="62,40 68,46 79,34" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      <line x1="45" y1="70" x2="95" y2="70" stroke="#99f6e4" strokeWidth="3" strokeLinecap="round" />
+      <line x1="55" y1="80" x2="85" y2="80" stroke="#99f6e4" strokeWidth="3" strokeLinecap="round" />
+      <circle className="cu-pulsing" cx="120" cy="25" r="4.5" fill="#5eead4" />
+      <circle className="cu-pulsing" cx="20" cy="75" r="3" fill="#2dd4bf" style={{ animationDelay: '1s' }} />
     </svg>
   );
 }

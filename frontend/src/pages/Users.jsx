@@ -8,12 +8,43 @@ const ROLE_OPTIONS = ["admin", "doctor", "nurse"];
 
 function UsersSvg() {
   return (
-    <svg width="120" height="80" viewBox="0 0 120 80" fill="none" style={{ opacity: 0.5 }}>
-      <circle cx="40" cy="28" r="10" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" />
-      <path d="M22 66c0-10 8-18 18-18s18 8 18 18" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="75" cy="30" r="8" fill="#99f6e4" stroke="#0d9488" strokeWidth="1.5" />
-      <path d="M61 62c0-8 6-14 14-14s14 6 14 14" fill="#99f6e4" stroke="#0d9488" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="100" cy="34" r="5" fill="#f0fdfa" stroke="#0d9488" strokeWidth="1" strokeDasharray="3 2" />
+    <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+      <defs>
+        <linearGradient id="usr-grad1" x1="0" y1="0" x2="100" y2="80">
+          <stop offset="0%" stopColor="#f0fdfa"/>
+          <stop offset="100%" stopColor="#ccfbf1"/>
+        </linearGradient>
+        <linearGradient id="usr-grad2" x1="0" y1="0" x2="100" y2="80">
+          <stop offset="0%" stopColor="#ccfbf1"/>
+          <stop offset="100%" stopColor="#99f6e4"/>
+        </linearGradient>
+        <filter id="usr-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0d9488" floodOpacity="0.15" />
+        </filter>
+      </defs>
+      <style>
+        {`
+          @keyframes usr-pulse {
+            0%, 100% { opacity: 0.7; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-3px); }
+          }
+          .usr-group1 { animation: usr-pulse 3s ease-in-out infinite; transform-origin: 40px 47px; }
+          .usr-group2 { animation: usr-pulse 3s ease-in-out infinite 1s; transform-origin: 75px 46px; }
+          .usr-group3 { animation: usr-pulse 3s ease-in-out infinite 2s; transform-origin: 100px 34px; }
+        `}
+      </style>
+      <g className="usr-group3">
+        <circle cx="100" cy="34" r="5" fill="#5eead4" />
+        <path d="M92 58c0-5 3-9 8-9s8 4 8 9" fill="none" stroke="#5eead4" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3"/>
+      </g>
+      <g className="usr-group2" filter="url(#usr-glow)">
+        <circle cx="75" cy="30" r="9" fill="url(#usr-grad2)" stroke="#14b8a6" strokeWidth="1.5" />
+        <path d="M59 64c0-8 7-15 16-15s16 7 16 15" fill="url(#usr-grad2)" stroke="#14b8a6" strokeWidth="1.5" strokeLinecap="round" />
+      </g>
+      <g className="usr-group1" filter="url(#usr-glow)">
+        <circle cx="40" cy="26" r="12" fill="url(#usr-grad1)" stroke="#0f766e" strokeWidth="2" />
+        <path d="M18 68c0-11 10-20 22-20s22 9 22 20" fill="url(#usr-grad1)" stroke="#0f766e" strokeWidth="2" strokeLinecap="round" />
+      </g>
     </svg>
   );
 }

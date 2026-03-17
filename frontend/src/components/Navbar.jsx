@@ -8,15 +8,23 @@ import { useIsMobile } from "../hooks/useWindowWidth";
 function MedSuiteLogo() {
   return (
     <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
-      <rect width="40" height="40" rx="12" fill="url(#navLogoGrad)" />
-      <path d="M20 10v20M10 20h20" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
-      <path d="M14 14l12 12M26 14L14 26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
       <defs>
         <linearGradient id="navLogoGrad" x1="0" y1="0" x2="40" y2="40">
           <stop stopColor="#0d9488" />
           <stop offset="1" stopColor="#2dd4bf" />
         </linearGradient>
       </defs>
+      <style>
+        {`
+          .logo-cross { transform-origin: center; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+          svg:hover .logo-cross { transform: rotate(90deg); }
+        `}
+      </style>
+      <rect width="40" height="40" rx="12" fill="url(#navLogoGrad)" />
+      <g className="logo-cross">
+        <path d="M20 10v20M10 20h20" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
+      </g>
+      <path d="M14 14l12 12M26 14L14 26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
     </svg>
   );
 }
