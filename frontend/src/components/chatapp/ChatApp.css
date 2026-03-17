@@ -103,8 +103,8 @@
   border: 1px solid var(--cp-border);
   background: var(--cp-surface);
   box-shadow: var(--cp-shadow);
-  display: grid;
-  grid-template-rows: auto auto auto auto 1fr auto;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   animation: chatSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: bottom right;
@@ -491,6 +491,8 @@
 /* ── Messages ───────────────────────────────────────────────────────────── */
 
 .chatapp-messages {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 16px 18px;
   overflow-y: auto;
   display: flex;
