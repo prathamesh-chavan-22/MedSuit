@@ -161,6 +161,7 @@ class Patient(Base):
     lab_results = orm_relationship("LabResult", back_populates="patient")
     medication_intakes = orm_relationship("MedicationIntake", back_populates="patient")
     food_intakes = orm_relationship("FoodIntake", back_populates="patient")
+    diseases = orm_relationship("PatientDisease", back_populates="patient", cascade="all, delete-orphan")
 
 
 # ─── Beds ─────────────────────────────────────────────────────────────────────
@@ -388,6 +389,24 @@ class FoodIntake(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     patient = orm_relationship("Patient", back_populates="food_intakes")
+
+
+# ─── Patient Diseases (Body Map) ─────────────────────────────────────────────
+
+class PatientDisease(Base):
+    __tablename__ = "patient_diseases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
+    body_part = Column(String, nullable=False)        # e.g. head, chest, abdomen, left_arm, right_arm, left_leg, right_leg
+    disease_name = Column(String, nullable=False)     # e.g. "Pneumonia"
+    description = Column(Text, nullable=True)         # Why / what caused it
+    current_state = Column(String, nullable=False, default="active")  # active | recovering | critical | resolved
+    severity = Column(String, nullable=True)          # mild | moderate | severe
+    diagnosed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    patient = orm_relationship("Patient", back_populates="diseases")
 
 
 class UserSession(Base):

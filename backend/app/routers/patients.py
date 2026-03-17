@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 
 from app import models, schemas
@@ -34,7 +34,7 @@ def list_patients(
     _: models.User = Depends(get_current_user),
     search: Optional[str] = Query(None, description="Search by name, MRN, UHID, or diagnosis"),
 ):
-    query = db.query(models.Patient)
+    query = db.query(models.Patient).options(joinedload(models.Patient.diseases))
     if search:
         query = query.filter(
             (models.Patient.full_name.ilike(f"%{search}%"))
@@ -51,7 +51,7 @@ def get_patient_by_uhid(
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_user),
 ):
-    patient = db.query(models.Patient).filter(models.Patient.uhid == uhid).first()
+    patient = db.query(models.Patient).options(joinedload(models.Patient.diseases)).filter(models.Patient.uhid == uhid).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient with given UHID not found")
     return patient
@@ -63,7 +63,7 @@ def get_patient(
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_user),
 ):
-    patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
+    patient = db.query(models.Patient).options(joinedload(models.Patient.diseases)).filter(models.Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient
@@ -76,7 +76,7 @@ def update_patient(
     db: Session = Depends(get_db),
     _: models.User = Depends(require_role(models.UserRole.admin, models.UserRole.doctor)),
 ):
-    patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
+    patient = db.query(models.Patient).options(joinedload(models.Patient.diseases)).filter(models.Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 

@@ -351,7 +351,7 @@ const BODY_REGIONS = [
   { id: "right_leg",label: "Right Leg",  keywords: ["right leg", "right knee", "right ankle", "right foot", "right lower", "right hip", "right thigh"] },
 ];
 
-function BodyMapPanel({ region, timeline, clinicalNotes }) {
+function BodyMapPanel({ region, timeline, clinicalNotes, diseases = [] }) {
   if (!region) {
     return (
       <div style={{
@@ -372,6 +372,9 @@ function BodyMapPanel({ region, timeline, clinicalNotes }) {
 
   const cfg = BODY_REGIONS.find(r => r.id === region);
   const keywords = cfg?.keywords || [];
+
+  // Diseases affecting the selected region
+  const regionDiseases = diseases.filter(d => d.body_part === region);
 
   const matchEvent = (evt) => {
     const haystack = [
@@ -394,6 +397,14 @@ function BodyMapPanel({ region, timeline, clinicalNotes }) {
   const relNotes  = clinicalNotes.filter(matchNote);
   const hasItems  = relEvents.length > 0 || relNotes.length > 0;
 
+  const STATE_STYLES = {
+    active:     { bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.5)",   text: "#ef4444",  dot: "#ef4444",  label: "Active" },
+    critical:   { bg: "rgba(220,38,38,0.15)",   border: "rgba(220,38,38,0.7)",   text: "#dc2626",  dot: "#dc2626",  label: "Critical" },
+    recovering: { bg: "rgba(234,179,8,0.12)",   border: "rgba(234,179,8,0.5)",   text: "#ca8a04",  dot: "#eab308",  label: "Recovering" },
+    resolved:   { bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.5)",   text: "#16a34a",  dot: "#22c55e",  label: "Resolved" },
+  };
+  const SEV_COLORS = { mild: "#94a3b8", moderate: "#f59e0b", severe: "#ef4444" };
+
   return (
     <div style={{
       flex: 1, display: "flex", flexDirection: "column",
@@ -411,14 +422,91 @@ function BodyMapPanel({ region, timeline, clinicalNotes }) {
         }}>{relEvents.length + relNotes.length} events</span>
       </div>
 
-      {!hasItems ? (
+      {/* Disease Info Cards */}
+      {regionDiseases.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+          {regionDiseases.map((disease, idx) => {
+            const s = STATE_STYLES[disease.current_state] || STATE_STYLES.active;
+            return (
+              <div key={idx} style={{
+                background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))",
+                border: `1px solid ${s.border}`,
+                borderRadius: 12,
+                padding: "12px 14px",
+                boxShadow: `0 0 16px ${s.border}40, inset 0 0 8px rgba(0,0,0,0.3)`,
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                {/* Animated status glow bar top */}
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0, height: 2,
+                  background: `linear-gradient(90deg, transparent, ${s.dot}, transparent)`,
+                }} />
+
+                {/* Header row */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "#f8fafc", flex: 1 }}>
+                    {disease.disease_name}
+                  </span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
+                    padding: "2px 8px", borderRadius: 99,
+                    background: s.bg, border: `1px solid ${s.border}`, color: s.text,
+                    display: "flex", alignItems: "center", gap: 4,
+                  }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: s.dot, display: "inline-block" }} />
+                    {s.label}
+                  </span>
+                  {disease.severity && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, textTransform: "uppercase",
+                      padding: "2px 8px", borderRadius: 99,
+                      background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)",
+                      color: SEV_COLORS[disease.severity] || "#94a3b8",
+                    }}>{disease.severity}</span>
+                  )}
+                </div>
+
+                {/* Description (why) */}
+                {disease.description && (
+                  <p style={{
+                    margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.55,
+                    color: "#cbd5e1",
+                  }}>{disease.description}</p>
+                )}
+
+                {/* Footer metadata */}
+                {disease.diagnosed_at && (
+                  <div style={{ fontSize: 10, color: "#64748b", display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    Diagnosed: {new Date(disease.diagnosed_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Divider before events */}
+          {hasItems && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "2px 0" }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(45,212,191,0.2)" }} />
+              <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.05em" }}>RELATED EVENTS</span>
+              <div style={{ flex: 1, height: 1, background: "rgba(45,212,191,0.2)" }} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {!hasItems && regionDiseases.length === 0 ? (
         <div style={{
           padding: "20px 0", textAlign: "center", color: "#94a3b8",
           fontSize: 13, fontWeight: 500,
         }}>
           No recorded events for {cfg?.label} region
         </div>
-      ) : (
+      ) : !hasItems ? null : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {relEvents.map((evt, i) => {
             const evtCfg = EVENT_CONFIG[evt.event_type];
@@ -465,10 +553,12 @@ function BodyMapPanel({ region, timeline, clinicalNotes }) {
   );
 }
 
-function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectRegion, diseaseLocations = [] }) {
+function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectRegion, diseases = [] }) {
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
-  const isDiseasedRegion = (id) => diseaseLocations.includes(id);
+  // Build a set of body parts that have associated diseases
+  const diseasedParts = new Set(diseases.map(d => d.body_part));
+  const isDiseasedRegion = (id) => diseasedParts.has(id);
 
   const regionFill = (id) => {
     if (id === selectedRegion) return "rgba(20, 184, 166, 0.3)";
@@ -557,7 +647,7 @@ function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectR
             <span style={{color: "#2dd4bf", marginRight: 5}}>● LIVE SCAN</span>
             Click a region to view specific clinical events
           </p>
-          {diseaseLocations.length > 0 && (
+          {diseasedParts.size > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
@@ -705,6 +795,7 @@ function InteractiveBodyMap({ timeline, clinicalNotes, selectedRegion, onSelectR
             region={selectedRegion}
             timeline={timeline}
             clinicalNotes={clinicalNotes}
+            diseases={diseases}
           />
         </div>
       </div>
@@ -1264,7 +1355,7 @@ export default function PatientDetail() {
             clinicalNotes={clinicalNotes}
             selectedRegion={selectedRegion}
             onSelectRegion={setSelectedRegion}
-            diseaseLocations={(patient?.disease_locations || "").split(",").map(s => s.trim()).filter(Boolean)}
+            diseases={patient?.diseases || []}
           />
         </>
       )}

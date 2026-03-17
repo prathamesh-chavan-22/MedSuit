@@ -529,7 +529,63 @@ def seed_database():
         db.commit()
         print(f"[OK] Created {food_count} food intake records across {len(patients)} patients")
 
+        # ── Patient Disease Map (Body Map Info) ──────────────────────────────
+        DISEASE_DATA = {
+            "MRN001": [
+                {"body_part": "chest",   "disease_name": "Hypertension",      "description": "Chronic high blood pressure straining the heart and arteries. Likely exacerbated by obesity and high-sodium diet.", "current_state": "active",     "severity": "moderate"},
+                {"body_part": "abdomen", "disease_name": "Type 2 Diabetes",   "description": "Insulin resistance causing elevated blood glucose. Pancreatic beta-cell dysfunction from chronic metabolic stress.", "current_state": "recovering", "severity": "moderate"},
+            ],
+            "MRN002": [
+                {"body_part": "chest", "disease_name": "Acute Coronary Syndrome", "description": "Partial blockage of coronary artery due to atherosclerotic plaque rupture causing myocardial ischemia.", "current_state": "critical", "severity": "severe"},
+            ],
+            "MRN003": [
+                {"body_part": "chest", "disease_name": "Community Acquired Pneumonia", "description": "Bacterial lung infection (likely Streptococcus pneumoniae) causing alveolar consolidation and impaired gas exchange. Worsened by underlying asthma.", "current_state": "active", "severity": "moderate"},
+            ],
+            "MRN004": [
+                {"body_part": "abdomen", "disease_name": "Post-surgical Recovery", "description": "Laparoscopic removal of the gallbladder (cholecystectomy) due to symptomatic gallstones. Port sites healing well.", "current_state": "recovering", "severity": "mild"},
+            ],
+            "MRN005": [
+                {"body_part": "abdomen", "disease_name": "Acute Kidney Injury", "description": "Sudden decline in kidney function secondary to diabetic nephropathy and dehydration. Creatinine rising — requires close fluid and electrolyte management.", "current_state": "critical", "severity": "severe"},
+            ],
+            "MRN006": [
+                {"body_part": "left_leg", "disease_name": "Hip Fracture (post ORIF)", "description": "Neck of femur fracture sustained from a fall. Open reduction and internal fixation performed. Atrial fibrillation increases DVT risk — on anticoagulation.", "current_state": "recovering", "severity": "moderate"},
+            ],
+            "MRN007": [
+                {"body_part": "abdomen", "disease_name": "Post-appendectomy Recovery", "description": "Perforated appendicitis requiring emergency laparoscopic appendectomy. IV antibiotics for peritonitis prevention.", "current_state": "recovering", "severity": "mild"},
+            ],
+            "MRN008": [
+                {"body_part": "head", "disease_name": "Ischemic Stroke", "description": "Left MCA territory infarct from cardioembolic source (atrial fibrillation). Right-sided weakness and expressive aphasia present. On dual antiplatelet therapy.", "current_state": "active", "severity": "severe"},
+            ],
+            "MRN009": [
+                {"body_part": "chest", "disease_name": "COPD Exacerbation",  "description": "Acute worsening of chronic obstructive pulmonary disease, triggered by viral URI. Increased mucus production and bronchospasm. Underlying heart failure complicates fluid management.", "current_state": "active", "severity": "severe"},
+                {"body_part": "chest", "disease_name": "Heart Failure",       "description": "Reduced ejection fraction heart failure managed with diuretics. Susceptible to fluid overload during COPD exacerbation.", "current_state": "active", "severity": "moderate"},
+            ],
+            "MRN010": [
+                {"body_part": "abdomen", "disease_name": "Dengue Fever",      "description": "DENV-2 serotype dengue infection causing thrombocytopenia and hepatomegaly. Risk of plasma leakage and dengue hemorrhagic fever if platelets fall below 20k.", "current_state": "active", "severity": "moderate"},
+            ],
+        }
+
+        disease_count = 0
+        for patient in patients:
+            disease_list = DISEASE_DATA.get(patient.mrn, [])
+            existing = db.query(models.PatientDisease).filter(models.PatientDisease.patient_id == patient.id).count()
+            if existing == 0:
+                for d in disease_list:
+                    db.add(models.PatientDisease(
+                        patient_id=patient.id,
+                        body_part=d["body_part"],
+                        disease_name=d["disease_name"],
+                        description=d["description"],
+                        current_state=d["current_state"],
+                        severity=d["severity"],
+                        diagnosed_at=now - timedelta(days=random.randint(1, 14)),
+                    ))
+                    disease_count += 1
+        db.commit()
+        print(f"[OK] Created {disease_count} patient disease records")
+
         # ── Alerts — one per active condition (honouring dedup model) ─────────
+
         sample_alerts = [
             (patients[1].id, models.AlertSeverity.critical, "Abnormal heart rate: 112 bpm"),
             (patients[1].id, models.AlertSeverity.warning,  "Fever detected: 38.8°C"),

@@ -77,6 +77,22 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
+# ─── Patient Diseases (Body Map) ─────────────────────────────────────────────
+
+class PatientDiseaseOut(BaseModel):
+    id: int
+    patient_id: int
+    body_part: str
+    disease_name: str
+    description: Optional[str] = None
+    current_state: str
+    severity: Optional[str] = None
+    diagnosed_at: Optional[datetime] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # ─── Patients ─────────────────────────────────────────────────────────────────
 
 class PatientCreate(BaseModel):
@@ -163,6 +179,7 @@ class PatientOut(PatientCreate):
     id: int
     uhid: str
     created_at: datetime
+    diseases: List[PatientDiseaseOut] = []
 
     model_config = {"from_attributes": True}
 
