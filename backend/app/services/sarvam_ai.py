@@ -43,7 +43,7 @@ def transcribe_audio_sarvam(file_path: str, language_code: str = "en-IN") -> str
                 "file": (filename, audio_file, mime_type),
             }
             data = {
-                "model": "saarika:v2",
+                "model": "saarika:v2.5",
                 "language_code": language_code,
             }
             response = requests.post(STT_URL, headers=headers, files=files, data=data, timeout=60)

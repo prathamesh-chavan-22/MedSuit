@@ -449,7 +449,7 @@ export default function ChatApp() {
 
       updateActiveSession((s) => ({
         ...s,
-        messages: [...s.messages, userMessage, assistantMessage],
+        messages: [...s.messages, assistantMessage],
         patientId: patientId,
       }));
 
@@ -464,7 +464,7 @@ export default function ChatApp() {
       };
       updateActiveSession((s) => ({
         ...s,
-        messages: [...s.messages, userMessage, errorMsg],
+        messages: [...s.messages, errorMsg],
       }));
     } finally {
       setIsLoading(false);
