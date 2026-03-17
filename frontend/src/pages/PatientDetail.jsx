@@ -219,17 +219,18 @@ function isSameDay(a, b) {
     a.getDate() === b.getDate();
 }
 
-function TimelineEventCard({ evt, isLast }) {
+function TimelineEventCard({ evt }) {
   const cfg = EVENT_CONFIG[evt.event_type] || {
     label: evt.event_type,
     color: "#6b7280",
     bg: "#f9fafb",
     border: "#e5e7eb",
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg>,
+    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg>,
   };
   const isFuture = evt.metadata?.is_future;
   const isWarning = evt.severity === "warning" || evt.severity === "critical";
   const severityColor = evt.severity === "critical" ? "#ef4444" : evt.severity === "warning" ? "#f59e0b" : null;
+  const dotColor = isWarning ? (severityColor || cfg.color) : cfg.color;
 
   const chips = [];
   const m = evt.metadata || {};
@@ -241,7 +242,7 @@ function TimelineEventCard({ evt, isLast }) {
   } else if (evt.event_type === "task") {
     if (m.status) chips.push({ label: "Status", val: m.status });
     if (m.priority != null) chips.push({ label: "Priority", val: m.priority === 3 ? "High" : m.priority === 2 ? "Medium" : "Low" });
-    if (m.due_at) chips.push({ label: "Due", val: new Date(m.due_at).toLocaleString() });
+    if (m.due_at) chips.push({ label: "Due", val: new Date(m.due_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
   } else if (evt.event_type === "medication") {
     if (m.dosage) chips.push({ label: "Dose", val: m.dosage });
     if (m.route) chips.push({ label: "Route", val: m.route });
@@ -265,162 +266,146 @@ function TimelineEventCard({ evt, isLast }) {
   }
 
   return (
-    <div style={{ display: "flex", gap: 0, position: "relative" }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 40, flexShrink: 0, paddingTop: 8 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: "50%",
-          background: isFuture ? `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}44)` : cfg.color,
-          border: `2px solid ${isFuture ? cfg.color + "88" : cfg.color}`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: isFuture ? cfg.color : "#fff", flexShrink: 0, zIndex: 1,
-          boxShadow: isWarning ? `0 0 0 4px ${(severityColor || cfg.color)}33` : `0 2px 8px ${cfg.color}33`,
-        }}>
-          {cfg.icon}
-        </div>
-        {!isLast && (
-          <div style={{
-            width: 2, flex: 1, minHeight: 24,
-            background: `linear-gradient(to bottom, ${cfg.color}66, #e2e8f0)`,
-            marginTop: 2,
-          }} />
-        )}
-      </div>
-      <div style={{
-        flex: 1, marginLeft: 12, marginBottom: isLast ? 0 : 16,
-        background: isFuture ? `linear-gradient(135deg, ${cfg.bg}, #f8faff)` : "#ffffff",
-        border: `1px solid ${isWarning ? (severityColor || cfg.border) + "88" : cfg.border}`,
-        borderLeft: `3px solid ${isFuture ? cfg.color + "88" : cfg.color}`,
-        borderRadius: 10, padding: "10px 14px",
-        boxShadow: isWarning ? `0 2px 12px ${(severityColor || cfg.color)}22` : "0 1px 6px rgba(0,0,0,0.05)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
-          <span style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
-            color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
-            borderRadius: 6, padding: "2px 8px",
-          }}>{cfg.label}</span>
-          {isFuture && (
-            <span style={{
-              fontSize: 11, fontWeight: 700, color: "#7c3aed",
-              background: "#f5f3ff", border: "1px solid #c4b5fd",
-              borderRadius: 6, padding: "2px 8px", letterSpacing: "0.05em",
-            }}>SCHEDULED</span>
-          )}
-          {evt.severity && (
-            <span style={{
-              fontSize: 11, fontWeight: 700,
-              color: evt.severity === "critical" ? "#991b1b" : evt.severity === "warning" ? "#92400e" : "#1e40af",
-              background: evt.severity === "critical" ? "#fee2e2" : evt.severity === "warning" ? "#fef3c7" : "#dbeafe",
-              borderRadius: 6, padding: "2px 8px", textTransform: "uppercase",
-            }}>{evt.severity}</span>
-          )}
-          <span style={{ marginLeft: "auto", fontSize: 11, color: "#94a3b8", whiteSpace: "nowrap", flexShrink: 0 }}>
-            {new Date(evt.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-            {" \u00b7 "}
-            <span style={{ color: "#64748b" }}>{formatRelativeDate(evt.created_at)}</span>
-          </span>
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", marginBottom: chips.length > 0 ? 8 : 0 }}>
-          {evt.title}
-        </div>
-        {chips.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {chips.map((chip, i) => (
-              <span key={i} style={{
-                fontSize: 12,
-                color: chip.warn ? "#92400e" : "#475569",
-                background: chip.warn ? "#fef3c7" : "#f1f5f9",
-                border: `1px solid ${chip.warn ? "#fcd34d" : "#e2e8f0"}`,
-                borderRadius: 6, padding: "2px 8px",
-                maxWidth: chip.wide ? "100%" : 240,
-                overflow: "hidden", textOverflow: "ellipsis",
-                whiteSpace: chip.wide ? "normal" : "nowrap",
-                fontFamily: "monospace",
-              }}>
-                <strong style={{ fontFamily: "inherit" }}>{chip.label}</strong>
-                {chip.val != null ? `: ${chip.val}` : ""}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+    <div style={{
+      background: isFuture ? `linear-gradient(135deg, ${cfg.bg}, #f8faff)` : "#ffffff",
+      border: `1px solid ${isWarning ? (severityColor || cfg.border) + "99" : cfg.border}`,
+      borderLeft: `4px solid ${isFuture ? dotColor + "66" : dotColor}`,
+      borderRadius: 12,
+      padding: "10px 14px",
+      boxShadow: isWarning ? `0 2px 12px ${dotColor}22` : "0 1px 6px rgba(0,0,0,0.04)",
+      transition: "box-shadow 0.2s ease, transform 0.2s ease",
+      marginBottom: 12,
+    }}>
+      {/* Header row: badge + time */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+        <span style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
+          textTransform: "uppercase", color: dotColor,
+          background: cfg.bg, border: `1px solid ${cfg.border}`,
+          borderRadius: 5, padding: "2px 7px",
+        }}>{cfg.label}</span>
 
-function TimelineSection({ title, events, color, icon }) {
-  if (!events.length) return null;
-  return (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8, marginBottom: 14,
-        paddingBottom: 8, borderBottom: `2px solid ${color}33`,
-      }}>
-        <span style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          width: 26, height: 26, borderRadius: 8,
-          background: color + "22", color,
-        }}>{icon}</span>
-        <span style={{ fontWeight: 700, fontSize: 13, color, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          {title}
+        {isFuture && (
+          <span style={{
+            fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+            color: "#7c3aed", background: "#f5f3ff",
+            border: "1px solid #c4b5fd", borderRadius: 5, padding: "2px 7px",
+            letterSpacing: "0.07em",
+          }}>Scheduled</span>
+        )}
+        {evt.severity && (
+          <span style={{
+            fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.07em", borderRadius: 5, padding: "2px 7px",
+            color: evt.severity === "critical" ? "#991b1b" : evt.severity === "warning" ? "#92400e" : "#1e40af",
+            background: evt.severity === "critical" ? "#fee2e2" : evt.severity === "warning" ? "#fef3c7" : "#dbeafe",
+          }}>{evt.severity}</span>
+        )}
+
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "#94a3b8", whiteSpace: "nowrap", flexShrink: 0 }}>
+          {new Date(evt.created_at).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
         </span>
-        <span style={{
-          fontSize: 12, fontWeight: 600, background: color + "22", color,
-          borderRadius: 12, padding: "1px 8px",
-        }}>{events.length}</span>
       </div>
-      <div>
-        {events.map((evt, i) => (
-          <TimelineEventCard
-            key={`${evt.event_type}-${i}`}
-            evt={evt}
-            isLast={i === events.length - 1}
-          />
-        ))}
+
+      {/* Title */}
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", marginBottom: chips.length > 0 ? 8 : 0, lineHeight: 1.4 }}>
+        {evt.title}
       </div>
+
+      {/* Chips */}
+      {chips.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {chips.map((chip, i) => (
+            <span key={i} style={{
+              fontSize: 11,
+              color: chip.warn ? "#92400e" : "#475569",
+              background: chip.warn ? "#fef3c7" : "#f1f5f9",
+              border: `1px solid ${chip.warn ? "#fcd34d" : "#e2e8f0"}`,
+              borderRadius: 6, padding: "2px 8px",
+              maxWidth: chip.wide ? "100%" : "230px",
+              overflow: "hidden", textOverflow: "ellipsis",
+              whiteSpace: chip.wide ? "normal" : "nowrap",
+              fontFamily: "monospace",
+            }}>
+              <strong style={{ fontFamily: "inherit" }}>{chip.label}</strong>
+              {chip.val != null ? `: ${chip.val}` : ""}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function PatientTimeline({ timeline }) {
-  const now = new Date();
-  const future = timeline.filter(e => { const d = new Date(e.created_at); return d > now && !isSameDay(d, now); }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  const today = timeline.filter(e => isSameDay(new Date(e.created_at), now)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  const past = timeline.filter(e => { const d = new Date(e.created_at); return d < now && !isSameDay(d, now); }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-  const clockIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
-  const calIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
-  const historyIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="12 8 12 12 14 14"/><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z"/></svg>;
-
   if (!timeline.length) {
     return (
-      <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8" }}>
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: "0 auto 12px", display: "block", opacity: 0.4 }}>
+      <div style={{
+        padding: "48px 0", textAlign: "center", color: "#94a3b8",
+        background: "rgba(255,255,255,0.9)", borderRadius: 14,
+        border: "1px solid rgba(204,251,241,0.6)",
+      }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: "0 auto 12px", display: "block", opacity: 0.3 }}>
           <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
-        No timeline events yet.
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>No timeline events yet.</p>
       </div>
     );
   }
 
+  // 1. Group events by Date String (YYYY-MM-DD)
+  const groupedEvents = {};
+  timeline.forEach(e => {
+    let dtLabel = "Unknown Date";
+    try {
+      const ms = Date.parse(e.created_at);
+      if (!isNaN(ms)) {
+        const d = new Date(ms);
+        dtLabel = d.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+      }
+    } catch {}
+    if (!groupedEvents[dtLabel]) groupedEvents[dtLabel] = [];
+    groupedEvents[dtLabel].push(e);
+  });
+
+  // 2. Sort the dates (e.g., most recent to oldest or oldest to newest)
+  const sortedDates = Object.keys(groupedEvents).sort((a, b) => new Date(a) - new Date(b));
+
+  const now = new Date();
+  const futureCount = timeline.filter(e => new Date(e.created_at) > now).length;
+  const todayCount = timeline.filter(e => isSameDay(new Date(e.created_at), now)).length;
+
   return (
-    <div style={{ padding: "4px 0 8px" }}>
+    <div style={{
+      background: "rgba(255,255,255,0.9)",
+      backdropFilter: "blur(8px)",
+      borderRadius: 14,
+      padding: "20px 0 24px",
+      boxShadow: "0 4px 14px rgba(13, 148, 136, 0.05)",
+      border: "1px solid rgba(204,251,241,0.6)",
+      overflow: "hidden", // Keep the outer box neat
+      display: "flex",
+      flexDirection: "column",
+    }}>
+      {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid #e2e8f0",
+        marginBottom: 20, padding: "0 20px 14px", borderBottom: "1px solid #e2e8f0",
+        flexWrap: "wrap", gap: 10,
       }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#0f172a" }}>Patient Timeline</h3>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Patient Timeline</h3>
+          <p style={{ margin: "3px 0 0", fontSize: 12, color: "#64748b" }}>
             {timeline.length} event{timeline.length !== 1 ? "s" : ""}
-            {future.length > 0 ? ` \u00b7 ${future.length} upcoming` : ""}
-            {` \u00b7 ${today.length} today \u00b7 ${past.length} past`}
+            {futureCount > 0 ? ` · ${futureCount} upcoming` : ""}
+            {todayCount > 0 ? ` · ${todayCount} today` : ""}
           </p>
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxWidth: 260 }}>
+        {/* Legend */}
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           {Object.entries(EVENT_CONFIG).map(([key, cfg]) => (
             <span key={key} title={cfg.label} style={{
-              width: 28, height: 28, borderRadius: 8,
+              width: 26, height: 26, borderRadius: 7,
               background: cfg.bg, border: `1px solid ${cfg.border}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               color: cfg.color, flexShrink: 0,
@@ -428,9 +413,95 @@ function PatientTimeline({ timeline }) {
           ))}
         </div>
       </div>
-      <TimelineSection title="Upcoming" events={future} color="#7c3aed" icon={clockIcon} />
-      <TimelineSection title="Today" events={today} color="#0ea5e9" icon={calIcon} />
-      <TimelineSection title="History" events={past} color="#64748b" icon={historyIcon} />
+
+      {/* Horizontal Scroll Area */}
+      <div style={{
+        overflowX: "auto",
+        display: "flex",
+        padding: "0 20px 20px",
+        scrollBehavior: "smooth",
+      }}>
+        <div style={{
+          display: "flex",
+          position: "relative",
+          minWidth: "min-content",
+        }}>
+          {/* Continuous Horizontal Track line under headers */}
+          <div style={{
+             position: "absolute",
+             top: 40, 
+             left: 10,
+             right: 10,
+             height: 3,
+             background: "linear-gradient(90deg, #ccfbf1, #99f6e4, #0d9488)",
+             borderRadius: 2,
+             zIndex: 0,
+             boxShadow: "0 1px 3px rgba(13, 148, 136, 0.2)",
+          }} />
+
+          {/* Render columns (one per date) */}
+          {sortedDates.map((dateStr, dIdx) => {
+            const dayEvents = groupedEvents[dateStr];
+            
+            // Format nice display date
+            const dt = new Date(dateStr);
+            const isToday = isSameDay(dt, now);
+            const displayDate = isToday 
+              ? "TODAY" 
+              : dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+            return (
+              <div key={dateStr} style={{
+                width: 300, // Fixed width for each column stack
+                flexShrink: 0,
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                marginRight: 24, // spacing between columns
+                zIndex: 1,
+              }}>
+                {/* Node Top area (Date Header + Dot) */}
+                <div style={{
+                  display: "flex", flexDirection: "column", 
+                  marginBottom: 16, height: 50, position: "relative"
+                }}>
+                  {/* Date label */}
+                  <span style={{ 
+                    fontSize: 12, fontWeight: 700, color: isToday ? "#0d9488" : "#475569", 
+                    textTransform: "uppercase", letterSpacing: "0.05em",
+                    marginLeft: 14,
+                    display: "flex", alignItems: "baseline", gap: 6,
+                  }}>
+                    {displayDate}
+                    <span style={{ fontSize: 10, background: "#f1f5f9", padding: "1px 6px", borderRadius: 10, color: "#64748b" }}>
+                      {dayEvents.length}
+                    </span>
+                  </span>
+
+                  {/* Axis Node / Dot matching the styling */}
+                  <div style={{
+                    width: 14, height: 14, borderRadius: "50%",
+                    background: isToday ? "#14b8a6" : "#ffffff",
+                    border: `3px solid ${isToday ? "#ffffff" : "#99f6e4"}`,
+                    boxShadow: `0 0 0 3px ${isToday ? "#14b8a6" : "transparent"}`,
+                    position: "absolute",
+                    top: 35, // Centered vertically on the horizontal line (y=40)
+                    left: 20, 
+                    zIndex: 2,
+                  }} />
+                </div>
+
+                {/* Vertical Event Cards Stack */}
+                <div style={{ display: "flex", flexDirection: "column", paddingLeft: 10 }}>
+                  {dayEvents.map((evt, i) => (
+                    <TimelineEventCard key={`${evt.event_type}-${i}`} evt={evt} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
