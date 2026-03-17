@@ -349,8 +349,14 @@ def chat_with_context(
             "context_summary": f"Context loaded for patient (ID: {patient_id})" if patient_id else "General mode",
         }
     except httpx.HTTPStatusError as e:
+        error_body = ""
+        try:
+            error_body = e.response.text[:300]
+        except Exception:
+            pass
+        print(f"Warning: Mistral API error {e.response.status_code}: {error_body}")
         return {
-            "reply": f"⚠ Mistral API error ({e.response.status_code}). Please try again.",
+            "reply": f"⚠ Mistral API error ({e.response.status_code}): {error_body[:150] or 'Unknown error'}. Please try again.",
             "risk_flags": [],
             "context_summary": "",
         }
