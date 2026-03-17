@@ -69,6 +69,44 @@ def ingest_mock_vitals(
     return reading
 
 
+@router.get("/latest", response_model=List[schemas.VitalReadingOut])
+def get_latest_vitals(
+    patient_ids: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_user),
+):
+    """Return the single most-recent vital reading for each requested patient.
+
+    Query param `patient_ids` is a comma-separated list of integer IDs.
+    If omitted, returns the latest reading for *every* patient that has at least one.
+    """
+    from sqlalchemy import func as sa_func
+
+    subq = (
+        db.query(
+            models.VitalReading.patient_id,
+            sa_func.max(models.VitalReading.id).label("max_id"),
+        )
+        .group_by(models.VitalReading.patient_id)
+    )
+
+    if patient_ids:
+        try:
+            ids = [int(x.strip()) for x in patient_ids.split(",") if x.strip()]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="patient_ids must be comma-separated integers")
+        subq = subq.filter(models.VitalReading.patient_id.in_(ids))
+
+    subq = subq.subquery()
+
+    rows = (
+        db.query(models.VitalReading)
+        .join(subq, models.VitalReading.id == subq.c.max_id)
+        .all()
+    )
+    return rows
+
+
 @router.get("/{patient_id}", response_model=List[schemas.VitalReadingOut])
 def get_vitals(
     patient_id: int,

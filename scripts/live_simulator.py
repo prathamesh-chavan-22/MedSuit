@@ -140,14 +140,39 @@ def run(patient_id: int, api_url: str, token: str, interval: float):
         sys.exit(0)
 
 
+def auto_login(api_url: str, username: str = "tushar.dayma", password: str = "test@123") -> str:
+    """Attempt to log in with default credentials and return a JWT token."""
+    login_url = f"{api_url.rstrip('/')}/auth/login"
+    print(f"🔑  Auto-login: POST {login_url}  (user={username})")
+    try:
+        resp = requests.post(
+            login_url,
+            data={"username": username, "password": password},
+            timeout=5,
+        )
+        if resp.status_code == 200:
+            token = resp.json().get("access_token", "")
+            if token:
+                print("✅  Auto-login successful.\n")
+                return token
+        print(f"⚠️  Auto-login failed (HTTP {resp.status_code}): {resp.text[:200]}")
+    except Exception as exc:
+        print(f"❌  Auto-login error: {exc}")
+    return ""
+
+
 if __name__ == "__main__":
     args = parse_args()
-    if not args.token:
-        print("⚠️  Warning: no auth token provided. Requests may be rejected with HTTP 401.")
-        print("   Set --token or the MEDSUITE_TOKEN environment variable.\n")
+    token = args.token
+    if not token:
+        print("⚠️  No auth token provided – attempting auto-login with default credentials...\n")
+        token = auto_login(args.url)
+        if not token:
+            print("   Could not auto-login. Set --token or the MEDSUITE_TOKEN environment variable.\n")
     run(
         patient_id=args.patient_id,
         api_url=args.url,
-        token=args.token,
+        token=token,
         interval=args.interval,
     )
+

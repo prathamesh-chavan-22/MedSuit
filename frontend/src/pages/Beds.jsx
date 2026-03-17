@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Heart, Activity } from "lucide-react";
 import api from "../api";
 
 const statusColor = {
@@ -30,6 +30,19 @@ export default function Beds() {
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients/").then((r) => r.data),
+  });
+
+  // Poll latest vitals for all patients every 2 seconds
+  const { data: latestVitals = [] } = useQuery({
+    queryKey: ["vitals-latest"],
+    queryFn: () => api.get("/vitals/latest").then((r) => r.data),
+    refetchInterval: 2000,
+  });
+
+  // Build a quick lookup: patient_id -> latest vital reading
+  const vitalsMap = {};
+  latestVitals.forEach((v) => {
+    vitalsMap[v.patient_id] = v;
   });
 
   const createMut = useMutation({
@@ -156,6 +169,7 @@ export default function Beds() {
             <div style={styles.bedGrid}>
               {wardBeds.map((bed) => {
                 const patient = patients.find((p) => p.id === bed.patient_id);
+                const vital = bed.patient_id ? vitalsMap[bed.patient_id] : null;
                 return (
                   <article
                     key={bed.id}
@@ -190,6 +204,81 @@ export default function Beds() {
                         <div style={styles.patientEmpty}>No patient assigned</div>
                       )}
                     </div>
+
+                    {/* ─── Live Vitals Strip ─────────────────────────── */}
+                    {patient && vital && (
+                      <div style={styles.vitalsStrip}>
+                        <div
+                          style={{
+                            ...styles.vitalChip,
+                            borderColor:
+                              vital.heart_rate > 100 || vital.heart_rate < 60
+                                ? "#ef4444"
+                                : "#e2e8f0",
+                            background:
+                              vital.heart_rate > 100 || vital.heart_rate < 60
+                                ? "#fef2f2"
+                                : "#f0fdf4",
+                          }}
+                        >
+                          <Heart
+                            size={13}
+                            style={{
+                              color:
+                                vital.heart_rate > 100 || vital.heart_rate < 60
+                                  ? "#ef4444"
+                                  : "#10b981",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            style={{
+                              ...styles.vitalVal,
+                              color:
+                                vital.heart_rate > 100 || vital.heart_rate < 60
+                                  ? "#dc2626"
+                                  : "#166534",
+                            }}
+                          >
+                            {vital.heart_rate?.toFixed(0) ?? "—"}
+                          </span>
+                          <span style={styles.vitalUnit}>bpm</span>
+                        </div>
+
+                        <div
+                          style={{
+                            ...styles.vitalChip,
+                            borderColor: vital.spo2 < 95 ? "#ef4444" : "#e2e8f0",
+                            background: vital.spo2 < 95 ? "#fef2f2" : "#eff6ff",
+                          }}
+                        >
+                          <Activity
+                            size={13}
+                            style={{
+                              color: vital.spo2 < 95 ? "#ef4444" : "#3b82f6",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            style={{
+                              ...styles.vitalVal,
+                              color: vital.spo2 < 95 ? "#dc2626" : "#1e40af",
+                            }}
+                          >
+                            {vital.spo2?.toFixed(1) ?? "—"}
+                          </span>
+                          <span style={styles.vitalUnit}>% SpO₂</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {patient && !vital && (
+                      <div style={styles.vitalsStripEmpty}>
+                        <span style={{ fontSize: 11, color: "#94a3b8", fontStyle: "italic" }}>
+                          No vitals data
+                        </span>
+                      </div>
+                    )}
 
                     <div style={styles.assignRow}>
                       <label style={styles.assignLabel}>Assign / Change Patient</label>
@@ -341,7 +430,7 @@ const styles = {
   wardMeta: { fontSize: 12, color: "#64748b", fontWeight: 600 },
   bedGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
     gap: 14,
   },
   bedCard: {
@@ -399,6 +488,36 @@ const styles = {
     borderRadius: 6,
     display: "inline-block",
   },
+  // ── Live vitals strip ──────────────────────────────────────────
+  vitalsStrip: {
+    display: "flex",
+    gap: 8,
+    padding: "8px 0 4px",
+    flexWrap: "wrap",
+  },
+  vitalsStripEmpty: {
+    padding: "8px 0 4px",
+  },
+  vitalChip: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+    border: "1px solid #e2e8f0",
+    borderRadius: 8,
+    padding: "4px 9px",
+    fontSize: 13,
+    lineHeight: 1.2,
+  },
+  vitalVal: {
+    fontWeight: 700,
+    fontSize: 14,
+  },
+  vitalUnit: {
+    fontSize: 10,
+    color: "#94a3b8",
+    fontWeight: 600,
+  },
+  // ────────────────────────────────────────────────────────────────
   assignRow: { marginTop: 10 },
   assignLabel: {
     display: "block",
