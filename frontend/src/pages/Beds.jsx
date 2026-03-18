@@ -387,7 +387,7 @@ export default function Beds() {
                       </div>
                     )}
 
-                    <div style={styles.assignRow}>
+                    <div style={styles.assignRow} onClick={(e) => e.stopPropagation()}>
                       <label style={styles.assignLabel}>Assign / Change Patient</label>
                       <select
                         style={styles.select}
