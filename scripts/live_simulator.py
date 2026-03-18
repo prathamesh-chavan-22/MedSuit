@@ -40,33 +40,54 @@ DEFAULT_URL = "http://localhost:8000"
 DEFAULT_INTERVAL = 0.5
 
 # ─── Walk Configuration ───────────────────────────────────────────────────────
+# spike_prob = 0.0001  →  ~1-in-10,000 chance of a dramatic spike per tick.
+# step is the maximum micro-drift per tick (very small, keeps readings smooth).
+# reversion controls how strongly the value is pulled back toward baseline each
+# tick (higher = faster recovery). Normal range for reversion is 0.02–0.10.
 VITAL_CONFIG = {
-    "heart_rate":         dict(baseline=75.0,  lo=50.0,  hi=115.0, step=1.0,  spike=25.0,  spike_prob=0.001),
-    "spo2":               dict(baseline=98.0,  lo=88.0,  hi=100.0, step=0.3,  spike=-5.0,  spike_prob=0.001),
-    "blood_pressure_sys": dict(baseline=120.0, lo=90.0,  hi=160.0, step=1.5,  spike=20.0,  spike_prob=0.001),
-    "blood_pressure_dia": dict(baseline=80.0,  lo=55.0,  hi=100.0, step=1.0,  spike=15.0,  spike_prob=0.001),
-    "temperature":        dict(baseline=36.8,  lo=35.5,  hi=40.0,  step=0.05, spike=1.2,   spike_prob=0.001),
-    "ecg_value":          dict(baseline=0.0,   lo=-1.0,  hi=1.0,   step=0.15, spike=0.5,   spike_prob=0.001),
+    #                       baseline  lo      hi      step   spike  spike_prob  reversion
+    "heart_rate":         dict(baseline=75.0,  lo=50.0,  hi=115.0, step=0.8,  spike=25.0,  spike_prob=0.0002, reversion=0.05),
+    "spo2":               dict(baseline=98.0,  lo=88.0,  hi=100.0, step=0.2,  spike=-6.0,  spike_prob=0.0002, reversion=0.08),
+    "blood_pressure_sys": dict(baseline=120.0, lo=90.0,  hi=160.0, step=1.0,  spike=22.0,  spike_prob=0.0002, reversion=0.05),
+    "blood_pressure_dia": dict(baseline=80.0,  lo=55.0,  hi=100.0, step=0.8,  spike=16.0,  spike_prob=0.0002, reversion=0.05),
+    "temperature":        dict(baseline=36.8,  lo=35.5,  hi=40.0,  step=0.05, spike=1.5,   spike_prob=0.0002, reversion=0.06),
+    "ecg_value":          dict(baseline=0.0,   lo=-1.0,  hi=1.0,   step=0.10, spike=0.6,   spike_prob=0.0002, reversion=0.10),
 }
 
 
 class VitalWalker:
-    """Maintains state for a single vital sign and advances it one step at a time."""
+    """
+    Maintains state for a single vital sign and advances it one step at a time.
+
+    Uses a *mean-reverting random walk* (Ornstein–Uhlenbeck-style):
+      • Each tick the value drifts slightly toward the healthy baseline
+        (controlled by ``reversion``), keeping the patient stable ~99 %+ of
+        the time.
+      • With probability ``spike_prob`` (default 0.0001 ≈ 1-in-10,000) a large
+        instantaneous spike is applied instead of the normal micro-drift.
+    """
 
     def __init__(self, baseline: float, lo: float, hi: float,
-                 step: float, spike: float, spike_prob: float) -> None:
+                 step: float, spike: float, spike_prob: float,
+                 reversion: float = 0.05) -> None:
         self.value = baseline
+        self.baseline = baseline
         self.lo = lo
         self.hi = hi
         self.step = step
         self.spike = spike
         self.spike_prob = spike_prob
+        self.reversion = reversion  # pull-back strength toward baseline
 
     def next(self) -> int:
         if random.random() < self.spike_prob:
+            # Rare dramatic spike – either direction
             delta = random.choice([self.spike, -self.spike])
         else:
-            delta = random.uniform(-self.step, self.step)
+            # Normal tick: small random drift + gentle pull back toward baseline
+            noise = random.uniform(-self.step, self.step)
+            pull = self.reversion * (self.baseline - self.value)
+            delta = noise + pull
 
         self.value = max(self.lo, min(self.hi, self.value + delta))
         return int(round(self.value))
