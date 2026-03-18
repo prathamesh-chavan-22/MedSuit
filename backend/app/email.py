@@ -23,7 +23,7 @@ class EmailConfig:
     SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
     SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "")
-    SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "MedSuite Hospital")
+    SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "Vitalis Hospital")
     
     @classmethod
     def is_configured(cls) -> bool:
@@ -114,19 +114,19 @@ class EmailService:
         Returns:
             True if email sent successfully
         """
-        subject = "Welcome to MedSuite Hospital System"
+        subject = "Welcome to Vitalis Hospital System"
         
         body = f"""
 Hello {user_name},
 
-Welcome to MedSuite Hospital Management System!
+Welcome to Vitalis Hospital Management System!
 
 Your account has been created successfully. You can now log in to the system using your email address.
 
 If you have any questions, please contact your system administrator.
 
 Best regards,
-MedSuite Team
+Vitalis Team
         """
         
         html_body = f"""
@@ -134,11 +134,11 @@ MedSuite Team
 <head></head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2563eb;">Welcome to MedSuite Hospital System</h2>
+        <h2 style="color: #2563eb;">Welcome to Vitalis Hospital System</h2>
         
         <p>Hello <strong>{user_name}</strong>,</p>
         
-        <p>Welcome to MedSuite Hospital Management System!</p>
+        <p>Welcome to Vitalis Hospital Management System!</p>
         
         <p>Your account has been created successfully. You can now log in to the system using your email address.</p>
         
@@ -155,7 +155,7 @@ MedSuite Team
         
         <p style="margin-top: 30px;">
             Best regards,<br>
-            <strong>MedSuite Team</strong>
+            <strong>Vitalis Team</strong>
         </p>
         
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
@@ -201,7 +201,7 @@ Message:
 
 Please take immediate action if required.
 
-This is an automated alert from MedSuite Hospital Management System.
+This is an automated alert from Vitalis Hospital Management System.
         """
         
         html_body = f"""
@@ -229,7 +229,7 @@ This is an automated alert from MedSuite Hospital Management System.
         
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
         <p style="font-size: 12px; color: #6b7280;">
-            This is an automated alert from MedSuite Hospital Management System.
+            This is an automated alert from Vitalis Hospital Management System.
         </p>
     </div>
 </body>
@@ -273,7 +273,7 @@ Due: {due_time}
 Please complete this task as soon as possible.
 
 Best regards,
-MedSuite Team
+Vitalis Team
         """
         
         html_body = f"""
@@ -297,12 +297,12 @@ MedSuite Team
         
         <p style="margin-top: 30px;">
             Best regards,<br>
-            <strong>MedSuite Team</strong>
+            <strong>Vitalis Team</strong>
         </p>
         
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
         <p style="font-size: 12px; color: #6b7280;">
-            This is an automated reminder from MedSuite Hospital Management System.
+            This is an automated reminder from Vitalis Hospital Management System.
         </p>
     </div>
 </body>

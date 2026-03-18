@@ -6,7 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useIsMobile } from "../hooks/useWindowWidth";
 
 /* Custom SVG logo matching the login page */
-function MedSuiteLogo() {
+function VitalisLogo() {
   return (
     <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
       <defs>
@@ -161,8 +161,8 @@ export default function Navbar() {
   return (
     <nav style={navStyle}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <MedSuiteLogo />
-        <span style={brandTextStyle}>MedSuite IPD</span>
+        <VitalisLogo />
+        <span style={brandTextStyle}>Vitalis IPD</span>
       </div>
 
       <div style={{ display: "flex", gap: isMobile ? 4 : 6, flexWrap: isMobile ? "nowrap" : "wrap", overflowX: isMobile ? "auto" : "unset" }}>

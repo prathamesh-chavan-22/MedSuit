@@ -24,7 +24,7 @@ from app.routers import (
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="MedSuite IPD Management",
+    title="Vitalis IPD Management",
     description="Hospital In-Patient Department management system API",
     version="0.1.0",
 )
@@ -42,6 +42,8 @@ app.add_middleware(
         "http://127.0.0.1:5174",
         "http://127.0.0.1:5175",
         "http://127.0.0.1:5176",
+        "https://composed-violently-coyote.ngrok-free.app",
+        "http://composed-violently-coyote.ngrok-free.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -68,4 +70,4 @@ app.include_router(food_intake.router)
 
 @app.get("/", tags=["Health"])
 def health():
-    return {"status": "ok", "service": "MedSuite IPD API"}
+    return {"status": "ok", "service": "Vitalis IPD API"}

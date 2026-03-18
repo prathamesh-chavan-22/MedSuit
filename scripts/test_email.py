@@ -44,20 +44,20 @@ def test_email_configuration():
                 
                 success = email_service.send_email(
                     to_email=recipient,
-                    subject="Test Email from MedSuite",
-                    body="This is a test email from MedSuite Hospital Management System. If you received this, your email configuration is working correctly!",
+                    subject="Test Email from Vitalis",
+                    body="This is a test email from Vitalis Hospital Management System. If you received this, your email configuration is working correctly!",
                     html_body="""
                     <html>
                     <body style="font-family: Arial, sans-serif; padding: 20px;">
                         <h2 style="color: #2563eb;">✅ Email Configuration Test</h2>
-                        <p>This is a test email from <strong>MedSuite Hospital Management System</strong>.</p>
+                        <p>This is a test email from <strong>Vitalis Hospital Management System</strong>.</p>
                         <p>If you received this, your email configuration is working correctly!</p>
                         <div style="margin-top: 20px; padding: 15px; background-color: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px;">
                             <p style="margin: 0; color: #166534;">✓ SMTP Configuration: Working</p>
                             <p style="margin: 10px 0 0 0; color: #166534;">✓ Email Delivery: Successful</p>
                         </div>
                         <p style="margin-top: 20px; color: #666; font-size: 12px;">
-                            Sent from MedSuite Email Service
+                            Sent from Vitalis Email Service
                         </p>
                     </body>
                     </html>
@@ -129,7 +129,7 @@ def main():
     """Main menu."""
     while True:
         print("\n" + "="*60)
-        print("MedSuite Email Test Menu")
+        print("Vitalis Email Test Menu")
         print("="*60)
         print("1. Test email configuration")
         print("2. Send test welcome email")
@@ -153,5 +153,5 @@ def main():
 
 
 if __name__ == "__main__":
-    print("\n🏥 MedSuite Email Testing Tool\n")
+    print("\n🏥 Vitalis Email Testing Tool\n")
     main()

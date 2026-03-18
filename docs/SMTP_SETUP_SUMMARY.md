@@ -2,7 +2,7 @@
 
 ## ✅ Configuration Complete
 
-Google SMTP has been successfully configured in the MedSuite project. The email service is ready to use but is **not yet integrated** into any endpoints.
+Google SMTP has been successfully configured in the Vitalis project. The email service is ready to use but is **not yet integrated** into any endpoints.
 
 ## 📁 Files Created/Modified
 
@@ -15,7 +15,7 @@ Google SMTP has been successfully configured in the MedSuite project. The email 
    SMTP_USERNAME=your-email@gmail.com
    SMTP_PASSWORD=your-app-password-here
    SMTP_FROM_EMAIL=your-email@gmail.com
-   SMTP_FROM_NAME=MedSuite Hospital
+   SMTP_FROM_NAME=Vitalis Hospital
    ```
 
 2. **`backend/.env.example`** - Template with SMTP configuration
@@ -168,7 +168,7 @@ python test_email.py
 | `SMTP_USERNAME` | Email account username | `your-email@gmail.com` |
 | `SMTP_PASSWORD` | App Password | `abcdefghijklmnop` |
 | `SMTP_FROM_EMAIL` | Sender email address | `your-email@gmail.com` |
-| `SMTP_FROM_NAME` | Sender display name | `MedSuite Hospital` |
+| `SMTP_FROM_NAME` | Sender display name | `Vitalis Hospital` |
 
 ---
 

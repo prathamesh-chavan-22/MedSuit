@@ -1,7 +1,7 @@
-# MedSuite Methodology
+# Vitalis Methodology
 
 ## 1. Purpose
-This document defines the methodology used to design, build, validate, and harden MedSuite as a patient-centric, governance-aware IPD platform with AI-assisted support.
+This document defines the methodology used to design, build, validate, and harden Vitalis as a patient-centric, governance-aware IPD platform with AI-assisted support.
 
 ## 2. Methodology Overview
 The project follows an iterative, evidence-driven methodology with continuous feedback loops between design, implementation, and validation.
@@ -202,7 +202,7 @@ flowchart LR
 ### 5.4 Suggested Timeline
 ```mermaid
 gantt
-    title MedSuite Implementation Plan
+    title Vitalis Implementation Plan
     dateFormat  YYYY-MM-DD
     section Foundation
     Auth Sessions Schema           :a1, 2026-03-18, 10d
@@ -337,4 +337,4 @@ gantt
 - Consent transitions and expiry behavior validated.
 
 ## 11. Conclusion
-MedSuite methodology combines architecture discipline, governance-first workflow design, and measurable validation to build a clinically meaningful IPD platform that can evolve toward production readiness and research-grade evidence generation.
+Vitalis methodology combines architecture discipline, governance-first workflow design, and measurable validation to build a clinically meaningful IPD platform that can evolve toward production readiness and research-grade evidence generation.

@@ -17,7 +17,7 @@ def _normalize_database_url(database_url: str) -> str:
 
     sqlite_path = database_url.replace("sqlite:///", "", 1)
     if not sqlite_path:
-        return f"sqlite:///{(PROJECT_ROOT / 'medsuite.db').as_posix()}"
+        return f"sqlite:///{(PROJECT_ROOT / 'vitalis.db').as_posix()}"
 
     path_obj = Path(sqlite_path)
     if path_obj.is_absolute():
@@ -26,7 +26,7 @@ def _normalize_database_url(database_url: str) -> str:
     # Route relative SQLite paths to the workspace root for consistency.
     return f"sqlite:///{(PROJECT_ROOT / sqlite_path).as_posix()}"
 
-DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL", "sqlite:///./medsuite.db"))
+DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL", "sqlite:///./vitalis.db"))
 
 engine = create_engine(
     DATABASE_URL,

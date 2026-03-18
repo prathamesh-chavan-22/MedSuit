@@ -1,7 +1,7 @@
-# MedSuite: Deep-Dive Research Synopsis
+# Vitalis: Deep-Dive Research Synopsis
 
 ## Abstract
-MedSuite is a full-stack In-Patient Department (IPD) platform that unifies operational workflows, clinical documentation, and AI-assisted decision support in a single system. The project demonstrates a practical architecture for hospital environments where traceability, role-governed access, and rapid clinical context retrieval are essential. The implementation combines FastAPI, SQLAlchemy, and Celery on the backend with React on the frontend, and integrates AI services for contextual chat, proactive risk scanning, and audio-informed documentation support.
+Vitalis is a full-stack In-Patient Department (IPD) platform that unifies operational workflows, clinical documentation, and AI-assisted decision support in a single system. The project demonstrates a practical architecture for hospital environments where traceability, role-governed access, and rapid clinical context retrieval are essential. The implementation combines FastAPI, SQLAlchemy, and Celery on the backend with React on the frontend, and integrates AI services for contextual chat, proactive risk scanning, and audio-informed documentation support.
 
 ## 1. Clinical Context and Motivation
 Hospital IPD teams typically face fragmented workflows across paper forms, spreadsheets, messaging channels, and disconnected digital systems. This leads to:
@@ -10,7 +10,7 @@ Hospital IPD teams typically face fragmented workflows across paper forms, sprea
 - Documentation fatigue and inconsistent note quality.
 - Governance challenges in permissions, consent, and auditability.
 
-MedSuite addresses this by creating one coherent workflow graph where identity, tasks, vitals, labs, notes, consent, and AI suggestions are connected around each patient.
+Vitalis addresses this by creating one coherent workflow graph where identity, tasks, vitals, labs, notes, consent, and AI suggestions are connected around each patient.
 
 ## 2. Project Objectives
 ### Primary Objectives
@@ -167,7 +167,7 @@ System prompts enforce:
 - Fallback and error messaging exist for missing AI key or service failure scenarios.
 
 ### 7.4 Research Implication
-MedSuite can be used to study trust calibration between clinician judgment and AI recommendations under constrained, context-rich prompts.
+Vitalis can be used to study trust calibration between clinician judgment and AI recommendations under constrained, context-rich prompts.
 
 ## 8. Data Model Strengths for Clinical Research
 - Rich intake schema captures demographic and risk context.
@@ -242,7 +242,7 @@ Interpretation:
 
 ### Experimental Design (Prototype-Friendly)
 - Pre/post deployment comparison in simulated ward setting.
-- Controlled cohort study: baseline workflow vs MedSuite-assisted workflow.
+- Controlled cohort study: baseline workflow vs Vitalis-assisted workflow.
 - Mixed-method evaluation: quantitative timing + qualitative clinician feedback.
 
 ## 13. Scalability and Deployment Readiness Considerations
@@ -257,7 +257,7 @@ Interpretation:
 - Environment-specific security baselines and compliance controls.
 
 ## 14. Contribution Summary
-MedSuite contributes a practical blueprint for converging:
+Vitalis contributes a practical blueprint for converging:
 - Clinical context aggregation,
 - Secure role-aware access,
 - Consent-governed workflows,
@@ -277,4 +277,4 @@ into one coherent IPD platform suitable for translational healthcare informatics
 8. Roadmap and research impact potential.
 
 ## 16. One-Line Thesis
-MedSuite demonstrates that a patient-centric, governance-aware, AI-augmented IPD platform can improve clinical workflow coherence and decision support quality while preserving traceability and role-based safety constraints.
+Vitalis demonstrates that a patient-centric, governance-aware, AI-augmented IPD platform can improve clinical workflow coherence and decision support quality while preserving traceability and role-based safety constraints.

@@ -126,7 +126,7 @@ def create_session(
         session_id=session.id,
         role="assistant",
         text=(
-            "Hello! I'm your **MedSuite AI Co-Pilot** powered by Mistral AI.\n\n"
+            "Hello! I'm your **Vitalis AI Co-Pilot** powered by Mistral AI.\n\n"
             "Open a patient's profile to ask context-aware clinical questions, "
             "or ask me anything about general medical workflows.\n\n"
             "> ⚠️ **Disclaimer:** AI responses are for clinical support only and must "

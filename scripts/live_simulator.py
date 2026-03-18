@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MedSuite Live Patient Simulator
+Vitalis Live Patient Simulator
 ================================
 Continuously pushes mock vital-sign readings for **all current patients**
 (or a single patient via ``--patient-id``) every N seconds, simulating
@@ -20,10 +20,10 @@ Usage:
 Arguments:
     --patient-id  (optional)  Limit simulation to this single patient ID.
                               If omitted, ALL patients are simulated.
-    --url         (optional)  Base URL of the MedSuite API.
+    --url         (optional)  Base URL of the Vitalis API.
                               Defaults to http://localhost:8000
     --token       (optional)  Bearer JWT token for authentication.
-                              You can also set the MEDSUITE_TOKEN env variable.
+                              You can also set the VITALIS_TOKEN env variable.
     --interval    (optional)  Seconds between readings. Defaults to 0.5.
 
 Press Ctrl+C to stop the simulator.
@@ -78,17 +78,17 @@ def build_walkers() -> dict:
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="MedSuite Live Patient Simulator – pushes vital readings every N seconds."
+        description="Vitalis Live Patient Simulator – pushes vital readings every N seconds."
     )
     parser.add_argument(
         "--patient-id", type=int, default=None,
         help="Target patient ID. If omitted, ALL patients are simulated.",
     )
-    parser.add_argument("--url", default=os.getenv("MEDSUITE_API_URL", DEFAULT_URL), help="API base URL")
+    parser.add_argument("--url", default=os.getenv("VITALIS_API_URL", DEFAULT_URL), help="API base URL")
     parser.add_argument(
         "--token",
-        default=os.getenv("MEDSUITE_TOKEN", ""),
-        help="Bearer JWT token (or set MEDSUITE_TOKEN env var)",
+        default=os.getenv("VITALIS_TOKEN", ""),
+        help="Bearer JWT token (or set VITALIS_TOKEN env var)",
     )
     parser.add_argument(
         "--interval",
@@ -140,7 +140,7 @@ def run(patient_ids: list[int], api_url: str, token: str, interval: float):
     base = api_url.rstrip("/")
     headers = {"Authorization": f"Bearer {token}"} if token else {}
 
-    print("🏥  MedSuite Live Patient Simulator  [smooth random-walk mode]")
+    print("🏥  Vitalis Live Patient Simulator  [smooth random-walk mode]")
     print(f"    Patients   : {patient_ids}")
     print(f"    Interval   : {interval}s")
     print(f"    Auth token : {'present' if token else 'NOT SET (may fail with 401)'}")
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         print("⚠️  No auth token provided – attempting auto-login with default credentials...\n")
         token = auto_login(args.url)
         if not token:
-            print("   Could not auto-login. Set --token or the MEDSUITE_TOKEN environment variable.\n")
+            print("   Could not auto-login. Set --token or the VITALIS_TOKEN environment variable.\n")
 
     headers = {"Authorization": f"Bearer {token}"} if token else {}
 

@@ -119,7 +119,7 @@ export default function Login() {
         <div style={styles.logo}>
           <MedicalLogo />
           <div>
-            <h1 style={styles.title}>MedSuite IPD</h1>
+            <h1 style={styles.title}>Vitalis IPD</h1>
             <p style={styles.subtitle}>Hospital In-Patient Department</p>
           </div>
         </div>

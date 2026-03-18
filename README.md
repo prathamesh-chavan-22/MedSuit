@@ -1,6 +1,6 @@
-# MedSuite
+# Vitalis
 
-MedSuite is a hospital IPD workflow platform with secure role-based APIs, consent-aware clinical flows, session-aware auth, and asynchronous processing.
+Vitalis is a hospital IPD workflow platform with secure role-based APIs, consent-aware clinical flows, session-aware auth, and asynchronous processing.
 
 ## Implemented Capabilities
 
@@ -23,7 +23,7 @@ MedSuite is a hospital IPD workflow platform with secure role-based APIs, consen
 ## Repo Layout
 
 ```text
-MedSuit/
+Vitalis/
 |- backend/
 |  |- app/
 |  |  |- auth.py
@@ -55,7 +55,7 @@ MedSuit/
 Backend (`backend/.env`):
 
 ```env
-DATABASE_URL=sqlite:///./medsuite.db
+DATABASE_URL=sqlite:///./vitalis.db
 SECRET_KEY=change-me
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=480
@@ -66,7 +66,7 @@ SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 SMTP_FROM_EMAIL=your-email@gmail.com
-SMTP_FROM_NAME=MedSuite Hospital
+SMTP_FROM_NAME=Vitalis Hospital
 CONSENT_ACTION_BASE_URL=http://localhost:8000
 CELERY_BROKER_URL=redis://localhost:6379/0
 CELERY_RESULT_BACKEND=redis://localhost:6379/0

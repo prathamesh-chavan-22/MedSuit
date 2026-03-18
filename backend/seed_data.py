@@ -1,6 +1,6 @@
 """Seed database with rich, realistic test data.
 
-This script is designed to populate the MedSuite database with enough data
+This script is designed to populate the Vitalis database with enough data
 to thoroughly test the UI and API at realistic scale:
   - 10 patients across 3 wards
   - 3 shifts
@@ -320,12 +320,12 @@ def seed_database():
     try:
         # ── Users ────────────────────────────────────────────────────────────
         user_specs = [
-            dict(username="admin",      full_name="Admin User",   email="admin@medsuite.local",  password="admin123",    role=models.UserRole.admin),
-            dict(username="dr_smith",   full_name="Dr. Smith",    email="smith@medsuite.local",  password="password123", role=models.UserRole.doctor),
-            dict(username="dr_patel",   full_name="Dr. Patel",    email="patel@medsuite.local",  password="password123", role=models.UserRole.doctor),
-            dict(username="nurse_john", full_name="John Nurse",   email="john@medsuite.local",   password="password123", role=models.UserRole.nurse),
-            dict(username="nurse_priya",full_name="Priya Nurse",  email="priya@medsuite.local",  password="password123", role=models.UserRole.nurse),
-            dict(username="nurse_aisha",full_name="Aisha Nurse",  email="aisha@medsuite.local",  password="password123", role=models.UserRole.nurse),
+            dict(username="admin",      full_name="Admin User",   email="admin@vitalis.local",  password="admin123",    role=models.UserRole.admin),
+            dict(username="dr_smith",   full_name="Dr. Smith",    email="smith@vitalis.local",  password="password123", role=models.UserRole.doctor),
+            dict(username="dr_patel",   full_name="Dr. Patel",    email="patel@vitalis.local",  password="password123", role=models.UserRole.doctor),
+            dict(username="nurse_john", full_name="John Nurse",   email="john@vitalis.local",   password="password123", role=models.UserRole.nurse),
+            dict(username="nurse_priya",full_name="Priya Nurse",  email="priya@vitalis.local",  password="password123", role=models.UserRole.nurse),
+            dict(username="nurse_aisha",full_name="Aisha Nurse",  email="aisha@vitalis.local",  password="password123", role=models.UserRole.nurse),
         ]
         users = []
         for spec in user_specs:

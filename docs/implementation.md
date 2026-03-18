@@ -1,6 +1,6 @@
-# MedSuite Implementation Status
+# Vitalis Implementation Status
 
-This document captures the current implementation state for MedSuite.
+This document captures the current implementation state for Vitalis.
 
 ## Completed Workstreams
 

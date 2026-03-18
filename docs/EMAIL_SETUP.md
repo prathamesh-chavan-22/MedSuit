@@ -1,7 +1,7 @@
 # Email Configuration Guide
 
 ## Overview
-MedSuite has been configured to send emails using Google SMTP (Gmail). The email service is ready to use but currently not integrated into any endpoints.
+Vitalis has been configured to send emails using Google SMTP (Gmail). The email service is ready to use but currently not integrated into any endpoints.
 
 ## Email Service Features
 
@@ -23,7 +23,7 @@ The email service (`backend/app/email.py`) provides:
 1. Go to https://myaccount.google.com/apppasswords
 2. Select app: **Mail**
 3. Select device: **Other (Custom name)**
-4. Enter name: **MedSuite Hospital**
+4. Enter name: **Vitalis Hospital**
 5. Click **Generate**
 6. Copy the 16-character password (remove spaces)
 
@@ -36,7 +36,7 @@ SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-16-char-app-password
 SMTP_FROM_EMAIL=your-email@gmail.com
-SMTP_FROM_NAME=MedSuite Hospital
+SMTP_FROM_NAME=Vitalis Hospital
 ```
 
 ## Usage Examples
@@ -107,7 +107,7 @@ from app.email import email_service
 email_service.send_email(
     to_email="your-test-email@gmail.com",
     subject="Test Email",
-    body="This is a test email from MedSuite"
+    body="This is a test email from Vitalis"
 )
 ```
 

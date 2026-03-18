@@ -445,7 +445,7 @@ export default function ChatApp() {
               <NurseAvatar isThinking={isLoading} size="normal" />
               <div>
                 <strong style={{ display: "flex", alignItems: "center", fontSize: 15.5, fontWeight: 700, letterSpacing: "-0.01em" }}>
-                  MedSuite AI Co-Pilot
+                  Vitalis AI Co-Pilot
                 </strong>
                 <p style={{ margin: "3px 0 0", fontSize: 12, opacity: 0.88, fontWeight: 500 }}>
                   {patientId ? (
@@ -562,7 +562,7 @@ export default function ChatApp() {
           <div className="chatapp-disclaimer">
             <AlertTriangle size={12} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>
-              AI responses are for clinical support only. Always verify with a licensed clinician. MedSuite AI will not answer questions unrelated to healthcare.
+              AI responses are for clinical support only. Always verify with a licensed clinician. Vitalis AI will not answer questions unrelated to healthcare.
             </span>
           </div>
 

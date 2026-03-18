@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Force app to use a dedicated test DB before importing app modules.
-TEST_DB_PATH = Path(__file__).resolve().parent / "test_medsuite.db"
+TEST_DB_PATH = Path(__file__).resolve().parent / "test_vitalis.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH.as_posix()}"
 os.environ["ALLOW_PUBLIC_REGISTER"] = "false"
 

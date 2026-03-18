@@ -1,6 +1,6 @@
-# MedSuite Frontend
+# Vitalis Frontend
 
-React frontend for MedSuite with protected workflows and session-aware authentication.
+React frontend for Vitalis with protected workflows and session-aware authentication.
 
 ## Implemented Frontend Areas
 
